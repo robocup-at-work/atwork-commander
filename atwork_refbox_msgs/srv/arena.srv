@@ -1,0 +1,14 @@
+# arena.srv
+
+### request ###
+
+# East-North-Up --> positive x points to east
+nav_msgs/OccupancyGrid map
+
+# header.frame contains the name of the table / waypoint
+geometry_msgs/PolygonStamped[] table
+geometry_msgs/PointStamped[] waypoint
+
+---
+
+### response ###

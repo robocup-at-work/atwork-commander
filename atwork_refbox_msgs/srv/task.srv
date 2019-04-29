@@ -1,0 +1,10 @@
+# task.srv
+
+### request ###
+
+atwork_refbox_msgs/table[] arena_start_state
+atwork_refbox_msgs/table[] arena_target_state
+
+---
+
+### response ###
