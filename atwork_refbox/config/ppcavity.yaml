@@ -1,0 +1,16 @@
+%YAML 1.2
+---
+# Main configuration document
+
+text: PP
+F20_20_B: true
+F20_20_G: true
+
+S40_40_B: true
+S40_40_G: true
+
+M20_100: flase
+M20: true
+M30: true
+
+debug: true

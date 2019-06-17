@@ -1,0 +1,29 @@
+%YAML 1.2
+---
+# Main configuration document
+
+text: BTT2
+object_count: 6
+decoy_count: 2
+table_height_2: 0 
+
+shelves_grasping: 2 
+shelves_placing: 0
+pp: 0
+rt_grasping: 0
+rt_placing: 0
+arbitary_surface_count: 2
+obstacle_count: 2
+barrier_tape_count: 1
+
+Axis: true
+
+container_red: 2
+container_blue: 1
+
+
+
+
+
+
+debug: true
