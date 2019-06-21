@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   nav_msgs
   std_msgs
+roscpp
 )
 
 ## System dependencies are found with CMake's conventions
@@ -53,6 +54,7 @@ find_package(catkin REQUIRED COMPONENTS
    object.msg
    robot_state.msg
    table.msg
+	abc_msg.msg
 #   Message1.msg
 #   Message2.msg
  )
@@ -110,8 +112,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES atwork_refbox_msgs
-#  CATKIN_DEPENDS geometry_msgs message_generation nav_msgs std_msgs
+ #LIBRARIES atwork_refbox_msgs
+  CATKIN_DEPENDS geometry_msgs message_runtime nav_msgs std_msgs
 #  DEPENDS system_lib
 )
 
@@ -203,3 +205,13 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+add_executable(talker src/talker.cpp)
+target_link_libraries(talker ${catkin_LIBRARIES})
+add_dependencies(talker atwork_refbox_msgs_generate_messages_cpp)
+
+add_executable(listener src/listener.cpp)
+target_link_libraries(listener ${catkin_LIBRARIES})
+add_dependencies(listener atwork_refbox_msgs_generate_messages_cpp)
+
+
