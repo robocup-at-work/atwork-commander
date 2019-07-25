@@ -55,6 +55,9 @@ roscpp
    robot_state.msg
    table.msg
 	abc_msg.msg
+   BeaconSignal.msg
+   Attentionmsg.msg
+   RobotInfo.msg
 #   Message1.msg
 #   Message2.msg
  )
