@@ -5,19 +5,27 @@
 text: FINAL
 object_count: 10
 decoy_count: 5
-table_height_2: 5 
+
+table_height_0: 8
+table_height_5: 8
+table_height_10: 8
+table_height_15 : 8
 
 shelves_grasping: 2 
 shelves_placing: 0
 pp: 0
-rt_grasping: 0
+rt_grasping: 1
 rt_placing: 0
 arbitary_surface_count: 2
 obstacle_count: 2
 barrier_tape_count: 2
-waypoint_count: 
 
-Axis: true
+##Axis: true
+M20: true
+M30: true
+R20: true	
+F20: false
+S40: false
 
 container_red: 2
 container_blue: 1

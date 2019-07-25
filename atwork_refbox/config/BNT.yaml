@@ -15,6 +15,7 @@ rt_placing: 0
 arbitary_surface_count: 2
 obstacle_count: 2
 barrier_tape_count: 1
+waypoint_count: 9
 
 Axis: true
 

@@ -5,7 +5,13 @@
 text: BTT1
 object_count: 5
 decoy_count: 3
-table_height_1: 10 
+
+#table_height_2: 10 
+
+table_height_0: 0
+table_height_5: 0
+table_height_10: 3
+table_height_15 : 0
 
 shelves_grasping: 2 
 shelves_placing: 1
@@ -16,7 +22,18 @@ arbitary_surface_count: 2
 obstacle_count: 2
 barrier_tape_count: 2
 
-Axis: false
+
+
+
+
+
+
+##Axis: true
+M20: true
+M30: true
+R20: true	
+F20: false
+S40: false
 
 container_red: 2
 container_blue: 2
