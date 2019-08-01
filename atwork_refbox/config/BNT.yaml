@@ -2,22 +2,43 @@
 ---
 # Main configuration document
 
-text: BNT
-object_count: 0
+text: "BMT"
+object_count: 5
 decoy_count: 0
-table_height_2: 0 
+table_height_2: 10 
+
+table_height_0: 0
+table_height_5: 0
+table_height_10: 0
+table_height_15 : 0
+
+
+
+
+
+
 
 shelves_grasping: 2 
 shelves_placing: 0
-pp: 0
+pp: 0 	
 rt_grasping: 0
 rt_placing: 0
 arbitary_surface_count: 2
-obstacle_count: 2
-barrier_tape_count: 1
-waypoint_count: 9
+obstacle_count: 0
+barrier_tape_count: 0
 
-Axis: true
+##Axis: true
+M20: true
+M30: true
+R20: true	
+F20: false
+S40: false
+
+
+
+
+
+
 
 container_red: 2
 container_blue: 1
@@ -27,4 +48,4 @@ container_blue: 1
 
 
 
-debug: true
+ 

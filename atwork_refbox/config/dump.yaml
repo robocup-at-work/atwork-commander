@@ -1,0 +1,9 @@
+rosdistro: 'kinetic
+
+  '
+roslaunch:
+  uris: {host_pawankumar_kpl_w0x__39911: 'http://pawankumar-KPL-W0X:39911/'}
+rosversion: '1.12.14
+
+  '
+run_id: c3b4cf02-b39e-11e9-8c65-d0c637189557
