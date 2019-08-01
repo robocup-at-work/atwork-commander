@@ -9,7 +9,12 @@ project(atwork_refbox)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   atwork_refbox_msgs
+  ##atwork_refbox
   roscpp
+  geometry_msgs
+  nav_msgs
+  message_generation
+ 
 )
 
 ## System dependencies are found with CMake's conventions
@@ -46,11 +51,11 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+	##add_message_files(
+  ##FILES
+  ##robot_state.msg
+  
+ ##)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -67,10 +72,15 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   atwork_refbox_msgs
-# )
+ generate_messages(
+   DEPENDENCIES
+   atwork_refbox_msgs
+   geometry_msgs
+   nav_msgs
+	std_msgs
+ )
+
+
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -85,7 +95,6 @@ find_package(catkin REQUIRED COMPONENTS
 ##     find_package(catkin REQUIRED COMPONENTS ...)
 ##   * uncomment the "generate_dynamic_reconfigure_options" section below
 ##     and list every .cfg file to be processed
-
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
 # generate_dynamic_reconfigure_options(
 #   cfg/DynReconf1.cfg
@@ -102,27 +111,31 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES atwork_refbox
-#  CATKIN_DEPENDS atwork_refbox_msgs roscpp
-#  DEPENDS system_lib
+  INCLUDE_DIRS include
+  LIBRARIES atwork_refbox
+  CATKIN_DEPENDS atwork_refbox_msgs roscpp geometry_msgs nav_msgs 
+  DEPENDS system_lib
 )
+
+## declare a cpp executable
+
 
 ###########
 ## Build ##
 ###########
 
+
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+ include
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/atwork_refbox.cpp
-# )
+#add_library(${PROJECT_NAME}
+# src/${PROJECT_NAME}/atwork_refbox.cpp
+#)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -196,3 +209,11 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+
+
+
+
+add_executable(st_viz_tasks  src/st_viz_tasks.cpp)
+target_link_libraries(st_viz_tasks  ${catkin_LIBRARIES})
+add_dependencies(st_viz_tasks  atwork_refbox_generate_messages_cpp)

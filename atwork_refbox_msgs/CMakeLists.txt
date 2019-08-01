@@ -8,6 +8,7 @@ project(atwork_refbox_msgs)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  roscpp
   geometry_msgs
   message_generation
   nav_msgs
@@ -52,7 +53,8 @@ find_package(catkin REQUIRED COMPONENTS
    FILES
    object.msg
    robot_state.msg
-   table.msg
+   table.msg   
+Int32MultiArray.msg
 #   Message1.msg
 #   Message2.msg
  )
@@ -62,6 +64,7 @@ find_package(catkin REQUIRED COMPONENTS
    FILES
    task.srv
    arena.srv
+	tasklist.srv
 #   Service1.srv
 #   Service2.srv
  )
@@ -108,12 +111,12 @@ find_package(catkin REQUIRED COMPONENTS
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES atwork_refbox_msgs
-#  CATKIN_DEPENDS geometry_msgs message_generation nav_msgs std_msgs
-#  DEPENDS system_lib
-)
+#catkin_package(
+ ## INCLUDE_DIRS include
+  ##LIBRARIES atwork_refbox_msgs
+  ##CATKIN_DEPENDS geometry_msgs message_generation nav_msgs std_msgs
+  ##DEPENDS system_lib
+#)
 
 ###########
 ## Build ##
@@ -122,7 +125,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+ include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -203,3 +206,7 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+
+#add_executable(com_st_pos_talker src/com_st_pos_talker.cpp)
+#target_link_libraries(com_st_pos_talker ${catkin_LIBRARIES})
