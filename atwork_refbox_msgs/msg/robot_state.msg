@@ -1,7 +1,9 @@
 # robot_state.msg
 
 Header header
-geometry_msgs/Pose2D pose
+geometry_msgs/Pose2D[] pose
+geometry_msgs/Point[] points
+uint8 another_field
 nav_msgs/Path path
 ##atwork_refbox_msgs/object[3] objects_on_robot
 uint8 objects_on_robot

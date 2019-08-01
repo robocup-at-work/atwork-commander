@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   nav_msgs
   std_msgs
+roscpp
 )
 
 ## System dependencies are found with CMake's conventions
@@ -53,8 +54,11 @@ find_package(catkin REQUIRED COMPONENTS
    FILES
    object.msg
    robot_state.msg
-   table.msg   
-Int32MultiArray.msg
+   table.msg
+	abc_msg.msg
+   BeaconSignal.msg
+   Attentionmsg.msg
+   RobotInfo.msg
 #   Message1.msg
 #   Message2.msg
  )
@@ -111,12 +115,13 @@ Int32MultiArray.msg
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
-#catkin_package(
- ## INCLUDE_DIRS include
-  ##LIBRARIES atwork_refbox_msgs
-  ##CATKIN_DEPENDS geometry_msgs message_generation nav_msgs std_msgs
-  ##DEPENDS system_lib
-#)
+
+catkin_package(
+#  INCLUDE_DIRS include
+ #LIBRARIES atwork_refbox_msgs
+  CATKIN_DEPENDS geometry_msgs message_runtime nav_msgs std_msgs
+#  DEPENDS system_lib
+)
 
 ###########
 ## Build ##
@@ -207,6 +212,11 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
+add_executable(talker src/talker.cpp)
+target_link_libraries(talker ${catkin_LIBRARIES})
+add_dependencies(talker atwork_refbox_msgs_generate_messages_cpp)
 
-#add_executable(com_st_pos_talker src/com_st_pos_talker.cpp)
-#target_link_libraries(com_st_pos_talker ${catkin_LIBRARIES})
+add_executable(listener src/listener.cpp)
+target_link_libraries(listener ${catkin_LIBRARIES})
+add_dependencies(listener atwork_refbox_msgs_generate_messages_cpp)
+
