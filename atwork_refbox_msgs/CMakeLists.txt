@@ -8,12 +8,10 @@ project(atwork_refbox_msgs)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
   geometry_msgs
   message_generation
   nav_msgs
   std_msgs
-roscpp
 )
 
 ## System dependencies are found with CMake's conventions
@@ -55,7 +53,7 @@ roscpp
    object.msg
    robot_state.msg
    table.msg
-	abc_msg.msg
+	 abc_msg.msg
    BeaconSignal.msg
    Attentionmsg.msg
    RobotInfo.msg
@@ -68,7 +66,7 @@ roscpp
    FILES
    task.srv
    arena.srv
-	tasklist.srv
+	 tasklist.srv
 #   Service1.srv
 #   Service2.srv
  )
@@ -211,12 +209,3 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
-
-add_executable(talker src/talker.cpp)
-target_link_libraries(talker ${catkin_LIBRARIES})
-add_dependencies(talker atwork_refbox_msgs_generate_messages_cpp)
-
-add_executable(listener src/listener.cpp)
-target_link_libraries(listener ${catkin_LIBRARIES})
-add_dependencies(listener atwork_refbox_msgs_generate_messages_cpp)
-
