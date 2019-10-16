@@ -1,6 +1,6 @@
 #include "ros/ros.h"
 #include "geometry_msgs/Point.h"
-#include "atwork_refbox_msgs/robot_state.h"
+#include "atwork_refbox_msgs/RobotState.h"
 
 #include <vector>
 
@@ -15,12 +15,12 @@ int main(int argc, char **argv)
   // ROS objects
   ros::init(argc, argv, "my_publisher");
   ros::NodeHandle n;
-  ros::Publisher pub = n.advertise<atwork_refbox_msgs::robot_state>("my_topic", 1);
+  ros::Publisher pub = n.advertise<atwork_refbox_msgs::RobotState>("my_topic", 1);
   ros::Rate loop_rate(0.5);
 
   // the message to be published
- atwork_refbox_msgs::robot_state msg;
-  msg.another_field = 0;
+ atwork_refbox_msgs::RobotState msg;
+  //msg.another_field = 0;
 
   // creating the vector
   Point my_array[11];
@@ -36,21 +36,21 @@ int main(int argc, char **argv)
   int count = 0;
   while (ros::ok())
   {
-    msg.points.clear();
+    //msg.points.clear();
 
-    msg.another_field = count;
-    int i = 0;
-    for (std::vector<Point>::iterator it = my_vector.begin(); it != my_vector.end(); ++it) {
-        geometry_msgs::Point point;
-        point.x = (*it).x;
-        point.y = (*it).y;
-        point.z = (*it).z;
-        msg.points.push_back(point);
-        i++;
-	
-    }
+    //msg.another_field = count;
+    // int i = 0;
+    // for (std::vector<Point>::iterator it = my_vector.begin(); it != my_vector.end(); ++it) {
+    //     geometry_msgs::Point point;
+    //     point.x = (*it).x;
+    //     point.y = (*it).y;
+    //     point.z = (*it).z;
+    //     msg.points.push_back(point);
+    //     i++;
+    //
+    // }
 
-    ROS_INFO("%d", msg.another_field);
+    //ROS_INFO("%d", msg.another_field);
 
     pub.publish(msg);
 
@@ -63,4 +63,3 @@ int main(int argc, char **argv)
 
   return 0;
 }
-
