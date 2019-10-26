@@ -24,7 +24,7 @@ barrier_tape_count: 1
 ##Axis: true
 M20: true
 M30: true
-R20: true	
+R20: true
 F20: false
 S40: false
 

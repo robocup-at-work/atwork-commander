@@ -6,8 +6,6 @@ object_count: 5
 decoy_count: 0
 
 #Heights of Tables
-#---------------------
-
 table_height_0: 0
 table_height_5: 0
 table_height_10: 2
