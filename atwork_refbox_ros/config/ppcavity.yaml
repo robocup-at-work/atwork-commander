@@ -8,13 +8,8 @@ F20_20_G: true
 
 S40_40_B: true
 S40_40_G: true
-
-M20_100: flase
-M20: true      //these 2 are same
-
-
+M20: true
 M30: true
-
 debug: true
 
 
