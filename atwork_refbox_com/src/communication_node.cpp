@@ -3,7 +3,7 @@
 
 ros::Publisher robot_state_pub;
 
-boost::shared_ptr<atwork_refbox_ros::com_plugin::ComInterface> plugin;
+boost::shared_ptr<atwork_refbox_ros::communication::Interface> plugin;
 
 
 void sendTaskClb( const atwork_refbox_msgs::Task::ConstPtr& msg ) {
@@ -26,9 +26,9 @@ int main(int argc, char **argv)
 	//TODO: list, no default
 	std::string plugin_name;
 	//the plugin_name should include the namespace
-	ros::param::param<std::string>("~plugin", plugin_name, "atwork_refbox_ros::com_plugin::null");
+	ros::param::param<std::string>("~plugin", plugin_name, "atwork_refbox_ros::communication::RosCom");
 
-	pluginlib::ClassLoader<atwork_refbox_ros::com_plugin::ComInterface> plug_in_loader( "atwork_refbox_com", "atwork_refbox_ros::com_plugin::ComInterface" );
+	pluginlib::ClassLoader<atwork_refbox_ros::communication::Interface> plug_in_loader( "atwork_refbox_com", "atwork_refbox_ros::communication::Interface" );
 
 	ROS_INFO("[main] starting plugin \"%s\"", plugin_name.c_str());
 	try
@@ -41,8 +41,6 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	ROS_INFO("[main] module loaded");
-
-	// plugin->initialize(roshandle);
 
 	ros::spin();
 

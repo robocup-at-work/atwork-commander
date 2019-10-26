@@ -8,26 +8,26 @@
 typedef std::function<void( atwork_refbox_msgs::RobotState )> robot_state_fct_t;
 
 namespace atwork_refbox_ros {
-namespace com_plugin {
+namespace communication {
 
-class ComInterface {
+class Interface {
 
   robot_state_fct_t robot_state_fct;
 
 protected:
 
-  ComInterface() {}
+  Interface() {}
 
 public:
 
-  virtual ~ComInterface() {}
+  virtual ~Interface() {}
 
   /**Initalize the global variables.
    * @param roshandle a valid ROS NodeHandle
    **/
   void initialize( ros::NodeHandle roshandle, robot_state_fct_t rsf ) {
     onInit(roshandle);
-    rsf = robot_state_fct;
+    robot_state_fct = rsf;
   }
 
   virtual void sendTask( atwork_refbox_msgs::Task task ) = 0;
@@ -46,5 +46,5 @@ protected:
 
 };
 
-}; //ns com_plugin
+}; //ns communication
 }; //ns atwork_refbox
