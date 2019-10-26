@@ -1,6 +1,6 @@
 #include "ros/ros.h"
 #include "geometry_msgs/Point.h"
-#include "atwork_refbox_msgs/RobotState.h"
+#include "atwork_refbox_ros_msgs/RobotState.h"
 
 #include <vector>
 
@@ -15,11 +15,11 @@ int main(int argc, char **argv)
   // ROS objects
   ros::init(argc, argv, "my_publisher");
   ros::NodeHandle n;
-  ros::Publisher pub = n.advertise<atwork_refbox_msgs::RobotState>("my_topic", 1);
+  ros::Publisher pub = n.advertise<atwork_refbox_ros_msgs::RobotState>("my_topic", 1);
   ros::Rate loop_rate(0.5);
 
   // the message to be published
- atwork_refbox_msgs::RobotState msg;
+ atwork_refbox_ros_msgs::RobotState msg;
   //msg.another_field = 0;
 
   // creating the vector

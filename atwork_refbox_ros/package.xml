@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>atwork_refbox_msgs</name>
+  <name>atwork_refbox_ros</name>
   <version>0.0.0</version>
-  <description>The atwork_refbox_msgs package</description>
+  <description>The atwork_refbox package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
@@ -19,14 +19,13 @@
   <!-- Url tags are optional, but multiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/atwork_refbox_msgs</url> -->
+  <!-- <url type="website">http://wiki.ros.org/atwork_refbox</url> -->
 
 
   <!-- Author tags are optional, multiple are allowed, one per tag -->
   <!-- Authors do not have to be maintainers, but could be -->
   <!-- Example: -->
   <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
-  <author email="maseidel@ovgu.de">Martin Seidel</author>
 
 
   <!-- The *depend tags are used to specify dependencies -->
@@ -49,22 +48,21 @@
   <!--   <test_depend>gtest</test_depend> -->
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
-  <buildtool_depend>catkin</buildtool_depend>
+<buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>message_generation</build_depend>
-  <exec_depend>message_runtime</exec_depend>
+<build_depend>atwork_refbox_ros_msgs</build_depend>
+<build_depend>roscpp</build_depend>
+<build_depend>std_msgs</build_depend>
 
-  <build_depend>geometry_msgs</build_depend>
-  <build_depend>nav_msgs</build_depend>
-  <build_depend>std_msgs</build_depend>
+<exec_depend>atwork_refbox_ros_msgs</exec_depend>
+<exec_depend>roscpp</exec_depend>
+<exec_depend>std_msgs</exec_depend>
 
-  <build_export_depend>geometry_msgs</build_export_depend>
-  <build_export_depend>nav_msgs</build_export_depend>
-  <build_export_depend>std_msgs</build_export_depend>
+<build_export_depend>atwork_refbox_ros_msgs</build_export_depend>
+<build_export_depend>roscpp</build_export_depend>
 
-  <exec_depend>geometry_msgs</exec_depend>
-  <exec_depend>nav_msgs</exec_depend>
-  <exec_depend>std_msgs</exec_depend>
+<depend>atwork_refbox_ros_com</depend>
+<depend>atwork_refbox_ros_task_generator</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

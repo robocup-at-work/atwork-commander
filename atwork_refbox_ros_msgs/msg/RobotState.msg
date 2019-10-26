@@ -1,12 +1,12 @@
 # RobotState.msg
 
-atwork_refbox_msgs/RobotHeader sender
+atwork_refbox_ros_msgs/RobotHeader sender
 
 geometry_msgs/Pose2D pose
 nav_msgs/Path path
 
-atwork_refbox_msgs/Object[3] objects_on_robot
-atwork_refbox_msgs/Workstation[] current_arena_state
+atwork_refbox_ros_msgs/Object[3] objects_on_robot
+atwork_refbox_ros_msgs/Workstation[] current_arena_state
 
 
 

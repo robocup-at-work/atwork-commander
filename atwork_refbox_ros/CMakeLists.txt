@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(atwork_refbox_com)
+project(atwork_refbox_ros)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-g -Wall -std=c++11)
@@ -8,10 +8,10 @@ add_compile_options(-g -Wall -std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-	roscpp
-  pluginlib
-
-	atwork_refbox_msgs
+  atwork_refbox_ros_msgs
+  atwork_refbox_ros_task_generator
+  atwork_refbox_ros_com
+  roscpp
 )
 
 ## System dependencies are found with CMake's conventions
@@ -48,11 +48,11 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+	##add_message_files(
+  ##FILES
+  ##robot_state.msg
+
+ ##)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -69,10 +69,15 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+ # generate_messages(
+ #   DEPENDENCIES
+ #   atwork_refbox_msgs
+ #   geometry_msgs
+ #   nav_msgs
+	# std_msgs
+ # )
+
+
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -87,7 +92,6 @@ find_package(catkin REQUIRED COMPONENTS
 ##     find_package(catkin REQUIRED COMPONENTS ...)
 ##   * uncomment the "generate_dynamic_reconfigure_options" section below
 ##     and list every .cfg file to be processed
-
 ## Generate dynamic reconfigure parameters in the 'cfg' folder
 # generate_dynamic_reconfigure_options(
 #   cfg/DynReconf1.cfg
@@ -104,27 +108,31 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
-#  LIBRARIES atwork_refbox_com
-  CATKIN_DEPENDS pluginlib
-#  DEPENDS system_lib
+  #INCLUDE_DIRS include
+  #LIBRARIES atwork_refbox
+  #CATKIN_DEPENDS atwork_refbox_msgs roscpp geometry_msgs nav_msgs
+  #DEPENDS system_lib
 )
+
+## declare a cpp executable
+
 
 ###########
 ## Build ##
 ###########
 
+
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  include
+ include
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/atwork_refbox_com.cpp
-# )
+#add_library(${PROJECT_NAME}
+# src/${PROJECT_NAME}/atwork_refbox.cpp
+#)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -134,8 +142,10 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/atwork_refbox_com_node.cpp)
-add_executable(communication src/communication_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/atwork_refbox_node.cpp)
+add_executable(st_viz_tasks  src/st_viz_tasks.cpp)
+add_executable(talker src/talker.cpp)
+add_executable(listener src/listener.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -146,13 +156,17 @@ add_executable(communication src/communication_node.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(communication ${catkin_EXPORTED_TARGETS})
+add_dependencies(st_viz_tasks ${catkin_EXPORTED_TARGETS})
+add_dependencies(talker ${catkin_EXPORTED_TARGETS})
+add_dependencies(listener ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(communication ${catkin_LIBRARIES})
+target_link_libraries(st_viz_tasks ${catkin_LIBRARIES})
+target_link_libraries(talker ${catkin_LIBRARIES})
+target_link_libraries(listener ${catkin_LIBRARIES})
 
 
 #############
@@ -169,18 +183,11 @@ target_link_libraries(communication ${catkin_LIBRARIES})
 #   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
 
-## Mark executables for installation
-## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
-# install(TARGETS ${PROJECT_NAME}_node
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
-
-## Mark libraries for installation
-## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_libraries.html
-# install(TARGETS ${PROJECT_NAME}
+## Mark executables and/or libraries for installation
+# install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
 
 ## Mark cpp header files for installation
@@ -202,7 +209,7 @@ target_link_libraries(communication ${catkin_LIBRARIES})
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_atwork_refbox_com.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_atwork_refbox.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

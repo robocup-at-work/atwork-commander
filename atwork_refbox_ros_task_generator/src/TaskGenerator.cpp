@@ -3,7 +3,7 @@
 using namespace atwork_refbox_ros;
 using namespace std;
 
-TaskGenerator::TaskGenerator(Options globalOptions, Tasks tasks, Workstations workstations, Waypoints waypoints) 
+TaskGenerator::TaskGenerator(Options globalOptions, TaskDefinitions tasks, Workstations workstations, Waypoints waypoints) 
   : mTasks(tasks), mGlobals(globalOptions), mWorkstations(workstations), mWaypoints(waypoints)
 {
 

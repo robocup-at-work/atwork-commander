@@ -1,14 +1,13 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>atwork_refbox_com</name>
+  <name>atwork_refbox_ros_task_generator</name>
   <version>0.0.0</version>
-  <description>The atwork_refbox_com package</description>
+  <description>@Work ROS RefBox Task generator</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
   <maintainer email="robotto@ovgu.de">Team robOTTO</maintainer>
-
 
   <!-- One license tag required, multiple allowed, one license per tag -->
   <!-- Commonly used license strings: -->
@@ -19,14 +18,13 @@
   <!-- Url tags are optional, but multiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/atwork_refbox_com</url> -->
+  <!-- <url type="website">http://wiki.ros.org/atwork_refbox_task_generator</url> -->
 
 
   <!-- Author tags are optional, multiple are allowed, one per tag -->
   <!-- Authors do not have to be maintainers, but could be -->
   <!-- Example: -->
-  <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
-  <author email="martin.seidel@st.ovgu.de">Martin Seidel</author>
+  <author email="steup@ovgu.de">Christoph Steup</author>
 
 
   <!-- The *depend tags are used to specify dependencies -->
@@ -50,14 +48,7 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
-
   <depend>roscpp</depend>
-
-  <build_depend>pluginlib</build_depend>
-  <build_export_depend>pluginlib</build_export_depend>
-  <exec_depend>pluginlib</exec_depend>
-
-  <depend>atwork_refbox_msgs</depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

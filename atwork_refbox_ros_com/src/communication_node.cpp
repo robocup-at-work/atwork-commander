@@ -6,11 +6,11 @@ ros::Publisher robot_state_pub;
 boost::shared_ptr<atwork_refbox_ros::com_plugin::ComInterface> plugin;
 
 
-void sendTaskClb( const atwork_refbox_msgs::Task::ConstPtr& msg ) {
+void sendTaskClb( const atwork_refbox_ros_msgs::Task::ConstPtr& msg ) {
 	plugin->sendTask( *msg );
 }
 
-void receiveRobotState( atwork_refbox_msgs::RobotState robot_state ) {
+void receiveRobotState( atwork_refbox_ros_msgs::RobotState robot_state ) {
 	ROS_INFO_STREAM("new robot_state: " << robot_state );
 	robot_state_pub.publish( robot_state );
 }
@@ -21,7 +21,7 @@ int main(int argc, char **argv)
 	ros::NodeHandle roshandle;
 
 	ros::Subscriber send_task_sub = roshandle.subscribe( "/refbox/internal/task", 1, &sendTaskClb );
-	robot_state_pub = roshandle.advertise<atwork_refbox_msgs::RobotState>("/refbox/internal/robot_state", 10);
+	robot_state_pub = roshandle.advertise<atwork_refbox_ros_msgs::RobotState>("/refbox/internal/robot_state", 10);
 
 	//TODO: list, no default
 	std::string plugin_name;

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #include "ros/ros.h"
-#include "atwork_refbox_msgs/tasklist.h"
+#include "atwork_refbox_ros_msgs/tasklist.h"
 #include "std_msgs/MultiArrayLayout.h"
 #include "std_msgs/MultiArrayDimension.h"
 #include "std_msgs/Int32MultiArray.h"
@@ -12,8 +12,8 @@ using namespace std;
 	
 vector<string> myvector;
 
-bool tasklist(atwork_refbox_msgs::tasklist::Request  &req,
-         atwork_refbox_msgs::tasklist::Response &res)
+bool tasklist(atwork_refbox_ros_msgs::tasklist::Request  &req,
+         atwork_refbox_ros_msgs::tasklist::Response &res)
 {
   res.tasklist = myvector;
   //ROS_INFO_STREAM(myvector);
