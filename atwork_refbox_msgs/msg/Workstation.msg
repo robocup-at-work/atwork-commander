@@ -1,0 +1,7 @@
+# Table.msg
+
+atwork_refbox_msgs/Object[] objects
+
+# either a workstation name or 'robot'
+# (for end of RTT or start of PPT)
+string workstation_name
