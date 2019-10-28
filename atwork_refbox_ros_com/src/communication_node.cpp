@@ -28,7 +28,7 @@ int main(int argc, char **argv)
 	//the plugin_name should include the namespace
 	ros::param::param<std::string>("~plugin", plugin_name, "atwork_refbox_ros::communication::RosCom");
 
-	pluginlib::ClassLoader<atwork_refbox_ros::communication::Interface> plug_in_loader( "atwork_refbox_com", "atwork_refbox_ros::communication::Interface" );
+	pluginlib::ClassLoader<atwork_refbox_ros::communication::Interface> plug_in_loader( "atwork_refbox_ros_com", "atwork_refbox_ros::communication::Interface" );
 
 	ROS_INFO("[main] starting plugin \"%s\"", plugin_name.c_str());
 	try
