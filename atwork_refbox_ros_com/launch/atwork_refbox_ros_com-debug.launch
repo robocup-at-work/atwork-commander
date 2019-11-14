@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <include file="$(find atwork_refbox_ros_com)/launch/atwork_refbox_ros_com.launch">
+        <arg name="output" value="screen"/>
+        <!-- <arg name="name" value="atwork_refbox_ros::communication::RosCom"/> -->
+    </include>
+
+</launch>
