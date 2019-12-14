@@ -1,3 +1,0 @@
-<launch>
-    <rosparam file="$(find atwork_refbox)/config/BNT.yaml" />
-</launch>	

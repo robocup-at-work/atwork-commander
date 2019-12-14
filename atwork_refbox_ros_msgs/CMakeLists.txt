@@ -51,29 +51,16 @@ find_package(catkin REQUIRED COMPONENTS
  add_message_files(
    FILES
    Object.msg
-	 RobotHeader.msg
+   RobotHeader.msg
    RobotState.msg
    Task.msg
    Workstation.msg
-
-	 #TODO: add to scheme or remove
-	 Attentionmsg.msg
-   BeaconSignal.msg
-   RobotInfo.msg
-	 TaskStatus.msg
-#   Message1.msg
-#   Message2.msg
  )
 
 ## Generate services in the 'srv' folder
  add_service_files(
    FILES
    Arena.srv
-
-	 #TODO: add to scheme or remove
-	 tasklist.srv
-#   Service1.srv
-#   Service2.srv
  )
 
 ## Generate actions in the 'action' folder

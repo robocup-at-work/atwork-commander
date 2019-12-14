@@ -1,0 +1,10 @@
+
+Arena:
+  PP_cavities:
+    F20_20_B: true
+    F20_20_G: true
+
+    S40_40_B: true
+    S40_40_G: true
+    M20: true
+    M30: true
