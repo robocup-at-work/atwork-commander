@@ -7,7 +7,12 @@ project(atwork_refbox_ros_task_generator)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED atwork_refbox_ros_msgs)
+find_package(catkin REQUIRED COMPONENTS
+              atwork_refbox_ros_msgs
+              roscpp
+              worldmodel_project
+              robotto_msgs
+             )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -121,6 +126,10 @@ include_directories(
   src/TaskGenerator.cpp
 )
 
+add_executable(receiver_node src/refbox_receiver_atc.cpp src/refbox_receiver_node_atc.cpp)
+target_link_libraries(receiver_node ${catkin_LIBRARIES})
+
+#add_dependencies(receiver_node atwork_ros_msgs_generate_messages_cpp)
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure

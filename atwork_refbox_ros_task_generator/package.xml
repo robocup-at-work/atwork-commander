@@ -49,6 +49,9 @@
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
   <depend>roscpp</depend>
+  <depend>worldmodel_project</depend>
+  <depend>atwork_refbox_ros_msgs</depend>
+  <depend>robotto_msgs</depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
