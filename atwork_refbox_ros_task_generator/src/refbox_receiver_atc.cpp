@@ -1,7 +1,7 @@
-#include "receiver_node_atc.h"
+#include <atwork_refbox_ros_task_generator/receiver_node_atc.h>
 
 #include <std_srvs/Empty.h>
-#include <atwork_refbox_task_generator/objects.h>
+#include <atwork_refbox_ros_task_generator/objects.h>
 
 #include <worldmodel_project/worldmodel_client.h>
 
@@ -14,6 +14,7 @@
 #include <iostream>
 
 using namespace std;
+using namespace atwork_refbox_ros;
 using run = vector<array<int, 4>>;
 /* obj, src, dst, cont
  * BNT: location, orientation [0,1,2,3], time [ca. 1-5s]
@@ -456,26 +457,24 @@ ReceiverNode::ReceiverNode(const ros::NodeHandle &nh):
 void ReceiverNode::readParameters()
 {
 	// DEFAULT WIEDER AUF -1
-	ros::param::param<int>("/robOTTO/optimizer/testInstance", mdiscipline, 7);
-	ros::param::param<bool>("~/referre", paramContainerInShelf, false);
-	ros::param::param<bool>("~/referre", paramContainerOnTurntable, false);
-	ros::param::param<bool>("~/referre", paramContainerOnPpt, false);
-	
+  ros::param::param<int>("/robOTTO/optimizer/testInstance", mdiscipline, 7);
+  ros::param::param<bool>("~/referre", paramContainerInShelf, false);
+  ros::param::param<bool>("~/referre", paramContainerOnTurntable, false);
+  ros::param::param<bool>("~/referre", paramContainerOnPpt, false);
 	switch (mdiscipline) {
 		case 0	: {
-			ros::param::param<map<string, int>>("~/BNT", paramBNT, {{"tables" , 10}, {"waypoints" , 9}});
+      ros::param::param<map<string, int>>("~/BNT", paramBNT, {{"tables" , 10}, {"waypoints" , 9}});
 			break;
 			}
 		case 7	: {
-			ros::param::param<map<string, int>>("~/Final", paramFinal, {{"objects" , 10}, {"tables" , 5},
-				 {"decoys" , 8}, {"pick_shelf" , 2}, {"pick_turntables" , 1}, {"place_shelf" , 1},
-				 {"place_turntables" , 0}, {"place_cavity_plattforms" , 3}, {"R_Container" , 1}, {"B_Container" , 1}});
+      ros::param::param<map<string, int>>("~/Final", paramFinal, {{"objects" , 10}, {"tables" , 5},
+         {"decoys" , 8}, {"pick_shelf" , 2}, {"pick_turntables" , 1}, {"place_shelf" , 1},
+         {"place_turntables" , 0}, {"place_cavity_plattforms" , 3}, {"R_Container" , 1}, {"B_Container" , 1}});
 			break;
 			}
 		default : throw 100;
 		 
 	}
-	ros::param::param<int>("", estimatet_active, -1);
 	for (int i=robotto_msgs::ATWORK_START; i<robotto_msgs::ATWORK_END; ++i) {
 		mObjects.push_back(i);
 	}
@@ -484,6 +483,35 @@ void ReceiverNode::readParameters()
 	for (int i=robotto_msgs::ROCKIN_START; i<robotto_msgs::ROCKIN_END; ++i) {
 		mObjects.push_back(i);
 	}
+}
+
+ReceiverNode::ReceiverNode(Options globalOptions, TaskDefinitions tasks, Workstations workstations) {
+    mTableMapping.resize(workstation.size());
+    unsigned int i=0;
+    for(const auto& ws : workstations) {
+      if(ws.second == "PPT") {
+        mPpt.push_back(i)
+      }
+      if(ws.second == "Shelf") {
+        mShelfs.push_back(i)
+      }
+      if(ws.second == "CB" || ws.second == "RTT") {
+        mConveyors.push_back(i)
+      }
+      try{
+        unsigned int height = boost::lexical_cast<unsigned int>(ws.second);
+        switch(height) {
+          case(0): mtables0.push_back(i); break;
+          case(5): mtables5.push_back(i); break;
+          case(10): mtables10.push_back(i); break;
+          case(15): mtables15.push_back(i); break;
+          default: ROS_ERROR_STREAM_NAMED("[REFBOX]", "Invalid height: " << height << " specified for normal workstation: " << ws.second);
+        }
+      catch(const std::exception& e) {
+        ROS_ERROR_STREAM_NAMED("[REFBOX]", "Invalid workstation type specified: " << ws.second << " for workstation: " << ws.first);
+      }
+      mTableMapping[i++]=ws.first
+    }
 }
 
 // VORLAGE

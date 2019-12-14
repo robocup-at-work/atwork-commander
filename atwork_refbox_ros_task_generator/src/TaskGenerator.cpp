@@ -1,10 +1,11 @@
-#include <atwork_refbox_task_generator/TaskGenerator.h>
+#include <atwork_refbox_ros_task_generator/TaskGenerator.h>
+
 
 using namespace atwork_refbox_ros;
 using namespace std;
 
-TaskGenerator::TaskGenerator(Options globalOptions, TaskDefinitions tasks, Workstations workstations, Waypoints waypoints) 
-  : mTasks(tasks), mGlobals(globalOptions), mWorkstations(workstations), mWaypoints(waypoints)
+TaskGenerator::TaskGenerator(Options globalOptions, TaskDefinitions tasks, Workstations workstations) 
+  : mNode(globalOptions, tasks, workstations)
 {
 
 }

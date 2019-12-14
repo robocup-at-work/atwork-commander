@@ -126,6 +126,7 @@ include_directories(
  add_library(${PROJECT_NAME}
   src/TaskGenerator.cpp
 )
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 add_executable(receiver_node src/refbox_receiver_atc.cpp src/refbox_receiver_node_atc.cpp)
 target_link_libraries(receiver_node ${catkin_LIBRARIES})

@@ -1,14 +1,21 @@
+#pragma once
+
 #define BOOST_DATE_TIME_POSIX_TIME_STD_CONFIG
 #include <ros/ros.h>
+
+#include "Definitions.h"
 
 #include <array>
 #include <string>
 #include <vector>
+#include <map>
 
 #include <boost/asio.hpp>
 #include <std_msgs/Bool.h>
 
 using run = std::vector<std::array<int, 4>>;
+
+namespace atwork_refbox_ros {
 
 class ReceiverNode
 {
@@ -17,8 +24,9 @@ class ReceiverNode
          * Ctor.
          */
         ReceiverNode(const ros::NodeHandle &nh);
+        ReceiverNode(Options& globalOptions, TaskDefinitions& tasks, Workstations& workstations);
 
-        void readParameters();
+        void readParameters(std::string task="", bool checkEvil=true, const std::map<std::string, int>* param=nullptr);
 
         void initializeRobot();
 
@@ -31,7 +39,7 @@ class ReceiverNode
          */
 
     private:
-
+        std::vector<std::string> mTableMapping;
         std::vector<unsigned int> mTables;
         std::vector<unsigned int> mTables0;
         std::vector<unsigned int> mTables5;
@@ -110,3 +118,5 @@ class ReceiverNode
         static const size_t blue = 0;
         static const size_t red = 1;    
 };
+
+}
