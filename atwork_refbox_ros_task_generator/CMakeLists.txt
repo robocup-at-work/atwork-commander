@@ -105,8 +105,8 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=gnu++0x -DHAVE_LIBCRYPTO -g")
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES atwork_refbox_task_generator
+ INCLUDE_DIRS include
+ LIBRARIES ${PROJECT_NAME}
 #  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
 )
@@ -125,7 +125,9 @@ include_directories(
 ## Declare a C++ library
  add_library(${PROJECT_NAME}
   src/TaskGenerator.cpp
+  src/refbox_receiver_atc.cpp
 )
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
 add_executable(receiver_node src/refbox_receiver_atc.cpp src/refbox_receiver_node_atc.cpp)
 target_link_libraries(receiver_node ${catkin_LIBRARIES})

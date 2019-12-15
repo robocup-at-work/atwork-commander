@@ -1,3 +1,0 @@
-<launch>
-    <rosparam file="$(find atwork_refbox)/config/BTT1.yaml" />
-</launch>

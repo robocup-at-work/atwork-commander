@@ -1,14 +1,21 @@
+#pragma once
+
 #define BOOST_DATE_TIME_POSIX_TIME_STD_CONFIG
 #include <ros/ros.h>
+
+#include "Definitions.h"
 
 #include <array>
 #include <string>
 #include <vector>
+#include <map>
 
 #include <boost/asio.hpp>
 #include <std_msgs/Bool.h>
 
 using run = std::vector<std::array<int, 4>>;
+
+namespace atwork_refbox_ros {
 
 class ReceiverNode
 {
@@ -17,10 +24,16 @@ class ReceiverNode
          * Ctor.
          */
         ReceiverNode(const ros::NodeHandle &nh);
+        ReceiverNode(const ArenaDescription& arena, const TaskDefinitions& tasks);
 
         void readParameters();
+        void readParameters(unsigned int objects, unsigned int tables, unsigned int decoys, unsigned int pickShelf,
+                            unsigned int pickTT, unsigned int placeShelf, unsigned int placeTT, unsigned int placePPT,
+                            unsigned int containerRed, unsigned int containerBlue, 
+                            bool containerInShelf = false, bool containerOnTT = false, bool containerOnPPT = false);
 
         void initializeRobot();
+        run generate_Final();
 
         /**
          * Handler for receive messages .
@@ -31,7 +44,7 @@ class ReceiverNode
          */
 
     private:
-
+        std::vector<std::string> mTableMapping;
         std::vector<unsigned int> mTables;
         std::vector<unsigned int> mTables0;
         std::vector<unsigned int> mTables5;
@@ -106,7 +119,6 @@ class ReceiverNode
         run auto_task_creation();
         run generate_BNT();
         run generate_BTT3();
-        run generate_Final();
         
         size_t get_container_id(size_t table, size_t color);
         size_t shortest_list(size_t &min);
@@ -134,3 +146,5 @@ class ReceiverNode
         static const size_t ppts_id = 5;
         static const size_t shelfs_id = 6;
 };
+
+}

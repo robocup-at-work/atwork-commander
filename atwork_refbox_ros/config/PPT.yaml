@@ -1,38 +1,29 @@
-%YAML 1.2
----
-# Main configuration document
 
-text: PPT
-object_count: 3
-decoy_count: 0
-table_height_0: 0
-table_height_5: 0
-table_height_10: 2
-table_height_15 : 0
+Tasks:
+  PPT:
+    object_count: 3
+    decoy_count: 0
+    table_height_0: 0
+    table_height_5: 0
+    table_height_10: 2
+    table_height_15 : 0
 
 
-shelves_grasping: 2 
-shelves_placing: 0
-pp: 0
-rt_grasping: 0
-rt_placing: 0
-arbitary_surface_count: 2
-obstacle_count: 2
-barrier_tape_count: 0
+    shelves_grasping: 2
+    shelves_placing: 0
+    pp: 0
+    rt_grasping: 0
+    rt_placing: 0
+    arbitary_surface_count: 2
+    obstacle_count: 2
+    barrier_tape_count: 0
 
-##Axis: true
-M20: true
-M30: true
-R20: true
-F20: false
-S40: false
+    ##Axis: true
+    M20: true
+    M30: true
+    R20: true
+    F20: false
+    S40: false
 
-container_red: 2
-container_blue: 1
-
-
-
-
-
-
-debug: true
+    container_red: 2
+    container_blue: 1

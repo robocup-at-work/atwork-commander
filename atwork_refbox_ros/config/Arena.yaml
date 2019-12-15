@@ -1,0 +1,18 @@
+
+Arena:
+  PP_cavities:
+    F20_20_B: true
+    F20_20_G: true
+
+    S40_40_B: true
+    S40_40_G: true
+    M20: true
+    M30: true
+  Workstations:
+    WS01: '10'
+    WS02: '15'
+    WS03: '5'
+    WS04: '0'
+    WS06: 'PPT'
+    WS07: 'SH'
+    WS08: 'RTT'
