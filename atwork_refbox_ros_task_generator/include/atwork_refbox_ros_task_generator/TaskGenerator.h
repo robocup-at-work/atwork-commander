@@ -16,7 +16,7 @@ class TaskGenerator {
     ReceiverNode mNode;
   public:
     TaskGenerator(Options globalOptions, TaskDefinitions tasks, Workstations workstations);
-    const Task& operator()(std::string taskName);
+    Task operator()(std::string taskName);
 };
 
 }

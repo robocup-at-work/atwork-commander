@@ -24,11 +24,16 @@ class ReceiverNode
          * Ctor.
          */
         ReceiverNode(const ros::NodeHandle &nh);
-        ReceiverNode(Options& globalOptions, TaskDefinitions& tasks, Workstations& workstations);
+        ReceiverNode(const Options& globalOptions, const TaskDefinitions& tasks, const Workstations& workstations);
 
-        void readParameters(std::string task="", bool checkEvil=true, const std::map<std::string, int>* param=nullptr);
+        void readParameters();
+        void readParameters(unsigned int objects, unsigned int tables, unsigned int decoys, unsigned int pickShelf,
+                            unsigned int pickTT, unsigned int placeShelf, unsigned int placeTT, unsigned int placePPT,
+                            unsigned int containerRed, unsigned int containerBlue, 
+                            bool containerInShelf = false, bool containerOnTT = false, bool containerOnPPT = false);
 
         void initializeRobot();
+        run generate_Final();
 
         /**
          * Handler for receive messages .
@@ -104,7 +109,6 @@ class ReceiverNode
         run auto_task_creation();
         run generate_BNT();
         run generate_BTT3();
-        run generate_Final();
         
         size_t get_container_id(size_t table, size_t color);
         

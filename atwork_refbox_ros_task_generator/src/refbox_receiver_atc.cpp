@@ -485,32 +485,56 @@ void ReceiverNode::readParameters()
 	}
 }
 
-ReceiverNode::ReceiverNode(Options globalOptions, TaskDefinitions tasks, Workstations workstations) {
-    mTableMapping.resize(workstation.size());
+void ReceiverNode::readParameters(unsigned int objects, unsigned int tables, unsigned int decoys, unsigned int pickShelf,
+                                  unsigned int pickTT, unsigned int placeShelf, unsigned int placeTT, unsigned int placePPT,
+                                  unsigned int containerRed, unsigned int containerBlue, 
+                                  bool containerInShelf, bool containerOnTT, bool containerOnPPT)
+{
+  paramContainerInShelf=containerInShelf;
+  paramContainerOnTurntable=containerOnTT;
+  paramContainerOnPpt=containerOnPPT;
+  paramFinal={{"objects" , objects}, {"tables" , tables}, {"decoys" , decoys}, {"pick_shelf" , pickShelf}, {"pick_turntables" , pickTT}, 
+             {"place_shelf" , placeShelf}, {"place_turntables" , placeTT}, {"place_cavity_plattforms" , placePPT}, 
+             {"R_Container" , containerRed}, {"B_Container" , containerBlue}};
+	for (int i=robotto_msgs::ATWORK_START; i<robotto_msgs::ATWORK_END; ++i) {
+		mObjects.push_back(i);
+	}
+	mPptObjects = mObjects;
+	if(paramFinal["place_cavity_plattforms"] > 0 && mPptObjects.size() == 0) {throw 228;};
+	for (int i=robotto_msgs::ROCKIN_START; i<robotto_msgs::ROCKIN_END; ++i) {
+		mObjects.push_back(i);
+	}
+
+}
+
+ReceiverNode::ReceiverNode(const Options& globalOptions, const TaskDefinitions& tasks, const Workstations& workstations) {
+    mTableMapping.resize(workstations.size());
     unsigned int i=0;
     for(const auto& ws : workstations) {
       if(ws.second == "PPT") {
-        mPpt.push_back(i)
+        mPpts.push_back(i);
       }
       if(ws.second == "Shelf") {
-        mShelfs.push_back(i)
+        mShelfs.push_back(i);
       }
       if(ws.second == "CB" || ws.second == "RTT") {
-        mConveyors.push_back(i)
+        mConveyors.push_back(i);
       }
       try{
         unsigned int height = boost::lexical_cast<unsigned int>(ws.second);
         switch(height) {
-          case(0): mtables0.push_back(i); break;
-          case(5): mtables5.push_back(i); break;
-          case(10): mtables10.push_back(i); break;
-          case(15): mtables15.push_back(i); break;
-          default: ROS_ERROR_STREAM_NAMED("[REFBOX]", "Invalid height: " << height << " specified for normal workstation: " << ws.second);
+          case(0): mTables0.push_back(i); break;
+          case(5): mTables5.push_back(i); break;
+          case(10): mTables10.push_back(i); break;
+          case(15): mTables15.push_back(i); break;
+          default: ROS_ERROR_STREAM_NAMED("[REFBOX]", "Invalid height: " << height << " specified for normal workstation: " << ws.second); continue;
         }
+      }
       catch(const std::exception& e) {
         ROS_ERROR_STREAM_NAMED("[REFBOX]", "Invalid workstation type specified: " << ws.second << " for workstation: " << ws.first);
+        continue;
       }
-      mTableMapping[i++]=ws.first
+      mTableMapping[i++]=ws.first;
     }
 }
 
