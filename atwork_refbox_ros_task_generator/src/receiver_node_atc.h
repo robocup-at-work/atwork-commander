@@ -42,7 +42,8 @@ class ReceiverNode
         std::vector<unsigned int> mShelfs;
         std::vector<unsigned int> mWaypoints;
         std::vector<unsigned int> mObjects;
-        std::vector<unsigned int> mPptObjects;        
+        std::vector<unsigned int> mPptObjects;
+        std::vector<size_t> mAllTables;      
         
         int mdiscipline;
 
@@ -91,16 +92,31 @@ class ReceiverNode
         bool paramContainerInShelf;
         bool paramContainerOnPpt;
         bool paramContainerOnTurntable;
+        bool paramFlexibleHeight;
         
         void generate_objects(run &tasks);
+        
+        void initialize_mAllTables();
+        void initialize_validpicks(run &tasks);
+        void initialize_picksleft();
+        void initialize_mTableTypes();
+        void update_validpicks();
+        void debugAll(std::string info, run &tasks);
+        
         run auto_task_creation();
         run generate_BNT();
         run generate_BTT3();
         run generate_Final();
         
         size_t get_container_id(size_t table, size_t color);
+        size_t shortest_list(size_t &min);
         
         std::vector<std::array<size_t, 3>> container_ids;
+        std::vector<std::vector<size_t>> validpicks;
+        std::vector<size_t> picksleft;
+        std::vector<size_t> mTableTypes;
+        
+        size_t tabletypes;
         
         static const size_t obj_id = 0;
         static const size_t src_id = 1;
@@ -108,5 +124,13 @@ class ReceiverNode
         static const size_t cont_id = 3;
         
         static const size_t blue = 0;
-        static const size_t red = 1;    
+        static const size_t red = 1;
+        
+        static const size_t tables0_id = 0;
+        static const size_t tables5_id = 1;
+        static const size_t tables10_id = 2;
+        static const size_t tables15_id = 3;
+        static const size_t conveyors_id = 4;
+        static const size_t ppts_id = 5;
+        static const size_t shelfs_id = 6;
 };

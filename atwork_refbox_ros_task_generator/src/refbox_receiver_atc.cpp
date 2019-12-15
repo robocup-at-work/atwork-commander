@@ -5,8 +5,8 @@
 
 #include <worldmodel_project/worldmodel_client.h>
 
-
 #include <sstream>
+#include <string>
 #include <regex>
 #include <unistd.h>
 #include <math.h>
@@ -15,6 +15,76 @@
 
 using namespace std;
 using run = vector<array<int, 4>>;
+ostream& operator<<(ostream& os, const vector<size_t>& vec)
+{
+    for(size_t i=0; i<vec.size(); ++i) {
+		os << vec.at(i) <<" ";
+	}
+	os << "\n";
+    return os;
+}
+
+ostream& operator<<(ostream& os, const array<size_t,3>& vec)
+{
+    for(size_t i=0; i<vec.size(); ++i) {
+		os << vec.at(i) <<" ";
+	}
+	os << "\n";
+    return os;
+}
+
+ostream& operator<<(ostream& os, const array<int,4>& vec)
+{
+    for(size_t i=0; i<vec.size(); ++i) {
+		os << vec.at(i) <<" ";
+	}
+	os << "\n";
+    return os;
+}
+
+ostream& operator<<(ostream& os, const vector<unsigned int>& vec)
+{
+    for(size_t i=0; i<vec.size(); ++i) {
+		os << vec.at(i) <<" ";
+	}
+	os << "\n";
+    return os;
+}
+
+ostream& operator<<(ostream& os, const vector<array<size_t,3>>& vec)
+{
+    for(size_t i=0; i<vec.size(); ++i) {
+		os << vec.at(i);
+	}
+    return os;
+}
+
+ostream& operator<<(ostream& os, const run &vec)
+{
+    for(size_t i=0; i<vec.size(); ++i) {
+		os << vec.at(i);
+	}
+    return os;
+}
+
+ostream& operator<<(ostream& os, const vector<vector<size_t>>& vec)
+{
+    for(size_t i=0; i<vec.size(); ++i) {
+		os << vec.at(i);
+	}
+    return os;
+}
+
+void ReceiverNode::debugAll(string info, run &tasks) {
+	cout<<info<<"\n===========================\n";
+	cout<<"mAllTables\n"<<mAllTables;
+	cout<<"validpicks\n"<<validpicks;
+	cout<<"picksleft\n"<<picksleft;
+	cout<<"mTableTypes\n"<<mTableTypes;
+	cout<<"container_ids\n"<<container_ids;
+	cout<<"tasks\n"<<tasks;
+}
+
 /* obj, src, dst, cont
  * BNT: location, orientation [0,1,2,3], time [ca. 1-5s]
  * objects is the number of tasks
@@ -92,6 +162,119 @@ size_t ReceiverNode::get_container_id(size_t table, size_t color) {
 	}
 }
 
+void ReceiverNode::initialize_mAllTables() {
+	size_t size = mTables0.size() + mTables5.size() + mTables10.size()
+					+ mTables15.size() + mConveyors.size();
+					+ mPpts.size() + mShelfs.size();
+	mAllTables.resize(size);
+	cout<<"0\n";
+	auto end = copy(mTables0.begin(), mTables0.end(), mAllTables.begin());
+	cout<<"1\n";
+	end = copy(mTables5.begin(), mTables5.end(), end);
+	cout<<"2\n";
+	end = copy(mTables10.begin(), mTables10.end(), end);
+	cout<<"3\n";
+	cout<<mPpts<<"\n";
+	cout<<mAllTables<<"\n";
+	end = copy(mPpts.begin(), mPpts.end(), end);
+	cout<<mAllTables<<"\n";
+	cout<<"4\n";
+	cout<<mConveyors<<"\n";
+	cout<<mAllTables<<"\n";
+	end = copy(mConveyors.begin(), mConveyors.end(), end);
+	cout<<mAllTables<<"\n";
+	cout<<"5\n";
+	end = copy(mTables15.begin(), mTables15.end(), end);
+	cout<<"6\n";
+	end = copy(mShelfs.begin(), mShelfs.end(), end);
+	cout<<"7\n";
+}
+
+void ReceiverNode::initialize_validpicks(run &tasks) {
+	size_t objects = paramFinal["objects"];
+	size_t tables = mAllTables.size();
+	validpicks.resize(objects);
+	for(size_t i=0; i<objects; ++i) {
+		validpicks.at(i).resize(0);
+		for(size_t j=0; j<tables; ++j) {
+			if(mAllTables.at(j) != tasks.at(i).at(dst_id)) {
+				validpicks.at(i).push_back(mAllTables.at(j));
+			}
+		}
+	}	
+}
+
+void ReceiverNode::initialize_picksleft() {
+	picksleft.resize(tabletypes);
+	picksleft.at(tables0_id) = paramFinal["tables0"];
+	picksleft.at(tables5_id) = paramFinal["tables5"];
+	picksleft.at(tables10_id) = paramFinal["tables10"];
+	picksleft.at(tables15_id) = paramFinal["tables15"];
+	picksleft.at(conveyors_id) = paramFinal["pick_turntables"];
+	picksleft.at(ppts_id) = paramFinal["pick_cavity_plattforms"];
+	picksleft.at(shelfs_id) = paramFinal["pick_shelf"];
+}
+
+void write_types(vector<size_t> &mTableTypes, size_t &low, size_t up, size_t type) {
+	for(size_t i=low; i<up; ++i) {
+		mTableTypes.at(i) = type;
+	}
+	low = up;
+}
+
+void ReceiverNode::initialize_mTableTypes() {
+	size_t low = 0;
+	size_t up = mTables0.size();
+	write_types(mTableTypes, low, up, tables0_id);
+	up += mTables5.size();
+	write_types(mTableTypes, low, up, tables5_id);
+	up += mTables10.size();
+	write_types(mTableTypes, low, up, tables10_id);
+	up += mTables15.size();
+	write_types(mTableTypes, low, up, tables15_id);
+	up += mConveyors.size();
+	write_types(mTableTypes, low, up, conveyors_id);
+	up += mPpts.size();
+	write_types(mTableTypes, low, up, ppts_id);
+	up += mShelfs.size();
+	write_types(mTableTypes, low, up, shelfs_id);
+}
+
+size_t sum_vector(vector<size_t> & vec) {
+	size_t sum = 0;
+	for(size_t i=0; i<vec.size(); ++i) {
+		sum += vec.at(i);
+	}
+	return sum;
+}
+
+size_t ReceiverNode::shortest_list(size_t &min) {
+	min = validpicks.at(0).size();
+	size_t minindex = 0;
+	for(size_t i=0; i<validpicks.size(); ++i) {
+		if(validpicks.at(i).size() != 0) {
+			if(validpicks.at(i).size()< min) {
+				min = validpicks.at(i).size();
+				minindex = i;
+			}
+		}
+	}
+	return minindex;
+}
+
+void ReceiverNode::update_validpicks() {
+	for(size_t i=0; i<tabletypes; ++i) {
+		size_t size = validpicks.size();
+		for(size_t j=0; j<size; ++j) {
+			size_t table = validpicks.at(i).at(j);
+			size_t type = mTableTypes.at(table);
+			if(picksleft.at(type) == 0) {
+				validpicks.at(i).erase(validpicks.at(i).begin()+j);
+			}
+		}
+	}
+}
+
 /* generate a BNT Task
  * 
  */
@@ -139,6 +322,11 @@ run ReceiverNode::generate_Final() {
 	size_t ppts = mPpts.size();
 	size_t conveyors = mConveyors.size();
 	size_t containers = paramFinal["B_Container"] + paramFinal["R_Container"];
+	if(paramFinal["FlexibleHeight"] == true) {
+		tabletypes = 8;
+	} else {
+		tabletypes = 7;
+	}
 		
 	// check validity
 	if (mObjects.size() == 0) {throw 220;}																			// No Objects
@@ -193,6 +381,7 @@ run ReceiverNode::generate_Final() {
 		a = rand() % conveyors;
 		tasks.at(placeTurntable.at(i)).at(dst_id) = mConveyors.at(a);
 	}
+	// PLACES NOCH BEARBEITEN KEINE PLACES, FALSS KEINE PICK VON DER TISCHHÖHE
 	for(size_t i=0; i<normalplace.size(); ++i) {
 		a = rand() % tables;
 		tasks.at(normalplace.at(i)).at(dst_id) = mTables.at(a);
@@ -230,6 +419,8 @@ run ReceiverNode::generate_Final() {
 	 * the rest of the picks are from a random turntable
 	 * all of the other are set to a normalpick
 	 */
+	 
+	/*
 	size_t specialpicks = paramFinal["pick_shelf"] + paramFinal["pick_turntables"];
 	std::vector<size_t>normalpick;
 	std::vector<size_t>specialpick;
@@ -250,6 +441,29 @@ run ReceiverNode::generate_Final() {
 		a = rand() % tables;
 		tasks.at(normalpick.at(i)).at(src_id) = mTables.at(a);
 	}
+	*/
+	debugAll("before initialisation", tasks);
+	initialize_mAllTables();
+	debugAll("after initialize_mAllTables", tasks);
+	initialize_validpicks(tasks);
+	debugAll("after initialize_validpicks", tasks);
+	initialize_picksleft();
+	debugAll("after initialize_picksleft", tasks);
+	initialize_mTableTypes();
+	debugAll("after initialize_mTableTypes", tasks);
+	
+	while(sum_vector(picksleft) > 0) {
+		size_t min;
+		size_t index = shortest_list(min);
+		a = rand() % min;
+		size_t table = validpicks.at(index).at(a);
+		tasks.at(index).at(src_id) = mAllTables.at(table);
+		validpicks.at(index).resize(0);
+		size_t type = mTableTypes.at(table);
+		--picksleft.at(type);
+		update_validpicks();
+	}
+	
 	return tasks;
 }
 
@@ -460,6 +674,7 @@ void ReceiverNode::readParameters()
 	ros::param::param<bool>("~/referre", paramContainerInShelf, false);
 	ros::param::param<bool>("~/referre", paramContainerOnTurntable, false);
 	ros::param::param<bool>("~/referre", paramContainerOnPpt, false);
+	ros::param::param<bool>("~/referre", paramFlexibleHeight, false);
 	
 	switch (mdiscipline) {
 		case 0	: {
@@ -469,7 +684,9 @@ void ReceiverNode::readParameters()
 		case 7	: {
 			ros::param::param<map<string, int>>("~/Final", paramFinal, {{"objects" , 10}, {"tables" , 5},
 				 {"decoys" , 8}, {"pick_shelf" , 2}, {"pick_turntables" , 1}, {"place_shelf" , 1},
-				 {"place_turntables" , 0}, {"place_cavity_plattforms" , 3}, {"R_Container" , 1}, {"B_Container" , 1}});
+				 {"place_turntables" , 0}, {"place_cavity_plattforms" , 3}, {"R_Container" , 1}, {"B_Container" , 1},
+				 {"pick_tables0", 1}, {"pick_tables5", 1}, {"pick_tables10", 2}, {"pick_tables15", 1},
+				 {"pick_cavity_plattforms", 0}});
 			break;
 			}
 		default : throw 100;
