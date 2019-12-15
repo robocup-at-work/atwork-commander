@@ -1,7 +1,10 @@
 <?xml version="1.0"?>
 
 <launch>
+    <arg name="ros_output" default="log" />
+
     <group ns="atwork_refbox">
+        <!-- load config -->
         <rosparam file="$(find atwork_refbox_ros)/config/BNT.yaml" />
         <rosparam file="$(find atwork_refbox_ros)/config/BMT.yaml" />
         <rosparam file="$(find atwork_refbox_ros)/config/BTT1.yaml" />
@@ -11,11 +14,15 @@
         <rosparam file="$(find atwork_refbox_ros)/config/PPT.yaml" />
         <rosparam file="$(find atwork_refbox_ros)/config/Final.yaml" />
 
-        <rosparam file="$(find atwork_refbox)/config/Arena.yaml" />
+        <rosparam file="$(find atwork_refbox_ros)/config/Arena.yaml" />
 
-        <!-- start refbox -->
+        <!-- start refbox (incl task generator) -->
+        <node pkg="atwork_refbox_ros" type="atwork_refbox_ros_node" name="atwork_refbox_ros_node" required="true" output="$(arg ros_output)"/>
+
         <!-- load com -->
-        <!-- load task generator -->
+        <include file="$(find atwork_refbox_ros_com)/launch/atwork_refbox_ros_com.launch">
+            <arg name="output" value="$(arg ros_output)"/>
+        </include>
 
     </group>
 </launch>
