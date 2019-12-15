@@ -1,5 +1,9 @@
-#include <atwork_refbox_ros_task_generator/TaskGenerator.h>
 #include <ros/ros.h>
+
+#include <atwork_refbox_ros_task_generator/TaskGenerator.h>
+
+#include <atwork_refbox_ros_msgs/Task.h>
+#include <atwork_refbox_ros_msgs/RobotState.h>
 
 namespace atwork_refbox_ros {
 
@@ -18,9 +22,9 @@ public:
         readTaskList();
         /**TODO read arena definition **/
 
-        m_robot_state_sub = roshandle.subscribe("/refbox/internal/robot_state", 1, &StateTracker::receiveRobotStateClb, this);
+        m_robot_state_sub = m_nh.subscribe("/refbox/internal/robot_state", 1, &StateTracker::receiveRobotStateClb, this);
 
-        m_send_task_pub = roshandle.advertise<atwork_refbox_ros_msgs::Task>("/refbox/internal/task", 1);
+        m_send_task_pub = m_nh.advertise<atwork_refbox_ros_msgs::Task>("/refbox/internal/task", 1);
     }
 
     ~StateTracker() {}
@@ -72,8 +76,8 @@ private:
         ROS_INFO_STREAM("[atwork_refbox] Read " << m_task_map.size() << " tasks from parameter server");
     }
 
-    void receiveRobotStateClb(const atwork_refbox_ros_msgs::RobotState::ConstPtr& msg) {
-
+    void receiveRobotStateClb(const atwork_refbox_ros_msgs::RobotState::ConstPtr& msg)
+    {
     }
 };
 }
