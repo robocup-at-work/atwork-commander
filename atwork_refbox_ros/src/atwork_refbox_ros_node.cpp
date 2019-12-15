@@ -8,13 +8,19 @@ class StateTracker {
 
     TaskDefinitions m_task_map;
 
+    ros::Publisher m_send_task_pub;
+    ros::Subscriber m_robot_state_sub;
+
 public:
     StateTracker(ros::NodeHandle nh)
         : m_nh(nh)
     {
         readTaskList();
+        /**TODO read arena definition **/
 
-        /** read arena definition **/
+        m_robot_state_sub = roshandle.subscribe("/refbox/internal/robot_state", 1, &StateTracker::receiveRobotStateClb, this);
+
+        m_send_task_pub = roshandle.advertise<atwork_refbox_ros_msgs::Task>("/refbox/internal/task", 1);
     }
 
     ~StateTracker() {}
@@ -64,6 +70,10 @@ private:
         ROS_ASSERT(m_task_map.size() > 0);
 
         ROS_INFO_STREAM("[atwork_refbox] Read " << m_task_map.size() << " tasks from parameter server");
+    }
+
+    void receiveRobotStateClb(const atwork_refbox_ros_msgs::RobotState::ConstPtr& msg) {
+
     }
 };
 }
