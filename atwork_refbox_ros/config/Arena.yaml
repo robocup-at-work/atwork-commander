@@ -8,11 +8,11 @@ Arena:
     S40_40_G: true
     M20: true
     M30: true
-  tables:
-    WS01: 10
-    WS02: 15
-    WS03: 5
-    WS04: 0
-    WS06: PPT
-    WS07: SH
-    WS08: RTT
+  Workstations:
+    WS01: '10'
+    WS02: '15'
+    WS03: '5'
+    WS04: '0'
+    WS06: 'PPT'
+    WS07: 'SH'
+    WS08: 'RTT'

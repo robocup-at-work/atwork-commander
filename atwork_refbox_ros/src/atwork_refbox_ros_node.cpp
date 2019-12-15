@@ -2,8 +2,8 @@
 
 #include <atwork_refbox_ros_task_generator/TaskGenerator.h>
 
-#include <atwork_refbox_ros_msgs/Task.h>
 #include <atwork_refbox_ros_msgs/RobotState.h>
+#include <atwork_refbox_ros_msgs/Task.h>
 
 namespace atwork_refbox_ros {
 
@@ -11,6 +11,8 @@ class StateTracker {
     ros::NodeHandle m_nh;
 
     TaskDefinitions m_task_map;
+    ArenaDescription m_arena;
+    std::shared_ptr<TaskGenerator> m_task_gen;
 
     ros::Publisher m_send_task_pub;
     ros::Subscriber m_robot_state_sub;
@@ -20,11 +22,13 @@ public:
         : m_nh(nh)
     {
         readTaskList();
-        /**TODO read arena definition **/
+        readArenaDefinition();
 
         m_robot_state_sub = m_nh.subscribe("/refbox/internal/robot_state", 1, &StateTracker::receiveRobotStateClb, this);
 
         m_send_task_pub = m_nh.advertise<atwork_refbox_ros_msgs::Task>("/refbox/internal/task", 1);
+
+        m_task_gen = std::make_shared<TaskGenerator>(m_arena, m_task_map);
     }
 
     ~StateTracker() {}
@@ -74,6 +78,30 @@ private:
         ROS_ASSERT(m_task_map.size() > 0);
 
         ROS_INFO_STREAM("[atwork_refbox] Read " << m_task_map.size() << " tasks from parameter server");
+    }
+
+    void readArenaDefinition()
+    {
+        std::string ws_param = ros::this_node::getNamespace() + "/Arena/Workstations";
+        ROS_INFO_STREAM("[atwork_refbox] Try to read workstations from '" << ws_param << "'");
+
+        std::map<std::string, std::string> temp_ws;
+        m_nh.getParam(ws_param, temp_ws);
+        for (auto& ws : temp_ws) {
+            m_arena.workstations[ws.first] = ws.second;
+        }
+
+        ROS_ASSERT(m_arena.workstations.size() > 1);
+
+        ROS_INFO_STREAM("[atwork_refbox] Read " << m_arena.workstations.size() << " workstations from parameter server");
+
+
+        std::string ppc_param = ros::this_node::getNamespace() + "/Arena/PP_cavities";
+        ROS_INFO_STREAM("[atwork_refbox] Try to read PP cavities from '" << ppc_param << "'");
+
+        m_nh.getParam(ppc_param, m_arena.cavities);
+
+        ROS_INFO_STREAM("[atwork_refbox] Read " << m_arena.cavities.size() << " PP cavities from parameter server");
     }
 
     void receiveRobotStateClb(const atwork_refbox_ros_msgs::RobotState::ConstPtr& msg)
