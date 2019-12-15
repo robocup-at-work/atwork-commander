@@ -1,4 +1,4 @@
-#include <atwork_refbox_task_generator/TaskGenerator.h>
+#include <atwork_refbox_ros_task_generator/TaskGenerator.h>
 #include <ros/ros.h>
 
 namespace atwork_refbox_ros {
