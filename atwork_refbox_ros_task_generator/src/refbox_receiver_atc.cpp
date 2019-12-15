@@ -507,10 +507,10 @@ void ReceiverNode::readParameters(unsigned int objects, unsigned int tables, uns
 
 }
 
-ReceiverNode::ReceiverNode(const Options& globalOptions, const TaskDefinitions& tasks, const Workstations& workstations) {
-    mTableMapping.resize(workstations.size());
+ReceiverNode::ReceiverNode(const ArenaDescription& arena, const TaskDefinitions& tasks) {
+    mTableMapping.resize(arena.workstations.size());
     unsigned int i=0;
-    for(const auto& ws : workstations) {
+    for(const auto& ws : arena.workstations) {
       if(ws.second == "PPT") {
         mPpts.push_back(i);
       }

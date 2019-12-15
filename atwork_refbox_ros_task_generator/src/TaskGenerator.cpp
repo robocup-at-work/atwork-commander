@@ -4,24 +4,25 @@
 using namespace atwork_refbox_ros;
 using namespace std;
 
-TaskGenerator::TaskGenerator(Options globalOptions, TaskDefinitions tasks, Workstations workstations) 
-  : mTasks(tasks), mNode(globalOptions, tasks, workstations)
+TaskGenerator::TaskGenerator(const ArenaDescription& arena, const TaskDefinitions& tasks) 
+  : mTasks(tasks), mNode(arena, tasks)
 {
 
 }
 
 Task TaskGenerator::operator()(string name) {
   try {
-    unsigned int objects=0;
-    unsigned int tables=0;
-    unsigned int decoys=0;
-    unsigned int pickShelf=0;
-    unsigned int pickTT=0;
-    unsigned int placeShelf=0;
-    unsigned int placeTT=0;
-    unsigned int placePPT=0;
-    unsigned int containerRed=0;
-    unsigned int containerBlue=0;
+    auto& params = mTasks[name];
+    unsigned int objects=params["object_count"];
+    unsigned int tables=params["table_height_0"]+params["table_height_5"]+params["table_height_10"]+params["table_height_15"];
+    unsigned int decoys=params["decoy_count"];
+    unsigned int pickShelf=params["shelves_grasping"];
+    unsigned int pickTT=params["rt_grasping"];
+    unsigned int placeShelf=params["shelves_placing"];
+    unsigned int placeTT=params["rt_placing"];
+    unsigned int placePPT=params["pp"];
+    unsigned int containerRed=params["container_red"];
+    unsigned int containerBlue=params["container_blue"];
     mNode.readParameters(objects, tables, decoys, pickShelf, pickTT, placeShelf, placeTT, placePPT, containerRed, containerBlue);
   }catch(int error){
 		switch (error) {

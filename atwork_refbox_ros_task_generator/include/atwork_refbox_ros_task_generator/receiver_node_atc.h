@@ -24,7 +24,7 @@ class ReceiverNode
          * Ctor.
          */
         ReceiverNode(const ros::NodeHandle &nh);
-        ReceiverNode(const Options& globalOptions, const TaskDefinitions& tasks, const Workstations& workstations);
+        ReceiverNode(const ArenaDescription& arena, const TaskDefinitions& tasks);
 
         void readParameters();
         void readParameters(unsigned int objects, unsigned int tables, unsigned int decoys, unsigned int pickShelf,
