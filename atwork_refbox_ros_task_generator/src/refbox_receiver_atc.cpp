@@ -165,7 +165,7 @@ size_t ReceiverNode::get_container_id(size_t table, size_t color) {
 
 void ReceiverNode::initialize_mAllTables() {
 	size_t size = mTables0.size() + mTables5.size() + mTables10.size()
-					+ mTables15.size() + mConveyors.size();
+					+ mTables15.size() + mConveyors.size()
 					+ mPpts.size() + mShelfs.size();
 	mAllTables.resize(size);
 	cout<<"0\n";
@@ -226,6 +226,7 @@ void write_types(vector<size_t> &mTableTypes, size_t &low, size_t up, size_t typ
 void ReceiverNode::initialize_mTableTypes() {
 	size_t low = 0;
 	size_t up = mTables0.size();
+  mTableTypes.resize(mAllTables.size());
 	write_types(mTableTypes, low, up, tables0_id);
 	up += mTables5.size();
 	write_types(mTableTypes, low, up, tables5_id);
@@ -265,7 +266,7 @@ size_t ReceiverNode::shortest_list(size_t &min) {
 
 void ReceiverNode::update_validpicks() {
 	for(size_t i=0; i<tabletypes; ++i) {
-		size_t size = validpicks.size();
+		size_t size = validpicks.at(i).size();
 		for(size_t j=0; j<size; ++j) {
 			size_t table = validpicks.at(i).at(j);
 			size_t type = mTableTypes.at(table);
