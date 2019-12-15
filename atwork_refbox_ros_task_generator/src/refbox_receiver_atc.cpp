@@ -513,12 +513,15 @@ ReceiverNode::ReceiverNode(const ArenaDescription& arena, const TaskDefinitions&
     for(const auto& ws : arena.workstations) {
       if(ws.second == "PPT") {
         mPpts.push_back(i);
+        continue;
       }
-      if(ws.second == "Shelf") {
+      if(ws.second == "SH") {
         mShelfs.push_back(i);
+        continue;
       }
       if(ws.second == "CB" || ws.second == "RTT") {
         mConveyors.push_back(i);
+        continue;
       }
       try{
         unsigned int height = boost::lexical_cast<unsigned int>(ws.second);
