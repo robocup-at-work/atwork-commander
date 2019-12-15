@@ -1,5 +1,7 @@
 #include <ros/ros.h>
-#include "receiver_node_atc.h"
+#include <atwork_refbox_ros_task_generator/receiver_node_atc.h>
+
+using atwork_refbox_ros::ReceiverNode;
 
 int main(int argc, char **argv)
 {

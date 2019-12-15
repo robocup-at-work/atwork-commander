@@ -8,3 +8,11 @@ Arena:
     S40_40_G: true
     M20: true
     M30: true
+  tables:
+    1: 10
+    2: 15
+    3: 5
+    4: 0
+    6: PPT
+    7: SH
+    8: RTT
