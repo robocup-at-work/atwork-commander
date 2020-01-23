@@ -1,0 +1,9 @@
+<library path="lib/libatwork_refbox_ros_rviz">
+  <class name="atwork_refbox_ros_rviz/RefboxUI"
+         type="atwork_refbox_ros::RefboxUI"
+         base_class_type="rviz::Panel">
+    <description>
+      A panel plugin allowing manipulation of worldmodel data.
+    </description>
+  </class>
+</library>
