@@ -12,6 +12,7 @@
 #include <math.h>
 #include <tuple>
 #include <iostream>
+#include <unordered_map>
 
 using namespace std;
 using namespace atwork_refbox_ros;
@@ -81,7 +82,7 @@ void ReceiverNode::debugAll(string info, run &tasks) {
 	cout<<"mAllTables\n"<<mAllTables;
 	cout<<"validpicks\n"<<validpicks;
 	cout<<"picksleft\n"<<picksleft;
-	cout<<"mTableTypes\n"<<mTableTypes;
+	//cout<<"mTableTypes\n"<<mTableTypes;
 	cout<<"container_ids\n"<<container_ids;
 	cout<<"tasks\n"<<tasks;
 }
@@ -168,29 +169,16 @@ void ReceiverNode::initialize_mAllTables() {
 					+ mTables15.size() + mConveyors.size()
 					+ mPpts.size() + mShelfs.size();
 	mAllTables.resize(size);
-	cout<<"0\n";
 	auto end = copy(mTables0.begin(), mTables0.end(), mAllTables.begin());
-	cout<<"1\n";
 	end = copy(mTables5.begin(), mTables5.end(), end);
-	cout<<"2\n";
 	end = copy(mTables10.begin(), mTables10.end(), end);
-	cout<<"3\n";
-	cout<<mPpts<<"\n";
-	cout<<mAllTables<<"\n";
 	end = copy(mPpts.begin(), mPpts.end(), end);
-	cout<<mAllTables<<"\n";
-	cout<<"4\n";
-	cout<<mConveyors<<"\n";
-	cout<<mAllTables<<"\n";
 	end = copy(mConveyors.begin(), mConveyors.end(), end);
-	cout<<mAllTables<<"\n";
-	cout<<"5\n";
 	end = copy(mTables15.begin(), mTables15.end(), end);
-	cout<<"6\n";
 	end = copy(mShelfs.begin(), mShelfs.end(), end);
-	cout<<"7\n";
 }
 
+// fills in all for every task every table where it isn't placed
 void ReceiverNode::initialize_validpicks(run &tasks) {
 	size_t objects = paramFinal["objects"];
 	size_t tables = mAllTables.size();
@@ -216,30 +204,30 @@ void ReceiverNode::initialize_picksleft() {
 	picksleft.at(shelfs_id) = paramFinal["pick_shelf"];
 }
 
-void write_types(vector<size_t> &mTableTypes, size_t &low, size_t up, size_t type) {
+
+size_t ReceiverNode::write_types(size_t low, size_t up, size_t type) {
 	for(size_t i=low; i<up; ++i) {
-		mTableTypes.at(i) = type;
+		mTableTypes[mAllTables.at(i)] = type;
 	}
-	low = up;
+	return up;
 }
 
 void ReceiverNode::initialize_mTableTypes() {
 	size_t low = 0;
 	size_t up = mTables0.size();
-  mTableTypes.resize(mAllTables.size());
-	write_types(mTableTypes, low, up, tables0_id);
+	low = write_types(low, up, tables0_id);
 	up += mTables5.size();
-	write_types(mTableTypes, low, up, tables5_id);
+	low = write_types(low, up, tables5_id);
 	up += mTables10.size();
-	write_types(mTableTypes, low, up, tables10_id);
+	low = write_types(low, up, tables10_id);
 	up += mTables15.size();
-	write_types(mTableTypes, low, up, tables15_id);
+	low = write_types(low, up, tables15_id);
 	up += mConveyors.size();
-	write_types(mTableTypes, low, up, conveyors_id);
+	low = write_types(low, up, conveyors_id);
 	up += mPpts.size();
-	write_types(mTableTypes, low, up, ppts_id);
+	low = write_types(low, up, ppts_id);
 	up += mShelfs.size();
-	write_types(mTableTypes, low, up, shelfs_id);
+	low = write_types(low, up, shelfs_id);
 }
 
 size_t sum_vector(vector<size_t> & vec) {
@@ -264,11 +252,12 @@ size_t ReceiverNode::shortest_list(size_t &min) {
 	return minindex;
 }
 
+//FEHLERBEHAFTET
 void ReceiverNode::update_validpicks() {
 	for(size_t i=0; i<tabletypes; ++i) {
 		size_t size = validpicks.at(i).size();
 		for(size_t j=0; j<size; ++j) {
-			size_t table = validpicks.at(i).at(j);
+			size_t table = validpicks.at(i).at(j); // TABLE IST ID, KEIN INDEX
 			size_t type = mTableTypes.at(table);
 			if(picksleft.at(type) == 0) {
 				validpicks.at(i).erase(validpicks.at(i).begin()+j);
@@ -383,7 +372,7 @@ run ReceiverNode::generate_Final() {
 		a = rand() % conveyors;
 		tasks.at(placeTurntable.at(i)).at(dst_id) = mConveyors.at(a);
 	}
-	// PLACES NOCH BEARBEITEN KEINE PLACES, FALSS KEINE PICK VON DER TISCHHÖHE
+	// PLACES NOCH BEARBEITEN KEINE PLACES, FALLS KEINE PICK VON DER TISCHHÖHE
 	for(size_t i=0; i<normalplace.size(); ++i) {
 		a = rand() % tables;
 		tasks.at(normalplace.at(i)).at(dst_id) = mTables.at(a);
@@ -759,101 +748,3 @@ ReceiverNode::ReceiverNode(const ArenaDescription& arena, const TaskDefinitions&
       mTableMapping[i++]=ws.first;
     }
 }
-
-// VORLAGE
-/*
-void ReceiverNode::handleMessage(boost::asio::ip::udp::endpoint &sender,
-                    uint16_t component_id, uint16_t msg_type,
-                    std::shared_ptr<google::protobuf::Message> msg)
-{
-    WorldmodelClient& wm = WorldmodelClient::getInstance();
-    std::shared_ptr<TriggeredConveyorBeltStatus> conveyor_belt_status_ptr;
-    std::shared_ptr<Inventory> inventory_pub_ptr;
-    std::shared_ptr<TaskInfo> task_info_ptr;
-    
-    ROS_DEBUG_STREAM("got protobuf message");
-
-    if (conveyor_belt_status_ptr = std::dynamic_pointer_cast<TriggeredConveyorBeltStatus>(msg)) {
-    	std_msgs::Bool beltState;
-        beltState.data = conveyor_belt_status_ptr->state();
-
-        belt_pub_.publish(beltState);
-    	ROS_DEBUG_STREAM("got conveyor belt message");
-    }
-
-    if(inventory_pub_ptr = std::dynamic_pointer_cast<Inventory>(msg)) {
-    	ROS_DEBUG_STREAM("got inventory message");
-       
-    }
-    if ( (task_info_ptr = std::dynamic_pointer_cast<TaskInfo>(msg)) && !wm.getInts("/World/1/TaskRunning").front() ) {
-        
-
-        std_srvs::Empty::Request req;
-        std_srvs::Empty::Response res;
-        try {
-          nh_.serviceClient<std_srvs::Empty>("/worldmodel/reset").call(req, res);
-        } catch (const runtime_error& e) {
-          ROS_ERROR_STREAM("Worldmodel reset failed: " << e.what());
-          return;
-        }
-        pptObjCount = 1;
-
-        for(int i=0; i < task_info_ptr->tasks().size(); i++) {
-					const atwork_pb_msgs::Task &refbox_task = task_info_ptr->tasks(i);
-					Task::TaskType task_type  = refbox_task.type();
-			// SWITCH CASE SO NICHT NÖTIG
-			// 4 FUNKTIONEN DURCH EINE ERSETZTEN, DIE ALLE 4 
-					switch (task_type) {
-						case atwork_pb_msgs::Task::TRANSPORTATION: {
-              auto task = refbox_task.transportation_task();
-              int src  = toLocation(task.source().instance_id(), task.source().type());
-              int dst  = toLocation(task.destination().instance_id(), task.destination().type());
-              int obj  = toObject(refbox_task.transportation_task().object());
-              int cont = toObject(refbox_task.transportation_task().container());
-              
-              // EINTRAGUNG IM WORLDMODEL
-              try  {
-                WorldmodelClient::getInstance().setInt("/World/1/TaskRunning", 1);
-                int contID = insertContainer(obj, cont, dst);
-                string tf = insertStackedTF(src);
-                ROS_INFO_STREAM("Insert object in wm: " << obj << "[" << tf << "]: " << src << " -> " << dst << "[" << contID << "]");
-                wm.insert("/Object/New/*", 
-                  {
-                    to_string(obj),                        // robOTTO object identifier
-                    to_string(src),                        // source table
-                    to_string(dst),                        // destination table
-                    (contID!=-1)?to_string(contID):"NULL", // container type
-                    to_string(src),                        // actual table
-                    "NULL",                                // inventory slot
-                    tf                                     // associated TF frame
-                  }
-                );
-              } catch(const runtime_error& e) {
-                ROS_FATAL_STREAM("Refbox task is invalid: " << e.what());
-              }
-						} break;
-						case atwork_pb_msgs::Task::NAVIGATION: {
-              try {
-                WorldmodelClient::getInstance().setInt("/World/1/TaskRunning", 1);
-                auto task = refbox_task.navigation_task();
-                wm.insert("/BNT/New/*", 
-                  {
-					  // toLocation, toOrientation, toTime anpassen
-                    "W"+to_string(toLocation(task.location().instance_id(), task.location().type(), true)),
-                    to_string(toOrientation(refbox_task.navigation_task().orientation())),
-                    to_string((int)ceil(toTime(refbox_task.navigation_task().wait_time()))),
-                  }
-                );
-              } catch(const runtime_error& e) {
-                ROS_ERROR_STREAM("Failed to insert navigation subtask: " << e.what());
-              }
-						}break;
-						case atwork_pb_msgs::Task::UNKNOWN:
-              ROS_ERROR_STREAM("Unknown Task description received");
-							break;
-					}
-				}
-      start();
-    }
-}
-*/

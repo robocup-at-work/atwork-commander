@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_map>
 
 #include <boost/asio.hpp>
 #include <std_msgs/Bool.h>
@@ -113,6 +114,7 @@ class ReceiverNode
         void initialize_validpicks(run &tasks);
         void initialize_picksleft();
         void initialize_mTableTypes();
+        size_t write_types(size_t low, size_t up, size_t type);
         void update_validpicks();
         void debugAll(std::string info, run &tasks);
         
@@ -126,7 +128,7 @@ class ReceiverNode
         std::vector<std::array<size_t, 3>> container_ids;
         std::vector<std::vector<size_t>> validpicks;
         std::vector<size_t> picksleft;
-        std::vector<size_t> mTableTypes;
+        std::unordered_map<size_t, size_t> mTableTypes;
         
         size_t tabletypes;
         
