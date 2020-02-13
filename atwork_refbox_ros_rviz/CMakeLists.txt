@@ -15,6 +15,10 @@ find_package(catkin REQUIRED COMPONENTS
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
+## This setting causes Qt's "MOC" generation to happen automatically.
+## No vtable is create without this line...
+set(CMAKE_AUTOMOC ON)
+
 ## This plugin includes Qt widgets, so we must include Qt.
 ## We'll use the version that rviz used so they are compatible.
 if(rviz_QT_VERSION VERSION_LESS "5")
