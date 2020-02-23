@@ -57,7 +57,7 @@
   <build_export_depend>pluginlib</build_export_depend>
   <exec_depend>pluginlib</exec_depend>
 
-  <depend>atwork_refbox_msgs</depend>
+  <depend>atwork_refbox_ros_msgs</depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
