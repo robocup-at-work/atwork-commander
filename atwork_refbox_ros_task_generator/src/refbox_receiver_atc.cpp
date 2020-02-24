@@ -5,6 +5,7 @@
 
 #include <worldmodel_project/worldmodel_client.h>
 
+#include <algorithm>
 #include <sstream>
 #include <string>
 #include <regex>
@@ -168,8 +169,8 @@ void ReceiverNode::initialize_mAllTables() {
 	size_t size = mTables0.size() + mTables5.size() + mTables10.size()
 					+ mTables15.size() + mConveyors.size()
 					+ mPpts.size() + mShelfs.size();
-	mAllTables.resize(size);
-	auto end = copy(mTables0.begin(), mTables0.end(), mAllTables.begin());
+	mAllTables.resize(size+1);
+	auto end = copy(mTables0.begin()+1, mTables0.end(), mAllTables.begin());
 	end = copy(mTables5.begin(), mTables5.end(), end);
 	end = copy(mTables10.begin(), mTables10.end(), end);
 	end = copy(mPpts.begin(), mPpts.end(), end);
@@ -243,7 +244,7 @@ size_t ReceiverNode::shortest_list(size_t &min) {
 	size_t minindex = 0;
 	for(size_t i=0; i<validpicks.size(); ++i) {
 		if(validpicks.at(i).size() != 0) {
-			if(validpicks.at(i).size()< min) {
+			if(validpicks.at(i).size() < min) {
 				min = validpicks.at(i).size();
 				minindex = i;
 			}
@@ -256,13 +257,15 @@ size_t ReceiverNode::shortest_list(size_t &min) {
 void ReceiverNode::update_validpicks() {
 	for(size_t i=0; i<tabletypes; ++i) {
 		size_t size = validpicks.at(i).size();
-		for(size_t j=0; j<size; ++j) {
-			size_t table = validpicks.at(i).at(j); // TABLE IST ID, KEIN INDEX
+    auto end = validpicks.at(i).end();
+		for(auto j = validpicks.at(i).begin(); j<end; ++j) {
+			size_t table = *j; // TABLE IST ID, KEIN INDEX
 			size_t type = mTableTypes.at(table);
 			if(picksleft.at(type) == 0) {
-				validpicks.at(i).erase(validpicks.at(i).begin()+j);
+        swap(*j,*--end);
 			}
 		}
+    validpicks.at(i).erase(end, validpicks.at(i).end());
 	}
 }
 
@@ -446,6 +449,8 @@ run ReceiverNode::generate_Final() {
 	while(sum_vector(picksleft) > 0) {
 		size_t min;
 		size_t index = shortest_list(min);
+    if (min == 0)
+      throw 229;
 		a = rand() % min;
 		size_t table = validpicks.at(index).at(a);
 		tasks.at(index).at(src_id) = mAllTables.at(table);
