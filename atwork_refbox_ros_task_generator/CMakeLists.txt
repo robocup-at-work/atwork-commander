@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(atwork_refbox_ros_task_generator)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++14 -g)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -10,11 +10,8 @@ project(atwork_refbox_ros_task_generator)
 find_package(catkin REQUIRED COMPONENTS
               atwork_refbox_ros_msgs
               roscpp
-              worldmodel_project
-              robotto_msgs
              )
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=gnu++0x -DHAVE_LIBCRYPTO -g")
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -125,12 +122,12 @@ include_directories(
 ## Declare a C++ library
  add_library(${PROJECT_NAME}
   src/TaskGenerator.cpp
-  src/refbox_receiver_atc.cpp
+  src/Definitions.cpp
 )
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 
-add_executable(receiver_node src/refbox_receiver_atc.cpp src/refbox_receiver_node_atc.cpp)
-target_link_libraries(receiver_node ${catkin_LIBRARIES})
+add_executable(ExampleGenerator src/ExampleNode.cpp)
+target_link_libraries(ExampleGenerator ${PROJECT_NAME} ${catkin_LIBRARIES})
 
 #add_dependencies(receiver_node atwork_ros_msgs_generate_messages_cpp)
 ## Add cmake target dependencies of the library
