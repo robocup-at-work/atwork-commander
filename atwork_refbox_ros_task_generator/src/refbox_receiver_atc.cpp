@@ -18,64 +18,37 @@
 using namespace std;
 using namespace atwork_refbox_ros;
 using run = vector<array<int, 4>>;
-ostream& operator<<(ostream& os, const vector<size_t>& vec)
+
+template<typename T, size_t n>
+ostream& operator<<(ostream& os, const vector<array<T,n>>& vec)
 {
-    for(size_t i=0; i<vec.size(); ++i) {
-		os << vec.at(i) <<" ";
-	}
-	os << "\n";
-    return os;
+  for(size_t i=0; i<vec.size(); i++)
+		os << vec[i];
+  return os << endl;
 }
 
-ostream& operator<<(ostream& os, const array<size_t,3>& vec)
+template<typename T>
+ostream& operator<<(ostream& os, const vector<vector<T>>& vec)
 {
-    for(size_t i=0; i<vec.size(); ++i) {
-		os << vec.at(i) <<" ";
-	}
-	os << "\n";
-    return os;
+  for(size_t i=0; i<vec.size(); i++)
+		os << vec[i];
+  return os << endl;
 }
 
-ostream& operator<<(ostream& os, const array<int,4>& vec)
+template<typename T, size_t n>
+ostream& operator<<(ostream& os, const array<T,n>& vec)
 {
-    for(size_t i=0; i<vec.size(); ++i) {
-		os << vec.at(i) <<" ";
-	}
-	os << "\n";
-    return os;
+  for(size_t i=0; i<vec.size(); i++)
+		os << vec[i] << (i==vec.size()-1?"":" ");
+  return os << endl;
 }
 
-ostream& operator<<(ostream& os, const vector<unsigned int>& vec)
+template<typename T>
+ostream& operator<<(ostream& os, const vector<T>& vec)
 {
-    for(size_t i=0; i<vec.size(); ++i) {
-		os << vec.at(i) <<" ";
-	}
-	os << "\n";
-    return os;
-}
-
-ostream& operator<<(ostream& os, const vector<array<size_t,3>>& vec)
-{
-    for(size_t i=0; i<vec.size(); ++i) {
-		os << vec.at(i);
-	}
-    return os;
-}
-
-ostream& operator<<(ostream& os, const run &vec)
-{
-    for(size_t i=0; i<vec.size(); ++i) {
-		os << vec.at(i);
-	}
-    return os;
-}
-
-ostream& operator<<(ostream& os, const vector<vector<size_t>>& vec)
-{
-    for(size_t i=0; i<vec.size(); ++i) {
-		os << vec.at(i);
-	}
-    return os;
+  for(size_t i=0; i<vec.size(); i++)
+		os << vec[i] << (i==vec.size()-1?"":" ");
+  return os << endl;
 }
 
 void ReceiverNode::debugAll(string info, run &tasks) {
@@ -262,10 +235,10 @@ void ReceiverNode::update_validpicks() {
 			size_t table = *j; // TABLE IST ID, KEIN INDEX
 			size_t type = mTableTypes.at(table);
 			if(picksleft.at(type) == 0) {
-        swap(*j,*--end);
+        iter_swap(j, --end);        // Remove element
 			}
 		}
-    validpicks.at(i).erase(end, validpicks.at(i).end());
+    validpicks.at(i).erase(end, validpicks.at(i).end()); //Erase removed elements
 	}
 }
 
