@@ -45,8 +45,14 @@ TaskGenVisGroup::~TaskGenVisGroup()
 {
     delete taskListCombo;
     delete pptCavatiesLineEdit;
+    delete generateButton;
+    delete loadButton;
+    delete buttonHBoxLayout;
     taskListCombo = nullptr;
     pptCavatiesLineEdit = nullptr;
+    generateButton = nullptr;
+    loadButton = nullptr;
+    buttonHBoxLayout = nullptr;
 }
 
 } // atwork_refbox_ros

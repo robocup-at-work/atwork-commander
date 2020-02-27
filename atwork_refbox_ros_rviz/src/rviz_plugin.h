@@ -203,6 +203,9 @@ class TaskGenVisGroup : public VisGroup {
 private:
     QComboBox* taskListCombo = nullptr;
     QLineEdit* pptCavatiesLineEdit = nullptr;
+    QPushButton* generateButton = nullptr;
+    QPushButton* loadButton = nullptr;
+    QHBoxLayout* buttonHBoxLayout = nullptr;
 
 public:
     TaskGenVisGroup(QWidget* parent = new QWidget())
@@ -211,9 +214,21 @@ public:
         // init
         pptCavatiesLineEdit = new QLineEdit();
         taskListCombo = new QComboBox();
+        generateButton = new QPushButton();
+        loadButton = new QPushButton();
+        buttonHBoxLayout = new QHBoxLayout();
 
         // draw
         layout->addRow("Select Task Instance", taskListCombo);
+
+        generateButton->setText("Generate Task");
+        // generateButton->setMaximumWidth(80);
+        loadButton->setText("Load Task");
+        // loadButton->setMaximumWidth(80);
+        buttonHBoxLayout->addWidget(generateButton);
+        buttonHBoxLayout->addWidget(loadButton);
+        layout->addRow(buttonHBoxLayout);
+
         pptCavatiesLineEdit->setPlaceholderText(". . . . .");
         pptCavatiesLineEdit->setReadOnly(true);
         layout->addRow("PPT Cavaties:", pptCavatiesLineEdit);
@@ -236,8 +251,12 @@ public:
     {
         if (make_connections) {
             connect(taskListCombo, SIGNAL(activated(int)), this, SLOT(update()));
+            connect(generateButton, SIGNAL(clicked()), this, SLOT(update()));
+            connect(loadButton, SIGNAL(clicked()), this, SLOT(update()));
         } else {
             disconnect(taskListCombo, SIGNAL(activated(int)), this, SLOT(update()));
+            disconnect(generateButton, SIGNAL(clicked()), this, SLOT(update()));
+            disconnect(loadButton, SIGNAL(clicked()), this, SLOT(update()));
         }
     }
     /*!
