@@ -12,7 +12,6 @@
 #include <QStackedWidget>
 #include <QString>
 #include <QTimer>
-// add your QWidgets includes here
 
 #ifndef Q_MOC_RUN
 #include <ros/ros.h>
@@ -26,7 +25,7 @@ namespace atwork_refbox_ros {
    * \brief Abstract Base Class VisGroup
    *
    * This baseclas specifies the interface for subclasses that should work within
-   * the WorldmodelUI and provides a number of conviences (fucntions and members)
+   * the RefboxUI and provides a number of conviences (fucntions and members)
    */
 class VisGroup : public QWidget {
     Q_OBJECT
@@ -170,7 +169,6 @@ public:
     //      returning false even if the user currently has a widget selected
     virtual bool hasFocus() override
     {
-
         for (auto e : subGroups) {
             if (e->hasFocus()) {
                 return true;
@@ -197,35 +195,34 @@ public Q_SLOTS:
 
 /************************************************************************/
 /*!
-   * \brief Qt widget displaying worldmodel information at "/World"
+   * \brief Qt widget displaying task generator information
    *
-   * This widget displays the World-Mapname as readonly
    */
-class WorldVisGroup : public VisGroup {
+class TaskGenVisGroup : public VisGroup {
     Q_OBJECT
 private:
-    QComboBox* worldInstanceCombo = nullptr;
-    QLineEdit* mapNameLineEdit = nullptr;
+    QComboBox* taskListCombo = nullptr;
+    QLineEdit* pptCavatiesLineEdit = nullptr;
 
 public:
-    WorldVisGroup(QWidget* parent = new QWidget())
+    TaskGenVisGroup(QWidget* parent = new QWidget())
         : VisGroup(parent)
     {
         // init
-        mapNameLineEdit = new QLineEdit();
-        worldInstanceCombo = new QComboBox();
+        pptCavatiesLineEdit = new QLineEdit();
+        taskListCombo = new QComboBox();
 
         // draw
-        layout->addRow("Select World", worldInstanceCombo);
-        mapNameLineEdit->setPlaceholderText("Placeholder MapName");
-        mapNameLineEdit->setReadOnly(true);
-        layout->addRow("Map Name", mapNameLineEdit);
+        layout->addRow("Select Task Instance", taskListCombo);
+        pptCavatiesLineEdit->setPlaceholderText(". . . . .");
+        pptCavatiesLineEdit->setReadOnly(true);
+        layout->addRow("PPT Cavaties:", pptCavatiesLineEdit);
 
         // update
         this->update();
     }
 
-    virtual ~WorldVisGroup();
+    virtual ~TaskGenVisGroup();
 
     /*!
        * \brief wire connects and disconnect ALL existing Signal-Slots Connections
@@ -238,11 +235,9 @@ public:
     virtual void wire(bool make_connections = true)
     {
         if (make_connections) {
-            connect(worldInstanceCombo, SIGNAL(activated(int)),
-                this, SLOT(update()));
+            connect(taskListCombo, SIGNAL(activated(int)), this, SLOT(update()));
         } else {
-            disconnect(worldInstanceCombo, SIGNAL(activated(int)),
-                this, SLOT(update()));
+            disconnect(taskListCombo, SIGNAL(activated(int)), this, SLOT(update()));
         }
     }
     /*!
@@ -273,25 +268,31 @@ public Q_SLOTS:
        */
     virtual void update() override
     {
-        QString state = worldInstanceCombo->currentText();
+        QString state = taskListCombo->currentText();
 
         // wire
         wire(false);
 
         // clear current data
-        worldInstanceCombo->clear();
-        mapNameLineEdit->clear();
+        taskListCombo->clear();
+        pptCavatiesLineEdit->clear();
 
-        worldInstanceCombo->setCurrentIndex(0);
-        mapNameLineEdit->setPlaceholderText("mapName.at(0).c_str()");
+        //TODO get list of tasks instances
+        taskListCombo->addItem(QString("BMT"));
+        taskListCombo->addItem(QString("BTT1"));
+        taskListCombo->addItem(QString("BTTx"));
+        taskListCombo->addItem(QString("RTT"));
+        taskListCombo->addItem(QString("Final"));
+
+        if (state.isEmpty()) {
+            taskListCombo->setCurrentIndex(0);
+        } else {
+            int index = taskListCombo->findText(state);
+            taskListCombo->setCurrentIndex(index);
+        }
+        pptCavatiesLineEdit->setPlaceholderText(". . . . .");
 
         // get fresh data
-        // WorldmodelClient& wmc = WorldmodelClient::getInstance();
-        // try{
-        //     vecInt worlds = wmc.getInts("/World/*/ID");
-        //     for (auto e : worlds){
-        //         worldInstanceCombo->addItem(QString::number(e));
-        //     }
         //     if (state.isEmpty() && worlds.size()){
         //         worldInstanceCombo->setCurrentIndex(0);
         //     } else {
@@ -309,10 +310,6 @@ public Q_SLOTS:
         //             mapNameLineEdit->setPlaceholderText(mapName.at(0).c_str());
         //         }
         //     }
-        // }
-        // catch( std::runtime_error e ){
-        //     ROS_ERROR_STREAM("[WMP] Failed to update WorldVisGroup");
-        // }
 
         // reconnect
         wire();
@@ -331,7 +328,7 @@ class RefboxUI : public rviz::Panel {
     Q_OBJECT
 private:
     MainVisGroup mainVG;
-    WorldVisGroup worldVG;
+    TaskGenVisGroup taskGenVG;
 
     ros::NodeHandle nh;
 
