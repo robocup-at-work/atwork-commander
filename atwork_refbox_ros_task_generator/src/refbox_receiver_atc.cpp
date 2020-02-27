@@ -56,7 +56,7 @@ void ReceiverNode::debugAll(string info, run &tasks) {
 	cout<<"mAllTables\n"<<mAllTables;
 	cout<<"validpicks\n"<<validpicks;
 	cout<<"picksleft\n"<<picksleft;
-	//cout<<"mTableTypes\n"<<mTableTypes;
+	cout<<"tabletypes "<<tabletypes<<"\n";
 	cout<<"container_ids\n"<<container_ids;
 	cout<<"tasks\n"<<tasks;
 }
@@ -67,6 +67,7 @@ void ReceiverNode::debugAll(string info, run &tasks) {
  */
 
 // for every task set random object type
+// if there are already entries select ppt objects only
 void ReceiverNode::generate_objects(run &tasks) {
 	const size_t objects = mObjects.size();
 	const size_t pptobjects = mPptObjects.size();
@@ -117,7 +118,7 @@ void variation(vector<size_t> &positions, size_t k, vector<size_t> &vec_k) {
 }
 
 size_t ReceiverNode::get_container_id(size_t table, size_t color) {
-	// if there is already a container of this color on the same table
+	// if there already is a container of this color on the same table
 	for(size_t i=0; i<container_ids.size(); ++i) {
 		if (container_ids.at(i).at(0) == table && container_ids.at(i).at(1) == color) {
 			return container_ids.at(i).at(2);
@@ -136,6 +137,7 @@ size_t ReceiverNode::get_container_id(size_t table, size_t color) {
 		container_ids.push_back(id);
 		return id.at(2);
 	}
+	else {throw 229;}
 }
 
 void ReceiverNode::initialize_mAllTables() {
@@ -160,25 +162,26 @@ void ReceiverNode::initialize_validpicks(run &tasks) {
 	for(size_t i=0; i<objects; ++i) {
 		validpicks.at(i).resize(0);
 		for(size_t j=0; j<tables; ++j) {
-			if(mAllTables.at(j) != tasks.at(i).at(dst_id)) {
+			if(mAllTables.at(j) != size_t(tasks.at(i).at(dst_id))) {
 				validpicks.at(i).push_back(mAllTables.at(j));
 			}
 		}
 	}	
 }
 
+// reads how many picks from every table have to be done
 void ReceiverNode::initialize_picksleft() {
 	picksleft.resize(tabletypes);
-	picksleft.at(tables0_id) = paramFinal["tables0"];
-	picksleft.at(tables5_id) = paramFinal["tables5"];
-	picksleft.at(tables10_id) = paramFinal["tables10"];
-	picksleft.at(tables15_id) = paramFinal["tables15"];
+	picksleft.at(tables0_id) = paramFinal["pick_tables0"];
+	picksleft.at(tables5_id) = paramFinal["pick_tables5"];
+	picksleft.at(tables10_id) = paramFinal["pick_tables10"];
+	picksleft.at(tables15_id) = paramFinal["pick_tables15"];
 	picksleft.at(conveyors_id) = paramFinal["pick_turntables"];
 	picksleft.at(ppts_id) = paramFinal["pick_cavity_plattforms"];
 	picksleft.at(shelfs_id) = paramFinal["pick_shelf"];
 }
 
-
+// writes the IDs into mTableTypes
 size_t ReceiverNode::write_types(size_t low, size_t up, size_t type) {
 	for(size_t i=low; i<up; ++i) {
 		mTableTypes[mAllTables.at(i)] = type;
@@ -204,6 +207,7 @@ void ReceiverNode::initialize_mTableTypes() {
 	low = write_types(low, up, shelfs_id);
 }
 
+// coputes the sum of all entries in a vector
 size_t sum_vector(vector<size_t> & vec) {
 	size_t sum = 0;
 	for(size_t i=0; i<vec.size(); ++i) {
@@ -212,6 +216,7 @@ size_t sum_vector(vector<size_t> & vec) {
 	return sum;
 }
 
+// finds the index with the shortest list of validpicks
 size_t ReceiverNode::shortest_list(size_t &min) {
 	min = validpicks.at(0).size();
 	size_t minindex = 0;
@@ -226,19 +231,17 @@ size_t ReceiverNode::shortest_list(size_t &min) {
 	return minindex;
 }
 
-//FEHLERBEHAFTET
 void ReceiverNode::update_validpicks() {
 	for(size_t i=0; i<tabletypes; ++i) {
-		size_t size = validpicks.at(i).size();
     auto end = validpicks.at(i).end();
 		for(auto j = validpicks.at(i).begin(); j<end; ++j) {
-			size_t table = *j; // TABLE IST ID, KEIN INDEX
+			size_t table = *j;
 			size_t type = mTableTypes.at(table);
 			if(picksleft.at(type) == 0) {
         iter_swap(j, --end);        // Remove element
 			}
 		}
-    validpicks.at(i).erase(end, validpicks.at(i).end()); //Erase removed elements
+    validpicks.at(i).erase(end, validpicks.at(i).end()); // Erase removed elements
 	}
 }
 
@@ -289,6 +292,11 @@ run ReceiverNode::generate_Final() {
 	size_t ppts = mPpts.size();
 	size_t conveyors = mConveyors.size();
 	size_t containers = paramFinal["B_Container"] + paramFinal["R_Container"];
+	size_t table0 = mTables0.size();
+	size_t table5 = mTables5.size();
+	size_t table10 = mTables10.size();
+	size_t table15 = mTables15.size();
+	
 	if(paramFinal["FlexibleHeight"] == true) {
 		tabletypes = 8;
 	} else {
@@ -306,6 +314,10 @@ run ReceiverNode::generate_Final() {
 	else if(tables == 0 && paramFinal["B_Container"] + paramFinal["R_Container"] > 0) {throw 225;}					// No tables No container place in air
 	if (ppts == 0 && paramFinal["place_cavity_plattforms"] > 0) {throw 226;}										// No cavity plattforms
 	if (conveyors == 0 && (paramFinal["pick_turntables"] > 0 || paramFinal["place_turntbales"] > 0)) {throw 227;}	// No conveyers
+	if (table0 == 0 && paramFinal["pick_tables0"] > 0) {throw 231;}													// No tables0
+	if (table5 == 0 && paramFinal["pick_tables5"] > 0) {throw 232;}													// No tables5
+	if (table10 == 0 && paramFinal["pick_tables10"] > 0) {throw 233;}												// No tables10
+	if (table15 == 0 && paramFinal["pick_tables15"] > 0) {throw 234;}												// No tables15
 	
 	/* select #place_shelf + #place_turntables + #ppts random tasks
 	 *  select #place_shelf + #place_turntables of these 
@@ -329,6 +341,13 @@ run ReceiverNode::generate_Final() {
 	variation(position, specialplaces, specialplace, normalplace);
 	variation(specialplace, shelfTurntables ,placeShelfTurntable, placePpt);
 	variation(placeShelfTurntable, paramFinal["place_shelf"], placeShelf, placeTurntable);
+	std::cout<<"placeShelf "<<placeShelf;
+	std::cout<<"placeTurntable "<<placeTurntable;
+	std::cout<<"placePpt "<<placePpt;
+	std::cout<<"normalplace "<<normalplace;
+	/********************************************
+	 * HIER WEITERDENKEN
+	 *******************************************/
 	
 	// write the Ppts as destinations to the tasks
 	for(size_t i=0; i<placePpt.size(); ++i) {
@@ -337,6 +356,7 @@ run ReceiverNode::generate_Final() {
 	}
 	
 	// generate the objects pptobjects seperately from the others
+	// in the tasks wich are vaild entries select ppt objects only
 	generate_objects(tasks);
 	
 	// write all the other distinations to the tasks
@@ -370,12 +390,12 @@ run ReceiverNode::generate_Final() {
 	variation(valid_containerplaces, containers, container);
 	variation(container, paramFinal["B_Container"], b_container, r_container);
 	
-	for(size_t i=0; i<paramFinal["B_Container"]; ++i) {
+	for(size_t i=0; i<size_t(paramFinal["B_Container"]); ++i) {
 		size_t table = tasks.at(b_container.at(i)).at(dst_id);
 		size_t blue_container_id = get_container_id(table, blue);
 		tasks.at(b_container.at(i)).at(cont_id) = blue_container_id;	
 	}
-	for(size_t i=0; i<paramFinal["R_Container"]; ++i) {
+	for(size_t i=0; i<size_t(paramFinal["R_Container"]); ++i) {
 		size_t table = tasks.at(r_container.at(i)).at(dst_id);
 		size_t red_container_id = get_container_id(table, red);
 		tasks.at(r_container.at(i)).at(cont_id) = red_container_id;
@@ -409,21 +429,17 @@ run ReceiverNode::generate_Final() {
 		tasks.at(normalpick.at(i)).at(src_id) = mTables.at(a);
 	}
 	*/
-	debugAll("before initialisation", tasks);
+	
 	initialize_mAllTables();
-	debugAll("after initialize_mAllTables", tasks);
 	initialize_validpicks(tasks);
-	debugAll("after initialize_validpicks", tasks);
 	initialize_picksleft();
-	debugAll("after initialize_picksleft", tasks);
 	initialize_mTableTypes();
 	debugAll("after initialize_mTableTypes", tasks);
 	
 	while(sum_vector(picksleft) > 0) {
 		size_t min;
 		size_t index = shortest_list(min);
-    if (min == 0)
-      throw 229;
+		if (min == 0) {throw 230;}
 		a = rand() % min;
 		size_t table = validpicks.at(index).at(a);
 		tasks.at(index).at(src_id) = mAllTables.at(table);
@@ -432,7 +448,6 @@ run ReceiverNode::generate_Final() {
 		--picksleft.at(type);
 		update_validpicks();
 	}
-	
 	return tasks;
 }
 
@@ -443,25 +458,6 @@ run ReceiverNode::auto_task_creation() {
 		default : throw 100;
 	}
 }
-
-
-// VORLAGE
-/*
-static int toOrientation(NavigationTask::Orientation ori) {
-  if(ori < NavigationTask::NORTH && ori > NavigationTask::WEST) {
-    ROS_ERROR_STREAM("Invalid orientation specified by refbox: " << ori);
-    return 0;
-  } else
-    return ori-1;
-}
-*/
-
-/*
-static double toTime(const Time& time) {
-  return (double)time.sec()+(double)time.nsec()/1e9;
-}
-*/
-
 
 // objects with unknown position get an default position stacked in front of the table
 // NICHT ZU VERÄNDERN

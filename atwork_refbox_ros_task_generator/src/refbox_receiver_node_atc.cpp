@@ -7,7 +7,7 @@ int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "receiver_node");
 	ros::NodeHandle nh("~");
-	ros::Rate loop_rate(10); // one Hz
+	ros::Rate loop_rate(10); //  Hz
 
 		
 	try {
@@ -40,7 +40,12 @@ int main(int argc, char **argv)
 			case 226 : ROS_ERROR_STREAM(error<<"[Final] No cavity plattforms: Can't generate cavity plattform tasks without cavity plattforms"); break;
 			case 227 : ROS_ERROR_STREAM(error<<"[Final] No conveyers: Can't generate conveyer tasks without conveyers"); break;
 			case 228 : ROS_ERROR_STREAM(error<<"[Final] No valid object for PPT"); break;
-			case 229 : ROS_ERROR_STREAM(error<<"[Final] No valid picks left"); break;
+			case 229 : ROS_ERROR_STREAM(error<<"[Final] Unknown color of container"); break;
+			case 230 : ROS_ERROR_STREAM(error<<"[Final] No valid picks left"); break;
+			case 231 : ROS_ERROR_STREAM(error<<"[Final] No tables0 : Can't generate table0 picks without table0"); break;
+			case 232 : ROS_ERROR_STREAM(error<<"[Final] No tables5 : Can't generate table0 picks without table5"); break;
+			case 233 : ROS_ERROR_STREAM(error<<"[Final] No tables10 : Can't generate table0 picks without table10"); break;
+			case 234 : ROS_ERROR_STREAM(error<<"[Final] No tables15 : Can't generate table0 picks without table15"); break;
 			default  : ROS_ERROR_STREAM(error<<"Unknown error");
 		}
 	}
