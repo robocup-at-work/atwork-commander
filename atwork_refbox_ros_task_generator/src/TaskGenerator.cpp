@@ -74,6 +74,11 @@ ostream& operator<<(ostream& os, const unordered_multimap<string, atwork_refbox_
   return os;
 }
 
+enum class Orientation : unsigned int {
+  VERTICAL,
+  HORIZONTAL
+};
+
 namespace atwork_refbox_ros {
 /**
  * \brief convert table description from arena format to internal format
@@ -93,22 +98,31 @@ static auto extractTables(const ArenaDescription& arena) {
  * \return Vector of string containing names of usable cavities
  **/
 static auto extractCavities(const ArenaDescription& arena) {
-  vector<string> cavities(arena.cavities.size());
-  transform(arena.cavities.begin(), arena.cavities.end(), cavities.begin(),
+  unordered_map<string, Orientation> cavities;
+  for (const auto& item: arena.cavities) {
+
+  }
+  transform(arena.cavities.begin(), arena.cavities.end(), insert_iterator(cavities.begin()),
             [](const pair<string, bool>& item){ return item.second ? item.first : ""; });
   auto newEnd = remove_if(cavities.begin(), cavities.end(), [](const string& s){return s!="";});
   cavities.erase(newEnd, cavities.end());
   return cavities;
 }
 
-
+/** Task Generation Implementation
+ *
+ * Implements the generation of Task according to supplied configurations.
+ *
+ * 
+ *
+ **/
 class TaskGeneratorImpl {
 
   TaskDefinitions mTasks;
   unordered_multimap<string, Table> mTables;
   vector<const string*> mObjectTypes;
+  unordered_map<const string*, Orientation> mCavities;
   unsigned int mLastID = 0;
-  const vector<std::string> mCavities;
 
   Object nextObject(const string& type) { return Object(type, mLastID++); }
 
@@ -127,6 +141,8 @@ class TaskGeneratorImpl {
     for (auto& table: mTables)
       table.second.reset();
     mLastID = 0;
+
+    
 
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Objects:\n" << objects);
     // TODO
