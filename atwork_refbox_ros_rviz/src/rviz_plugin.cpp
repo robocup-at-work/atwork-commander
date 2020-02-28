@@ -10,7 +10,7 @@ RefboxUI::RefboxUI(QWidget* parent)
     : rviz::Panel(parent)
     , mainVG(parent)
 {
-    mainVG.registerSubclass(&worldVG, "World");
+    mainVG.registerSubclass(&taskGenVG, "Task Generator");
     setLayout(mainVG.getLayout());
 }
 
@@ -41,12 +41,18 @@ MainVisGroup::~MainVisGroup()
     // timer             = nullptr;
 }
 
-WorldVisGroup::~WorldVisGroup()
+TaskGenVisGroup::~TaskGenVisGroup()
 {
-    delete worldInstanceCombo;
-    delete mapNameLineEdit;
-    worldInstanceCombo = nullptr;
-    mapNameLineEdit = nullptr;
+    delete taskListCombo;
+    delete pptCavatiesLineEdit;
+    delete generateButton;
+    delete loadButton;
+    delete buttonHBoxLayout;
+    taskListCombo = nullptr;
+    pptCavatiesLineEdit = nullptr;
+    generateButton = nullptr;
+    loadButton = nullptr;
+    buttonHBoxLayout = nullptr;
 }
 
 } // atwork_refbox_ros
