@@ -4,14 +4,18 @@
 #include <ros/console.h>
 
 #include <exception>
+#include <thread>
+#include <chrono>
 
 using namespace atwork_refbox_ros;
 using namespace std;
+using namespace chrono;
 
 static void activateDebug() {
-  if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) )
+  if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
     ros::console::notifyLoggerLevelsChanged();
-  ros::Duration(1).sleep(); // Necessary to allow rosconsole to react to logger level change
+    this_thread::sleep_for(seconds(1)); // Necessary to allow rosconsole to react to logger level change
+  }
 }
 
 static auto exampleTaskDef() {
