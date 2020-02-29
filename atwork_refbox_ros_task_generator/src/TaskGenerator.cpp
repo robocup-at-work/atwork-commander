@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <unordered_map>
 #include <regex>
+#include <iterator>
 
 using namespace std;
 
@@ -19,14 +20,83 @@ class Table;
 using ObjectPtr = Object*;
 using TablePtr = Table*;
 
-struct Object {
-  const string& type;
-  const unsigned int id;
+enum class Orientation : unsigned int {
+  FREE,
+  VERTICAL,
+  HORIZONTAL
+};
+
+enum class Type : unsigned int {
+  UNKNOWN,
+  OBJECT,
+  COLORED_OBJECT,
+  CAVITY,
+  CONTAINER
+};
+
+struct ObjectType {
+  static Type extractType(const string& typeName) {
+    size_t len = typeName.length();
+    char last = typeName[ len - 1 ];
+    if (  last == 'H' || last == 'V' )
+      return Type::CAVITY;
+    if (  last == 'G' || last == 'B' )
+      return Type::COLORED_OBJECT;
+    if ( typeName.substr(0, sizeof("CONTAINER")) == "CONTAINER" )
+      return Type::CONTAINER;
+    return Type::OBJECT;
+  }
+
+  string extractForm(const string& typeName) const {
+    switch ( type ) {
+      case ( Type::CAVITY):
+      case ( Type::COLORED_OBJECT): return typeName.substr( 0, typeName.length() - 2 );
+      case ( Type::CONTAINER ): return "DEFAULT";
+      default: return typeName;
+    }
+  }
+
+  string extractColor(const string& typeName) const {
+    switch ( type ) {
+      case ( Type::COLORED_OBJECT): return typeName.substr( typeName.length() - 1 );
+      case ( Type::CONTAINER ): return typeName.substr( sizeof("CONTAINER_") );
+      default: return "DEFAULT";
+    }
+  }
+
+  Orientation extractOrientation(const string& typeName) const {
+    if ( type ==  Type::CAVITY)
+      switch ( typeName[ typeName.length() - 1 ] ) {
+        case ( 'H' ): return Orientation::HORIZONTAL;
+        case ( 'V' ): return Orientation::VERTICAL;
+      };
+    return Orientation::FREE;
+  }
+
+  const Type type = Type::UNKNOWN;
+  const string form = "";
+  const string color = "";
+  Orientation orientation = Orientation::FREE;
+  ObjectType() = default;
+  ObjectType(const string typeName)
+    : type( extractType( typeName ) ), form( extractForm( typeName ) ),
+      color( extractColor( typeName ) ),
+      orientation( extractOrientation( typeName ) )
+  {}
+};
+
+struct Object : public ObjectType {
+  static unsigned int globalID;
+  const unsigned int id=globalID++;
   TablePtr source;
   TablePtr destination;
   ObjectPtr container;
-  Object(const string& type, unsigned int id): type(type), id(id) {}
+  Object() = default;
+  Object(const ObjectType& type): ObjectType(type) {}
+  static void reset() { globalID = 0; }
 };
+
+unsigned int Object::globalID = 0;
 
 struct Table {
   std::string name ="";
@@ -37,8 +107,36 @@ struct Table {
     : name(name), type(type) {}
   void reset() { container.clear(); }
 };
+
 }
 
+ostream& operator<<(ostream& os, const atwork_refbox_ros::Type type) {
+  switch ( type ) {
+    case ( atwork_refbox_ros::Type::CAVITY ):         return os << "Cavity";
+    case ( atwork_refbox_ros::Type::CONTAINER ):      return os << "Container";
+    case ( atwork_refbox_ros::Type::COLORED_OBJECT ): return os << "Colored Object";
+    case ( atwork_refbox_ros::Type::OBJECT ):         return os << "Plain Object";
+    default:                                          return os << "UNKNOWN";
+  }
+}
+
+ostream& operator<<(ostream& os, const atwork_refbox_ros::Orientation o) {
+  switch ( o ) {
+    case( atwork_refbox_ros::Orientation::VERTICAL )  : return os << "V";
+    case( atwork_refbox_ros::Orientation::HORIZONTAL ): return os << "H";
+    default                        : return os << "UNKNOWN";
+  }
+}
+
+ostream& operator<<(ostream& os, const atwork_refbox_ros::ObjectType& type) {
+  switch ( type.type ) {
+    case ( atwork_refbox_ros::Type::CAVITY ):         return os << type.form << "_" << type.orientation;
+    case ( atwork_refbox_ros::Type::CONTAINER ):
+    case ( atwork_refbox_ros::Type::COLORED_OBJECT ): return os << type.form << "_" << type.color;
+    case ( atwork_refbox_ros::Type::OBJECT ):         return os << type.form;
+    default:                                           return os << "UNKNOWN OBJECT TYPE";
+  }
+}
 
 ostream& operator<<(ostream& os, const atwork_refbox_ros::Table& t) {
   os << "Table " << t.name << "(" << t.type << "):";
@@ -62,52 +160,28 @@ ostream& operator<<(ostream& os, const vector<atwork_refbox_ros::Object>& v) {
   return os;
 }
 
-ostream& operator<<(ostream& os, const vector<const string*>& v) {
+template<typename T>
+ostream& operator<<(ostream& os, const vector<const T*>& v) {
   for (size_t i=0; i<v.size(); i++)
     os << *v[i] << (i+1!=v.size()?" ":"");
   return os;
 }
 
-ostream& operator<<(ostream& os, const unordered_multimap<string, atwork_refbox_ros::Table>& m) {
+template<typename T>
+ostream& operator<<(ostream& os, const vector<T>& v) {
+  for (size_t i=0; i<v.size(); i++)
+    os << v[i] << (i+1!=v.size()?" ":"");
+  return os;
+}
+
+template<typename K, typename V>
+ostream& operator<<(ostream& os, const unordered_multimap<K, V>& m) {
   for (const auto& item: m)
     os << item.first << " = " << item.second << endl;
   return os;
 }
 
-enum class Orientation : unsigned int {
-  VERTICAL,
-  HORIZONTAL
-};
-
 namespace atwork_refbox_ros {
-/**
- * \brief convert table description from arena format to internal format
- * \param arena Description of Arena
- * \return Vector of TaskGenerator::Table objects filled with arena information
- **/
-static auto extractTables(const ArenaDescription& arena) {
-  unordered_multimap<string, Table> tables;
-  for (const auto& table: arena.workstations)
-    tables.emplace(table.second, Table(table.first, table.second));
-  return tables;
-}
-
-/**
- * \brief convert information on usable cavities of PPT to internal format
- * \param arena Description of Arena
- * \return Vector of string containing names of usable cavities
- **/
-static auto extractCavities(const ArenaDescription& arena) {
-  unordered_map<string, Orientation> cavities;
-  for (const auto& item: arena.cavities) {
-
-  }
-  transform(arena.cavities.begin(), arena.cavities.end(), insert_iterator(cavities.begin()),
-            [](const pair<string, bool>& item){ return item.second ? item.first : ""; });
-  auto newEnd = remove_if(cavities.begin(), cavities.end(), [](const string& s){return s!="";});
-  cavities.erase(newEnd, cavities.end());
-  return cavities;
-}
 
 /** Task Generation Implementation
  *
@@ -118,29 +192,32 @@ static auto extractCavities(const ArenaDescription& arena) {
  **/
 class TaskGeneratorImpl {
 
-  TaskDefinitions mTasks;
-  unordered_multimap<string, Table> mTables;
-  vector<const string*> mObjectTypes;
-  unordered_map<const string*, Orientation> mCavities;
-  unsigned int mLastID = 0;
-
-  Object nextObject(const string& type) { return Object(type, mLastID++); }
-
-  void extractObjectTypes(const string& task) {
-    mObjectTypes.resize(mTasks[task].size());
-    auto it=mObjectTypes.begin();
-    for (const auto& item: mTasks[task])
-      if ( item.second && regex_match(item.first, regex("[A-Z0-9_]+")))
-        *it++=&item.first;
-    mObjectTypes.erase(it, mObjectTypes.end());
+  static auto extractCavities(const ArenaDescription& arena) {
+    vector<ObjectType> cavities;
+      for (const auto& item: arena.cavities)
+        if ( item.second )
+          cavities.emplace_back(item.first);
+    return cavities;
   }
 
-  Task generate(const TaskDefinition& def){
+  TaskDefinitions mTasks;
+  unordered_multimap<string, Table> mTables;
+  const vector<ObjectType> mAvailableCavities;
+
+  auto extractObjectTypes(const string& task) {
+    vector<ObjectType> availableObjects;
+    for ( const auto& item: mTasks[task] )
+      if ( item.second && regex_match( item.first, regex("[A-Z0-9_]+") ) )
+        availableObjects.emplace_back(item.first);
+    return availableObjects;
+  }
+
+  Task generate( const TaskDefinition& def, const vector<ObjectType> availableObjects){
+    Object::reset();
     vector<Object> container;
     vector<Object> objects;
-    for (auto& table: mTables)
+    for ( auto& table: mTables )
       table.second.reset();
-    mLastID = 0;
 
     
 
@@ -150,7 +227,7 @@ class TaskGeneratorImpl {
     return Task();
   }
 
-  void sanityCheck(std::string task = "") {
+  void sanityCheck(std::string task = "", const vector<ObjectType>* availableObjects=NULL) {
     if (task == "") {
       if (mTables.size() < 2) throw runtime_error("At least two tables need to exist in the arena!");
       if (mTasks.empty()) throw runtime_error("No Tasks configured!");
@@ -163,7 +240,8 @@ class TaskGeneratorImpl {
       }
       return;
     }
-    if (mTasks[task]["object_count"]>=0 && mObjectTypes.empty() ) {
+
+    if (mTasks[task]["object_count"]>=0 && availableObjects->empty() ) {
       ostringstream os;
       os << task << ": Transportation Task without allowed object defined!";
       throw runtime_error(os.str());
@@ -213,8 +291,14 @@ class TaskGeneratorImpl {
 
   public:
     TaskGeneratorImpl(const ArenaDescription& arena, const TaskDefinitions& tasks)
-      : mTasks(tasks), mTables(extractTables(arena)), mCavities(extractCavities(arena))
+      : mTasks(tasks), mAvailableCavities( extractCavities( arena ) )
     {
+
+      for (const auto& table: arena.workstations)
+        mTables.emplace(table.second, Table(table.first, table.second));
+
+
+
       sanityCheck();
     }
 
@@ -229,12 +313,12 @@ class TaskGeneratorImpl {
           os << item.first << " ";
         throw runtime_error(os.str());
       }
-      extractObjectTypes(task->first);
+      auto availableObjects = extractObjectTypes(task->first);
       ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Tables:\n" << mTables);
-      ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] ObjectTypes:\n" << mObjectTypes);
-      ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Last ObjectID = " << mLastID);
-      sanityCheck(task->first);
-      return generate(task->second);
+      ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Cavities:\n" << mAvailableCavities);
+      ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] ObjectTypes:\n" << availableObjects);
+      sanityCheck(task->first, &availableObjects);
+      return generate(task->second, availableObjects);
     }
 };
 
