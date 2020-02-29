@@ -1,1 +1,3 @@
 docs
+compile_commands.json
+.clangd
