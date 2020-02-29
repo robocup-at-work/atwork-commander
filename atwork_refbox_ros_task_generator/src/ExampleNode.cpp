@@ -45,8 +45,8 @@ static auto exampleTaskDef() {
       {"BEARING_BOX",1},
       {"DISTANCE_TUBE",1},
       {"MOTOR",1},
-      {"container_red",1},
-      {"container_blue",1}
+      {"CONTAINER_RED",1},
+      {"CONTAINER_BLUE",1}
     };
     TaskDefinitions def{{"EXAMPLE", example}};
     return def;
