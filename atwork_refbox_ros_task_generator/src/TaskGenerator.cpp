@@ -34,7 +34,7 @@ enum class Type : unsigned int {
   CONTAINER
 };
 
-struct ObjectType {
+struct ObjectBase {
   static Type extractType(const string& typeName) {
     size_t len = typeName.length();
     char last = typeName[ len - 1 ];
@@ -76,23 +76,41 @@ struct ObjectType {
   const Type type = Type::UNKNOWN;
   const string form = "";
   const string color = "";
+  const unsigned int count = 0;
   Orientation orientation = Orientation::FREE;
-  ObjectType() = default;
-  ObjectType(const string typeName)
+  ObjectBase() = default;
+  ObjectBase(const string typeName)
     : type( extractType( typeName ) ), form( extractForm( typeName ) ),
       color( extractColor( typeName ) ),
       orientation( extractOrientation( typeName ) )
   {}
 };
 
-struct Object : public ObjectType {
+struct ObjectType : public ObjectBase {
+  unsigned int count = 0;
+  ObjectType( const string& typeName, unsigned int count )
+    : ObjectBase( typeName ), count(count)
+  {}
+  operator bool() const { return count; }
+  ObjectType& operator--() {
+    count--;
+    return *this;
+  }
+  ObjectType operator--(int) {
+    ObjectType temp(*this);
+    count--;
+    return temp;
+  }
+};
+
+struct Object : public ObjectBase {
   static unsigned int globalID;
   const unsigned int id=globalID++;
   TablePtr source;
   TablePtr destination;
   ObjectPtr container;
   Object() = default;
-  Object(const ObjectType& type): ObjectType(type) {}
+  Object(const ObjectType& type): ObjectBase(type) {}
   static void reset() { globalID = 0; }
 };
 
@@ -196,7 +214,7 @@ class TaskGeneratorImpl {
     vector<ObjectType> cavities;
       for (const auto& item: arena.cavities)
         if ( item.second )
-          cavities.emplace_back(item.first);
+          cavities.emplace_back(item.first, item.second);
     return cavities;
   }
 
@@ -208,7 +226,7 @@ class TaskGeneratorImpl {
     vector<ObjectType> availableObjects;
     for ( const auto& item: mTasks[task] )
       if ( item.second && regex_match( item.first, regex("[A-Z0-9_]+") ) )
-        availableObjects.emplace_back(item.first);
+        availableObjects.emplace_back(item.first, item.second);
     return availableObjects;
   }
 
