@@ -109,17 +109,16 @@ struct ObjectType : public ObjectBase {
 
 struct Object : public ObjectBase {
   static unsigned int globalID;
-  unsigned int id=globalID++;
+  unsigned int id=0;
   TablePtr source = nullptr;
   TablePtr destination = nullptr;
   ObjectPtr container = nullptr;
   Object() = default;
-  Object(const ObjectType& type): ObjectBase(type) {}
-  Object(const Object& copy): ObjectBase(copy), id(copy.id) { }
+  Object(const ObjectType& type): ObjectBase(type), id(globalID++) {}
   static void reset() { globalID = 0; }
 };
 
-unsigned int Object::globalID = 0;
+unsigned int Object::globalID = 1;
 
 struct Table {
   std::string name ="";
@@ -304,10 +303,22 @@ class TaskGeneratorImpl {
     return tables;
   }
 
-  static vector<Object*> toPtr(vector<Object>::iterator start, vector<Object>::iterator end) {
-    vector<Object*> ptrs( end - start );
-    transform( start, end, ptrs.begin(), [](Object& t){ return &t; } );
+  template<typename T>
+  static vector<T*> toPtr(typename vector<T>::iterator start, typename vector<T>::iterator end) {
+    vector<T*> ptrs( end - start );
+    transform( start, end, ptrs.begin(), [](T& t){ return &t; } );
     return ptrs;
+  }
+
+  template<typename T>
+  T& uniqueSelect(typename vector<T>::iterator start, typename vector<T>::iterator& end) {
+    if ( start == end )
+      throw runtime_error("Tried to unique select from an empty sequence!");
+
+    auto rand = uniform_int_distribution<size_t>( 0, end - start - 1 );
+    auto selected = start + rand( mRand );
+    iter_swap(selected, end - 1);
+    return *--end;
   }
 
   vector<Object*> generateCavities( TaskDefinition& def, vector<ObjectType> availableCavities, vector<Object>& objects )
@@ -328,7 +339,7 @@ class TaskGeneratorImpl {
 
     uniform_int_distribution<size_t> rand(0, n-1);
     auto ppTables = extractTablesByTypes( { "PP" } );
-    auto cavities = toPtr(start, objects.end());
+    auto cavities = toPtr<Object>(start, objects.end());
 
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Generated Cavities:" << endl << cavities);
     for (auto& cavityPtr : cavities) {
@@ -366,7 +377,7 @@ class TaskGeneratorImpl {
           *start++ = temp;
         }
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Generated Objects (after Container Generation):" << endl << objects);
-    return toPtr( objects.end() - numContainersAvailable, objects.end());
+    return toPtr<Object>( objects.end() - numContainersAvailable, objects.end());
   }
 
   void place( TaskDefinition& def, vector<ObjectType>& availableObjects, vector<Object>& objects, string tableType )
@@ -424,13 +435,10 @@ class TaskGeneratorImpl {
       os << "Not enough cavities generated! Generated " << cavities.size() << ", min Necessary: " << def[ "pp" ] << "!";
       throw runtime_error(os.str());
     }
-    auto last = cavities.end()-1;
+    auto end = cavities.end();
     for ( size_t i = 0; i < def[ "pp" ]; i++ ) {
-      auto rand = uniform_int_distribution<size_t>( 0, last - cavities.begin()-1 );
-      auto selected = cavities.begin() + rand( mRand );
-      place( def, availableObjects, objects, **selected );
-      iter_swap(selected, last);
-      last--;
+      Object* selected = uniqueSelect<Object*>(cavities.begin(), end);
+      place( def, availableObjects, objects, *selected );
     }
 
     auto containers = generateContainers( def, availableObjects, objects );
@@ -440,9 +448,8 @@ class TaskGeneratorImpl {
       throw runtime_error(os.str());
     }
     auto rand = uniform_int_distribution<size_t>( 0, containers.size()-1 );
-    for ( size_t i = 0; i < def[ "container_placing" ]; i++) {
+    for ( size_t i = 0; i < def[ "container_placing" ]; i++)
       place( def, availableObjects, objects, *containers[ rand(mRand) ] );
-    }
 
 
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Objects:\n" << objects);
