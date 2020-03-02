@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <regex>
 #include <iterator>
+#include <random>
+#include <numeric>
 
 using namespace std;
 
@@ -73,10 +75,9 @@ struct ObjectBase {
     return Orientation::FREE;
   }
 
-  const Type type = Type::UNKNOWN;
-  const string form = "";
-  const string color = "";
-  const unsigned int count = 0;
+  Type type = Type::UNKNOWN;
+  string form = "";
+  string color = "";
   Orientation orientation = Orientation::FREE;
   ObjectBase() = default;
   ObjectBase(const string typeName)
@@ -105,7 +106,7 @@ struct ObjectType : public ObjectBase {
 
 struct Object : public ObjectBase {
   static unsigned int globalID;
-  const unsigned int id=globalID++;
+  unsigned int id=globalID++;
   TablePtr source;
   TablePtr destination;
   ObjectPtr container;
@@ -218,6 +219,7 @@ class TaskGeneratorImpl {
     return cavities;
   }
 
+  default_random_engine mRand;
   TaskDefinitions mTasks;
   unordered_multimap<string, Table> mTables;
   const vector<ObjectType> mAvailableCavities;
@@ -230,36 +232,8 @@ class TaskGeneratorImpl {
     return availableObjects;
   }
 
-  Task generate( const TaskDefinition& def, const vector<ObjectType> availableObjects){
-    Object::reset();
-    vector<Object> container;
-    vector<Object> objects;
-    for ( auto& table: mTables )
-      table.second.reset();
-
-    
-
-    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Objects:\n" << objects);
-    // TODO
-
-    return Task();
-  }
-
-  void sanityCheck(std::string task = "", const vector<ObjectType>* availableObjects=NULL) {
-    if (task == "") {
-      if (mTables.size() < 2) throw runtime_error("At least two tables need to exist in the arena!");
-      if (mTasks.empty()) throw runtime_error("No Tasks configured!");
-      for (auto& task : mTasks ) {
-        if ( task.second["object_count"] == 0 && task.second["waypoint_count"] == 0 ) {
-          ostringstream os;
-          os << task.first << ": Empty Task defined!";
-          throw runtime_error(os.str());
-        }
-      }
-      return;
-    }
-
-    if (mTasks[task]["object_count"]>=0 && availableObjects->empty() ) {
+  void sanityCheck(std::string task, const vector<ObjectType>& availableObjects) {
+    if (mTasks[task]["object_count"]>=0 && availableObjects.empty() ) {
       ostringstream os;
       os << task << ": Transportation Task without allowed object defined!";
       throw runtime_error(os.str());
@@ -307,6 +281,141 @@ class TaskGeneratorImpl {
     //TODO
   }
 
+  void sanityCheck() {
+    if (mTables.size() < 2) throw runtime_error("At least two tables need to exist in the arena!");
+    if (mTasks.empty()) throw runtime_error("No Tasks configured!");
+    for (auto& task : mTasks ) {
+      if ( task.second["object_count"] == 0 && task.second["waypoint_count"] == 0 ) {
+        ostringstream os;
+        os << task.first << ": Empty Task defined!";
+        throw runtime_error(os.str());
+      }
+    }
+  }
+
+
+
+  vector<Object*> generateCavities( TaskDefinition& def, vector<ObjectType> availableCavities, vector<Object>& objects )
+  {
+    vector<Object*> cavities;
+    size_t cavityPerPPT = 5;
+    size_t n = mTables.count( "PP" );
+    size_t numCavitiesAvailable = accumulate(availableCavities.begin(), availableCavities.end(), 0ul, [](size_t n, ObjectType& t){ return t.count + n; });
+    size_t cavitiesToGenerate = min(n*cavityPerPPT, numCavitiesAvailable);
+    objects.resize( objects.size() + cavitiesToGenerate );
+    auto startCavities = objects.end() - cavitiesToGenerate;
+    cavities.resize( cavitiesToGenerate );
+    shuffle( availableCavities.begin(), availableCavities.end(), mRand );
+    transform( availableCavities.begin(), availableCavities.begin() + cavitiesToGenerate, startCavities,
+               [](const ObjectType& t){ return Object(t); }
+             );
+
+    transform( startCavities, objects.end(), cavities.begin(),
+               [](Object& t){ return &t; }
+             );
+    return cavities;
+  }
+
+  vector<Object*> generateContainers( TaskDefinition& def,  vector<ObjectType>& availableObjects, vector<Object>& objects)
+  {
+    vector<Object*> containers;
+    for ( ObjectType& type : availableObjects ) {
+      if ( type.type == Type::CONTAINER )
+        for ( unsigned int i = 0; i < type.count; i++ ) {
+          objects.emplace_back( type );
+          // TODO Add to table
+        }
+    }
+    return containers;
+  }
+
+  void place( TaskDefinition& def, vector<ObjectType>& availableObjects, vector<Object>& objects, string tableType )
+  {
+    // TODO
+  }
+
+  void place( TaskDefinition& def, vector<ObjectType>& availableObjects, vector<Object>& objects, Object& container )
+  {
+
+    // TODO
+    if ( container.type == Type::CAVITY && def[ "pp_team_orientation" ] )
+      container.orientation = Orientation::FREE;
+
+    // TODO
+  }
+
+  void pick( TaskDefinition& def, vector<ObjectType>& availableObjects, vector<Object>& objects, string tableType )
+  {
+
+    // TODO
+
+  }
+
+  Task generate( const string& taskName){
+    TaskDefinition& def = mTasks[ taskName ];
+    Object::reset();
+    vector<Object> objects;
+    for ( auto& table: mTables )
+      table.second.reset();
+
+    auto availableObjects = extractObjectTypes( taskName );
+    auto availableCavities = mAvailableCavities; // TODO: filter according to allowed Objects from Task
+    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Tables:\n" << mTables);
+    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Cavities:\n" << mAvailableCavities);
+    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] ObjectTypes:\n" << availableObjects);
+
+    sanityCheck(taskName, availableObjects);
+    auto seedIt = def.find("seed");
+    if ( seedIt != def.end() ) mRand.seed(seedIt->second);
+
+
+    // PP fill
+    // generate places on PP
+    // Container generate and distribute
+    // generate places on Container
+    // generate places on shelf
+    // generate picks on shelf
+    // generate picks on rt
+    // generate remaining places
+    // generate remaining picks
+
+
+    auto cavities = generateCavities( def, availableCavities, objects);
+    if ( cavities.size() < def[ "pp" ] ) {
+      ostringstream os;
+      os << "Not enough cavities generated! Generated " << cavities.size() << ", min Necessary: " << def[ "pp" ] << "!";
+      throw runtime_error(os.str());
+    }
+    auto end = cavities.end();
+    for ( size_t i = 0; i < def[ "pp" ]; i++ ) {
+      auto rand = uniform_int_distribution<size_t>( 0, end - cavities.begin() );
+      auto selected = cavities.begin() + rand( mRand );
+      place( def, availableObjects, objects, **selected );
+      iter_swap(selected, end);
+      end--;
+    }
+
+    auto containers = generateContainers( def, availableObjects, objects );
+    if ( containers.size() < 1 && def[ "container_placing" ] ) {
+      ostringstream os;
+      os << "Not enough containers generated! Generated " << containers.size() << ", min Necessary: " << 1 << "!";
+      throw runtime_error(os.str());
+    }
+    auto rand = uniform_int_distribution<size_t>( 0, containers.size() );
+    for ( size_t i = 0; i < def[ "container_placing" ]; i++) {
+      place( def, availableObjects, objects, *containers[ rand(mRand) ] );
+    }
+
+
+    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Objects:\n" << objects);
+    // TODO
+
+    return Task();
+  }
+
+
+
+
   public:
     TaskGeneratorImpl(const ArenaDescription& arena, const TaskDefinitions& tasks)
       : mTasks(tasks), mAvailableCavities( extractCavities( arena ) )
@@ -331,12 +440,7 @@ class TaskGeneratorImpl {
           os << item.first << " ";
         throw runtime_error(os.str());
       }
-      auto availableObjects = extractObjectTypes(task->first);
-      ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Tables:\n" << mTables);
-      ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Cavities:\n" << mAvailableCavities);
-      ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] ObjectTypes:\n" << availableObjects);
-      sanityCheck(task->first, &availableObjects);
-      return generate(task->second, availableObjects);
+      return generate(task->first);
     }
 };
 
