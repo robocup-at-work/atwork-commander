@@ -114,7 +114,7 @@ struct Object : public ObjectBase {
   TablePtr destination = nullptr;
   ObjectPtr container = nullptr;
   Object() = default;
-  Object(const ObjectType& type): ObjectBase(type), id(globalID++) {}
+  Object(ObjectType& type): ObjectBase(type), id(globalID++) { type--; }
   static void reset() { globalID = 0; }
 };
 
@@ -158,6 +158,11 @@ ostream& operator<<(ostream& os, const atwork_refbox_ros::ObjectBase& type) {
     default:                                           return os << "UNKNOWN OBJECT TYPE";
   }
 }
+
+ostream& operator<<(ostream& os, const atwork_refbox_ros::ObjectType& type) {
+  return os << ((atwork_refbox_ros::ObjectBase)type) << "(" << type.count << ")";
+}
+
 
 ostream& operator<<(ostream& os, const atwork_refbox_ros::Table& t) {
   return os << "Table " << t.name << "(" << t.type << "):";
@@ -321,7 +326,12 @@ class TaskGeneratorImpl {
     return *--end;
   }
 
-  vector<Object*> generateCavities( TaskDefinition& def, vector<ObjectType> availableCavities, vector<Object>& objects )
+  static void cleanTypes(vector<ObjectType>& types) {
+    auto end = remove_if(types.begin(), types.end(), [](const ObjectType& t){ return t.count == 0; });
+    types.erase(end, types.end());
+  }
+
+  vector<Object*> generateCavities( TaskDefinition& def, vector<ObjectType>& availableCavities, vector<Object>& objects )
   {
     size_t cavitiesPerPPT = 5;
     size_t n = mTables.count( "PP" );
@@ -334,7 +344,7 @@ class TaskGeneratorImpl {
     auto start = objects.end() - cavitiesToGenerate;
     shuffle( availableCavities.begin(), availableCavities.end(), mRand );
     transform( availableCavities.begin(), availableCavities.begin() + cavitiesToGenerate, start,
-               [](const ObjectType& t){ return Object(t); }
+               [](ObjectType& t){ return Object(t); }
              );
 
     uniform_int_distribution<size_t> rand(0, n-1);
@@ -367,7 +377,7 @@ class TaskGeneratorImpl {
 
     uniform_int_distribution<size_t> rand(0, tables.size()-1);
 
-    for ( const auto& type : availableObjects )
+    for ( ObjectType& type : availableObjects )
       if ( type.type == Type::CONTAINER )
         for ( size_t i = 0; i < type.count; i++) {
           Object temp(type);
@@ -380,14 +390,23 @@ class TaskGeneratorImpl {
     return toPtr<Object>( objects.end() - numContainersAvailable, objects.end());
   }
 
-  void place( TaskDefinition& def, vector<ObjectType>& availableObjects, vector<Object>& objects, string tableType )
+  vector<Object*> generateObjects( TaskDefinition& def, vector<ObjectType>& availableObjects,
+                                  vector<Object>& objects, size_t objectCount = 1, size_t decoyCount = 0)
   {
+    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Generate " << objectCount << " Objects and " << decoyCount << " Decoys");
+    //TODO
+    return {};
+  }
+
+  void place( TaskDefinition& def, Object& object, vector<string> tableTypes )
+  {
+    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Place " << object << " on table of types [" << tableTypes << "]");
     // TODO
   }
 
-  void place( TaskDefinition& def, vector<ObjectType>& availableObjects, vector<Object>& objects, Object& container )
+  void place( TaskDefinition& def, Object& object, Object& container )
   {
-    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Generate Object to be placed in Container " << container);
+    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Place " << object << " in " << container);
     // TODO
     if ( container.type == Type::CAVITY && def[ "pp_team_orientation" ] )
       container.orientation = Orientation::FREE;
@@ -395,9 +414,10 @@ class TaskGeneratorImpl {
     // TODO
   }
 
-  void pick( TaskDefinition& def, vector<ObjectType>& availableObjects, vector<Object>& objects, string tableType )
+  void pick( TaskDefinition& def, Object& object, vector<string> tableTypes )
   {
 
+    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Pick " << object << " from table of types [" << tableTypes << "]");
     // TODO
 
   }
@@ -408,7 +428,7 @@ class TaskGeneratorImpl {
     vector<Object> objects;
 
     auto availableObjects = extractObjectTypes( taskName );
-    auto availableCavities = mAvailableCavities; // TODO: filter according to allowed Objects from Task
+    vector<ObjectType> availableCavities = mAvailableCavities; // TODO: filter according to allowed Objects from Task
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Tables:\n" << mTables);
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Cavities:\n" << mAvailableCavities);
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] ObjectTypes:\n" << availableObjects);
@@ -430,6 +450,7 @@ class TaskGeneratorImpl {
 
 
     auto cavities = generateCavities( def, availableCavities, objects);
+    cleanTypes( availableCavities );
     if ( cavities.size() < def[ "pp" ] ) {
       ostringstream os;
       os << "Not enough cavities generated! Generated " << cavities.size() << ", min Necessary: " << def[ "pp" ] << "!";
@@ -438,21 +459,48 @@ class TaskGeneratorImpl {
     auto end = cavities.end();
     for ( size_t i = 0; i < def[ "pp" ]; i++ ) {
       Object* selected = uniqueSelect<Object*>(cavities.begin(), end);
-      place( def, availableObjects, objects, *selected );
+      //TODO Filter available Objects according to cavity type
+      auto genObjects = generateObjects(def, availableObjects, objects);
+      if ( genObjects.empty() ) {
+        throw runtime_error("Did not generate any objects!");
+      }
+      place( def, *genObjects.front(), *selected );
+      def[ "pp" ]--;
     }
 
     auto containers = generateContainers( def, availableObjects, objects );
+    cleanTypes( availableObjects );
     if ( containers.size() < 1 && def[ "container_placing" ] ) {
       ostringstream os;
       os << "Not enough containers generated! Generated " << containers.size() << ", min Necessary: 1!";
       throw runtime_error(os.str());
     }
     auto rand = uniform_int_distribution<size_t>( 0, containers.size()-1 );
-    for ( size_t i = 0; i < def[ "container_placing" ]; i++)
-      place( def, availableObjects, objects, *containers[ rand(mRand) ] );
+    auto genObjects = generateObjects(def, availableObjects, objects, def[ "container_placing" ] );
+    def[ "container_placing" ]=0;
+    for ( Object* objPtr: genObjects)
+      place( def, *objPtr, *containers[ rand(mRand) ] );
 
+    size_t created = accumulate(objects.begin(), objects.end(), 0,
+                                [](size_t n, const Object& o){ return n + (o.type==Type::OBJECT || o.type == Type::COLORED_OBJECT ? 1 : 0); } );
+    genObjects = generateObjects(def, availableObjects, objects, def[ "object_count" ] - created, def[ "decoy_count"] );
+    for ( Object* objPtr: genObjects ) {
+      if ( def[ "shelf_placing" ] ) {
+        place( def, *objPtr, { "Shelf" } );
+        def[ "shelf_placing" ]--;
+        continue;
+      }
+      if ( def[ "rt_placing" ] ) {
+        place( def, *objPtr, { "TT" } );
+        def[ "rt_placing" ]--;
+        continue;
+      }
+      place(def, *objPtr, { "00", "05", "10", "15" } );
+    }
 
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Objects:\n" << objects);
+    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Available Objects:\n" << availableObjects);
+    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Available Cavities:\n" << availableCavities);
     // TODO
 
     return Task();
