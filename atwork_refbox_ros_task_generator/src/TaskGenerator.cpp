@@ -427,7 +427,6 @@ class TaskGeneratorImpl {
   void place( TaskDefinition& def, Object& object, Object& container )
   {
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Place " << object << " in " << container);
-    // TODO
     if ( container.type == Type::CAVITY && def[ "pp_team_orientation" ] )
       container.orientation = Orientation::FREE;
     object.destination = container.source;
@@ -512,9 +511,9 @@ class TaskGeneratorImpl {
                                 [](size_t n, const Object& o){ return n + (o.type==Type::OBJECT || o.type == Type::COLORED_OBJECT ? 1 : 0); } );
     genObjects = generateObjects(def, availableObjects, objects, def[ "object_count" ] - created, def[ "decoy_count"] );
     for ( Object* objPtr: genObjects ) {
-      if ( def[ "shelf_placing" ] ) {
-        place( def, *objPtr, { "Shelf" } );
-        def[ "shelf_placing" ]--;
+      if ( def[ "shelfes_placing" ] ) {
+        place( def, *objPtr, { "SH" } );
+        def[ "shelfes_placing" ]--;
         continue;
       }
       if ( def[ "rt_placing" ] ) {
