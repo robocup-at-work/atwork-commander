@@ -394,14 +394,34 @@ class TaskGeneratorImpl {
                                   vector<Object>& objects, size_t objectCount = 1, size_t decoyCount = 0)
   {
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Generate " << objectCount << " Objects and " << decoyCount << " Decoys");
-    //TODO
-    return {};
+    auto typeEnd = availableObjects.end();
+    auto it = start;
+    for ( size_t i = 0; i < objectCount + decoyCount; i++) {
+      uniform_int_distribution<size_t> rand(0, typeEnd - availableObjects.begin() - 1);
+      size_t offset = rand( mRand );
+      ObjectType& type = availableObjects[ offset ];
+      *it++ = Object(type);
+      if ( !type.count )
+        iter_swap(availableObjects.begin() + offset, --typeEnd);
+    }
+    availableObjects.erase(typeEnd, availableObjects.end());
+    auto objects = toPtr<Object>(start, it);
+    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Generated Objects:" << endl << objects);
+    return toPtr<Object>(start, start + objectCount);
   }
 
   void place( TaskDefinition& def, Object& object, vector<string> tableTypes )
   {
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Place " << object << " on table of types [" << tableTypes << "]");
-    // TODO
+    vector<TablePtr> tables = extractTablesByTypes( tableTypes );
+    if ( tables.empty() ) {
+      ostringstream os;
+      os << "Not enough tables of Types " << tableTypes << " available! Min. necessary: 1, Extracted: 0";
+      throw runtime_error( os.str() );
+    }
+    uniform_int_distribution<size_t> rand(0, tables.size() - 1 );
+    Table* table = tables[ rand( mRand ) ];
+    object.destination = table;
   }
 
   void place( TaskDefinition& def, Object& object, Object& container )
@@ -410,16 +430,23 @@ class TaskGeneratorImpl {
     // TODO
     if ( container.type == Type::CAVITY && def[ "pp_team_orientation" ] )
       container.orientation = Orientation::FREE;
-
-    // TODO
+    object.destination = container.source;
+    object.container = &container;
   }
 
   void pick( TaskDefinition& def, Object& object, vector<string> tableTypes )
   {
 
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Pick " << object << " from table of types [" << tableTypes << "]");
-    // TODO
-
+    vector<TablePtr> tables = extractTablesByTypes( tableTypes );
+    if ( tables.empty() ) {
+      ostringstream os;
+      os << "Not enough tables of Types " << tableTypes << " available! Min. necessary: 1, Extracted: 0";
+      throw runtime_error( os.str() );
+    }
+    uniform_int_distribution<size_t> rand(0, tables.size() - 1 );
+    Table* table = tables[ rand( mRand ) ];
+    object.source = table;
   }
 
   Task generate( const string& taskName){
@@ -497,6 +524,26 @@ class TaskGeneratorImpl {
       }
       place(def, *objPtr, { "00", "05", "10", "15" } );
     }
+
+    for ( Object* objPtr: genObjects ) {
+      if ( def[ "shelfes_picking" ] ) {
+        pick( def, *objPtr, { "SH" } );
+        def[ "shelfes_picking" ]--;
+        continue;
+      }
+      if ( def[ "rt_picking" ] ) {
+        pick( def, *objPtr, { "TT" } );
+        def[ "rt_picking" ]--;
+        continue;
+      }
+      pick(def, *objPtr, { "00", "05", "10", "15" } );
+    }
+
+    for (auto it = objects.begin(); it < start; it++)
+      if ( !it->source )
+        pick(def, *it, { "00", "05", "10", "15", "TT", "SH" } );
+
+    objects.erase(start, objects.end());
 
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Objects:\n" << objects);
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Available Objects:\n" << availableObjects);
