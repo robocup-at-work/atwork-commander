@@ -381,8 +381,9 @@ class TaskGeneratorImpl {
     return containers;
   }
 
-  vector<Object*> generateObjects( TaskDefinition& def, vector<ObjectType>& availableObjects,
-                                  vector<Object>::iterator start, size_t objectCount = 1, size_t decoyCount = 0)
+
+  vector<Object*> generateObjects( TaskDefinition& def, vector<ObjectType*> availableObjects,
+                                  vector<Object>::iterator start, size_t objectCount, size_t decoyCount)
   {
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Generate " << objectCount << " Objects and " << decoyCount << " Decoys");
     auto typeEnd = availableObjects.end();
@@ -390,16 +391,32 @@ class TaskGeneratorImpl {
     for ( size_t i = 0; i < objectCount + decoyCount; i++) {
       uniform_int_distribution<size_t> rand(0, typeEnd - availableObjects.begin() - 1);
       size_t offset = rand( mRand );
-      ObjectType& type = availableObjects[ offset ];
+      ObjectType& type = *availableObjects[ offset ];
       *it++ = Object(type);
       if ( !type.count )
         iter_swap(availableObjects.begin() + offset, --typeEnd);
     }
-    availableObjects.erase(typeEnd, availableObjects.end());
     auto objects = toPtr<Object>(start, it);
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Generated Objects:" << endl << objects);
     return toPtr<Object>(start, start + objectCount);
   }
+
+  vector<Object*> generateObjects( TaskDefinition& def, vector<ObjectType> availableObjects,
+                                  vector<Object>::iterator start, size_t objectCount=1, size_t decoyCount=0)
+  {
+    return generateObjects(def, toPtr<ObjectType>(availableObjects.begin(), availableObjects.end()), start, objectCount, decoyCount);
+  }
+
+  template<typename F>
+  vector<Object*> generateObjects( TaskDefinition& def, vector<ObjectType> availableObjects,
+                                  vector<Object>::iterator start, size_t objectCount, size_t decoyCount, F&& filter) {
+    vector<ObjectType*> ptrs = toPtr<ObjectType>(availableObjects.begin(), availableObjects.end());
+    auto end = remove_if(ptrs.begin(), ptrs.end(), filter);
+    ptrs.erase(end, ptrs.end());
+    return generateObjects(def, ptrs, start, objectCount, decoyCount);
+
+  }
+
 
   void place( TaskDefinition& def, Object& object, vector<string> tableTypes )
   {
@@ -485,14 +502,14 @@ class TaskGeneratorImpl {
     auto end = cavities.end();
     for ( size_t i = 0; i < def[ "pp" ]; i++ ) {
       Object* selected = uniqueSelect<Object*>(cavities.begin(), end);
-      //TODO Filter available Objects according to cavity type
-      auto genObjects = generateObjects(def, availableObjects, start++);
+      auto filter = [selected](const ObjectType* t){ return t->form != selected->form; };
+      auto genObjects = generateObjects(def, availableObjects, start++, 1, 0, filter);
       if ( genObjects.empty() ) {
         throw runtime_error("Did not generate any objects!");
       }
       place( def, *genObjects.front(), *selected );
-      def[ "pp" ]--;
     }
+    cleanTypes( availableObjects );
 
     auto containers = generateContainers( def, availableObjects, start );
     start += containers.size();
@@ -505,38 +522,43 @@ class TaskGeneratorImpl {
     auto rand = uniform_int_distribution<size_t>( 0, containers.size()-1 );
     auto genObjects = generateObjects(def, availableObjects, start, def[ "container_placing" ] );
     start += def[ "container_placing" ];
-    def[ "container_placing" ]=0;
     for ( Object* objPtr: genObjects)
       place( def, *objPtr, *containers[ rand(mRand) ] );
 
     size_t created = accumulate(objects.begin(), objects.end(), 0,
                                 [](size_t n, const Object& o){ return n + (o.type==Type::OBJECT || o.type == Type::COLORED_OBJECT ? 1 : 0); } );
     genObjects = generateObjects(def, availableObjects, start, def[ "object_count" ] - created, def[ "decoy_count"] );
+    cleanTypes( availableObjects );
     start += def[ "object_count" ] - created + def[ "decoy_count" ];
 
+    size_t shelfes_placing = def[ "shelfes_placing" ];
+    size_t rt_placing = def[ "rt_placing" ];
+    size_t shelfes_picking = def[ "shelfes_picking" ];
+    size_t rt_picking = def[ "rt_picking" ];
+
     for ( Object* objPtr: genObjects ) {
-      if ( def[ "shelfes_placing" ] ) {
+      if ( shelfes_placing ) {
         place( def, *objPtr, { "SH" } );
-        def[ "shelfes_placing" ]--;
+        shelfes_placing--;
         continue;
       }
-      if ( def[ "rt_placing" ] ) {
+      if ( rt_placing ) {
         place( def, *objPtr, { "TT" } );
-        def[ "rt_placing" ]--;
+        rt_placing--;
         continue;
       }
       place(def, *objPtr, { "00", "05", "10", "15" } );
     }
 
     for ( Object* objPtr: genObjects ) {
-      if ( def[ "shelfes_picking" ] ) {
+      if ( shelfes_picking ) {
         pick( def, *objPtr, { "SH" } );
-        def[ "shelfes_picking" ]--;
+        shelfes_picking--;
         continue;
       }
-      if ( def[ "rt_picking" ] ) {
+      if ( rt_picking ) {
         pick( def, *objPtr, { "TT" } );
-        def[ "rt_picking" ]--;
+        rt_picking--;
         continue;
       }
       pick(def, *objPtr, { "00", "05", "10", "15" } );
