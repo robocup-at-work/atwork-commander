@@ -1,5 +1,9 @@
 #include <atwork_refbox_ros_task_generator/TaskGenerator.h>
 
+#include <atwork_refbox_ros_msgs/Task.h>
+#include <atwork_refbox_ros_msgs/Object.h>
+#include <atwork_refbox_ros_msgs/Workstation.h>
+
 #include <ros/console.h>
 
 #include <sstream>
@@ -12,7 +16,6 @@
 #include <numeric>
 
 using namespace std;
-
 
 namespace atwork_refbox_ros {
 
@@ -315,6 +318,127 @@ class TaskGeneratorImpl {
     return ptrs;
   }
 
+  uint16_t toContainerType( const Object& o ) {
+    if ( o.color == "RED" )  return atwork_refbox_ros_msgs::Object::CONTAINER_RED;
+    if ( o.color == "BLUE" ) return atwork_refbox_ros_msgs::Object::CONTAINER_BLUE;
+    throw runtime_error("Unknown container object enocunted!");
+  }
+
+  uint16_t toCavityType( const Object& o ) {
+    if ( o.form == "F20_20" )
+      switch ( o.orientation ) {
+        case( Orientation::VERTICAL )  : return atwork_refbox_ros_msgs::Object::F20_20_V;
+        case( Orientation::HORIZONTAL ): return atwork_refbox_ros_msgs::Object::F20_20_H;
+        case( Orientation::FREE )      : return atwork_refbox_ros_msgs::Object::F20_20_F;
+      }
+    if ( o.form == "S40_40" )
+      switch ( o.orientation ) {
+        case( Orientation::VERTICAL )  : return atwork_refbox_ros_msgs::Object::S40_40_V;
+        case( Orientation::HORIZONTAL ): return atwork_refbox_ros_msgs::Object::S40_40_H;
+        case( Orientation::FREE )      : return atwork_refbox_ros_msgs::Object::S40_40_F;
+      }
+    if ( o.form == "M20" )
+      switch ( o.orientation ) {
+        case( Orientation::VERTICAL )  : return atwork_refbox_ros_msgs::Object::M20_V;
+        case( Orientation::HORIZONTAL ): return atwork_refbox_ros_msgs::Object::M20_H;
+        case( Orientation::FREE )      : return atwork_refbox_ros_msgs::Object::M20_F;
+      }
+    if ( o.form == "M30" )
+      switch ( o.orientation ) {
+        case( Orientation::VERTICAL )  : return atwork_refbox_ros_msgs::Object::M30_V;
+        case( Orientation::HORIZONTAL ): return atwork_refbox_ros_msgs::Object::M30_H;
+        case( Orientation::FREE )      : return atwork_refbox_ros_msgs::Object::M30_F;
+      }
+    if ( o.form == "M20_100" )
+      switch ( o.orientation ) {
+        case( Orientation::VERTICAL )  : return atwork_refbox_ros_msgs::Object::M20_100_V;
+        case( Orientation::HORIZONTAL ): return atwork_refbox_ros_msgs::Object::M20_100_H;
+        case( Orientation::FREE )      : return atwork_refbox_ros_msgs::Object::M20_100_F;
+      }
+    if ( o.form == "R20" )
+      switch ( o.orientation ) {
+        case( Orientation::VERTICAL )  : return atwork_refbox_ros_msgs::Object::R20_V;
+        case( Orientation::HORIZONTAL ): return atwork_refbox_ros_msgs::Object::R20_H;
+        case( Orientation::FREE )      : return atwork_refbox_ros_msgs::Object::R20_F;
+      }
+    throw runtime_error("Unknown cavity type encountered!");
+  }
+
+  uint16_t toColoredObjectType( const Object& o ) {
+    if ( o.form == "F20_20" ) {
+      if ( o.color == "B" ) return atwork_refbox_ros_msgs::Object::F20_20_B;
+      if ( o.color == "G" ) return atwork_refbox_ros_msgs::Object::F20_20_G;
+    }
+    if ( o.form == "S40_40" ) {
+      if ( o.color == "B" ) return atwork_refbox_ros_msgs::Object::S40_40_B;
+      if ( o.color == "G" ) return atwork_refbox_ros_msgs::Object::S40_40_G;
+    }
+    throw runtime_error("Unknown colored object type encountered!");
+  }
+
+  uint16_t toObjectType( const Object& o ) {
+    if ( o.form == "M20_100" )       return atwork_refbox_ros_msgs::Object::M20_100;
+    if ( o.form == "M20" )           return atwork_refbox_ros_msgs::Object::M20;
+    if ( o.form == "M30" )           return atwork_refbox_ros_msgs::Object::M30;
+    if ( o.form == "R20" )           return atwork_refbox_ros_msgs::Object::R20;
+    if ( o.form == "AXIS" )          return atwork_refbox_ros_msgs::Object::AXIS;
+    if ( o.form == "BEARING" )       return atwork_refbox_ros_msgs::Object::BEARING;
+    if ( o.form == "BEARING_BOX" )   return atwork_refbox_ros_msgs::Object::BEARING_BOX;
+    if ( o.form == "DISTANCE_TUBE" ) return atwork_refbox_ros_msgs::Object::DISTANCE_TUBE;
+    if ( o.form == "MOTOR" )         return atwork_refbox_ros_msgs::Object::MOTOR;
+    throw runtime_error("Unknown plain object enocunted!");
+  }
+
+  atwork_refbox_ros_msgs::Object toTaskObject( const Object& o ) {
+    atwork_refbox_ros_msgs::Object object;
+    switch ( o.type ) {
+      case( Type::CONTAINER )     : object.object = toContainerType(o); break;
+      case( Type::CAVITY )        : object.object = toCavityType(o); break;
+      case( Type::COLORED_OBJECT ): object.object = toColoredObjectType(o); break;
+      case( Type::OBJECT )        : object.object = toObjectType(o); break;
+      default                     : throw runtime_error("Unknown object type encountered in conversion to task message");
+    }
+    if ( o.container ) {
+      switch (o.container->type ) {
+        case ( Type::CONTAINER ): object.target = toContainerType( *o.container ); break;
+        case ( Type::CAVITY )   : object.target = toCavityType( *o.container ); break;
+        default                 : throw runtime_error("Unknown/invalid object type to place an object in!");
+      }
+    }
+    return object;
+  }
+
+  Task toTask(const vector<Object>& objects) {
+    ROS_DEBUG_STREAM("[REFBOX] Converting generated object list to task description");
+    Task task;
+    task.arena_start_state.resize( mTables.size() );
+    task.arena_target_state.resize( mTables.size() );
+
+    unordered_map<const Table*, size_t> index( mTables.size() );
+
+    size_t i=0;
+    for ( const auto& table : mTables ) {
+      index.emplace(&table.second, i);
+      task.arena_start_state[i].workstation_name = table.second.name;
+      task.arena_target_state[i].workstation_name = table.second.name;
+      i++;
+    }
+
+    for ( const Object& o: objects ) {
+      size_t srcID = index[ o.source ];
+      task.arena_start_state[srcID].objects.push_back(toTaskObject(o));
+
+      size_t dstID;
+      if ( o.destination )
+        dstID = index[ o.destination ];
+      else
+        dstID = srcID;
+      task.arena_target_state[dstID].objects.push_back(toTaskObject(o));
+    }
+
+    return task;
+  }
+
   template<typename T>
   T& uniqueSelect(typename vector<T>::iterator start, typename vector<T>::iterator& end) {
     if ( start == end )
@@ -573,9 +697,8 @@ class TaskGeneratorImpl {
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Objects:\n" << objects);
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Available Objects:\n" << availableObjects);
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Available Cavities:\n" << availableCavities);
-    // TODO
 
-    return Task();
+    return toTask(objects);
   }
 
   public:
