@@ -61,6 +61,9 @@ find_package(catkin REQUIRED COMPONENTS
  add_service_files(
    FILES
    Arena.srv
+   StartTask.srv
+   GenerateTask.srv
+   LoadTask.srv
  )
 
 ## Generate actions in the 'action' folder

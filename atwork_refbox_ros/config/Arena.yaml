@@ -1,18 +1,30 @@
 
 Arena:
   PP_cavities:
-    F20_20_B: true
-    F20_20_G: true
+    F20_20_H:  true
+    F20_20_V:  true
+    S40_40_H:  true
+    S40_40_V:  true
+    M20_V:     true
+    M20_H:     true
+    M30_V:     true
+    M30_H:     true
+    R20_H:     true
+    R20_V:     true
+    M20_100_H: true
+    M20_100_V: true
 
-    S40_40_B: true
-    S40_40_G: true
-    M20: true
-    M30: true
   Workstations:
-    WS01: '10'
-    WS02: '15'
-    WS03: '5'
-    WS04: '0'
-    WS06: 'PPT'
-    WS07: 'SH'
-    WS08: 'RTT'
+   WS01: "10"
+   WS02: "10"
+   WS03: "05"
+   WS04: "00"
+   WS05: "00"
+   WS06: "15"
+   WS07: "15"
+   WS08: "05"
+   PP01: "PP"
+   TT01: "TT"
+   SH01: "SH"
+   SH02: "SH"
+

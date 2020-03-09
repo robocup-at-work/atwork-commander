@@ -4,18 +4,50 @@
 
 #include <atwork_refbox_ros_msgs/RobotState.h>
 #include <atwork_refbox_ros_msgs/Task.h>
+#include <atwork_refbox_ros_msgs/LoadTask.h>
+#include <atwork_refbox_ros_msgs/GenerateTask.h>
+#include <atwork_refbox_ros_msgs/StartTask.h>
+
+#include <stdexcept>
+#include <iostream>
+
+enum class State {
+  IDLE,
+  GENERATED,
+  REGISTERED,
+  READY,
+  RUNNING
+};
+
+std::ostream& operator<<( std::ostream& os, State s ) {
+  switch ( s ) {
+    case ( State::IDLE )      : return os << "IDLE";
+    case ( State::GENERATED ) : return os << "GENERATED";
+    case ( State::REGISTERED ): return os << "REGISTERED";
+    case ( State::READY )     : return os << "READY";
+    case ( State::RUNNING )   : return os << "RUNNING";
+    default                   : return os << "UNKNOWN";
+  }
+}
 
 namespace atwork_refbox_ros {
 
 class StateTracker {
+
     ros::NodeHandle m_nh;
 
     TaskDefinitions m_task_map;
     ArenaDescription m_arena;
     std::shared_ptr<TaskGenerator> m_task_gen;
+    Task m_current_task;
+    State m_state = State::IDLE;
+    ros::Time m_end;
 
     ros::Publisher m_send_task_pub;
     ros::Subscriber m_robot_state_sub;
+    ros::ServiceServer m_start_task_service;
+    ros::ServiceServer m_generate_task_service;
+    ros::ServiceServer m_load_task_service;
 
 public:
     StateTracker(ros::NodeHandle nh)
@@ -24,16 +56,32 @@ public:
         readTaskList();
         readArenaDefinition();
 
-        m_robot_state_sub = m_nh.subscribe("/refbox/internal/robot_state", 1, &StateTracker::receiveRobotStateClb, this);
+        m_robot_state_sub = m_nh.subscribe("internal/robot_state", 1, &StateTracker::receiveRobotStateClb, this);
 
-        m_send_task_pub = m_nh.advertise<atwork_refbox_ros_msgs::Task>("/refbox/internal/task", 1);
+        m_send_task_pub = m_nh.advertise<atwork_refbox_ros_msgs::Task>("internal/task", 1);
 
         m_task_gen = std::make_shared<TaskGenerator>(m_arena, m_task_map);
+        m_start_task_service = m_nh.advertiseService("refbox/internal/start_task", &StateTracker::startTask, this);
+        m_generate_task_service = m_nh.advertiseService("refbox/internal/generate_task", &StateTracker::generateTask, this);
+        m_load_task_service = m_nh.advertiseService("refbox/internal/load_task", &StateTracker::loadTask, this);
     }
 
     ~StateTracker() {}
 
 private:
+    void stateUpdate( State state ) {
+      switch ( state ) {
+        case ( State::GENERATED ):
+          if ( m_state == State::IDLE ) {
+            ROS_DEBUG_STREAM("[REFBOX] Switchign state to GENERATED");
+            m_state = State::GENERATED;
+            return;
+          }
+        default: ROS_ERROR_STREAM("[REFBOX] State change not yet implemented: " << state);
+      }
+      ROS_DEBUG_STREAM("[REFBOX] Keeping state: " << m_state);
+    }
+
     void readTaskList()
     {
         std::string task_param = ros::this_node::getNamespace() + "/Tasks";
@@ -106,6 +154,33 @@ private:
 
     void receiveRobotStateClb(const atwork_refbox_ros_msgs::RobotState::ConstPtr& msg)
     {
+    }
+
+    bool startTask(atwork_refbox_ros_msgs::StartTask::Request& req, atwork_refbox_ros_msgs::StartTask::Response& res) {
+      return false;
+    }
+
+    bool generateTask(atwork_refbox_ros_msgs::GenerateTask::Request& req, atwork_refbox_ros_msgs::GenerateTask::Response& res) {
+      if ( m_state == State::RUNNING ) {
+        ROS_ERROR_STREAM("[REFBOX] Got generation request with ongoing task! Ignoring!");
+        return false;
+      }
+
+      try {
+        res.task = m_task_gen->operator()(req.task_name);
+        m_current_task = res.task;
+        ROS_DEBUG_STREAM("[REFBOX] New Task generated:" << std::endl << res.task);
+        stateUpdate( State::GENERATED );
+      } catch( std::runtime_error& e) {
+        ROS_ERROR_STREAM("[REFBOX] Error generating requested task " << req.task_name << ":" << std::endl << e.what());
+        return false;
+      }
+
+      return true;
+    }
+
+    bool loadTask(atwork_refbox_ros_msgs::LoadTask::Request& req, atwork_refbox_ros_msgs::LoadTask::Response& res) {
+      return false;
     }
 };
 }
