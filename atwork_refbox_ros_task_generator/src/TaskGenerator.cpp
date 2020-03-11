@@ -296,6 +296,11 @@ class TaskGeneratorImpl {
         os << task.first << ": Empty Task defined!";
         throw runtime_error(os.str());
       }
+      if ( task.second[ "prep_time" ] <= 0 || task.second[ "exec_time" ] <= 0 ) {
+        ostringstream os;
+        os << task.first << ": preparation time or execution time specified <= 0!";
+        throw runtime_error(os.str());
+      }
     }
   }
 
@@ -714,19 +719,29 @@ class TaskGeneratorImpl {
       sanityCheck();
     }
 
+    bool check( const Task& task ) const {
+
+      return true;
+    }
+
     Task operator()(std::string taskName) {
-      auto task = find_if(mTasks.begin(), mTasks.end(),
-                         [taskName](const auto& item){ return item.first == taskName; }
-                  );
-      if (task == mTasks.end()) {
+      auto taskIt = find_if( mTasks.begin(), mTasks.end(),
+                                 [ taskName ]( const auto& item ){ return item.first == taskName; }
+                               );
+      if ( taskIt == mTasks.end() ) {
         ostringstream os;
         os << "No Task " << taskName << " configured. Valid tasks are: ";
-        for (const auto& item: mTasks)
+        for ( const auto& item: mTasks )
           os << item.first << " ";
-        throw runtime_error(os.str());
+        throw runtime_error( os.str() );
       }
-      return generate(task->first);
+      Task task = generate( taskIt->first );
+      task.prep_time = ros::Duration ( taskIt->second[ "prep_time" ]*60 );
+      task.exec_time = ros::Duration ( taskIt->second[ "exec_time" ]*60 );
+      check( task );
+      return task;
     }
+
 };
 
 TaskGenerator::TaskGenerator(const ArenaDescription& arena, const TaskDefinitions& tasks)

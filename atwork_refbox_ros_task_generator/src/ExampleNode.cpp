@@ -21,6 +21,8 @@ static void activateDebug() {
 static auto exampleTaskDef() {
     TaskDefinition example {
       { "seed"               , 1234},
+      { "prep_time"          , 3},
+      { "exec_time"          , 8},
       { "waypoint_count"     , 0},
       { "object_count"       , 5},
       { "decoy_count"        , 3},
