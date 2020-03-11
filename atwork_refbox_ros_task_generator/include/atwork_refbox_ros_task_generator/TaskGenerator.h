@@ -17,6 +17,13 @@ class TaskGenerator {
     TaskGenerator(const ArenaDescription& arena, const TaskDefinitions& tasks);
     ~TaskGenerator();
     Task operator()(std::string taskName);
+
+    /** \brief Check task for basic soundness
+     *
+     *  \param task The task to check
+     *  \return true if sound, false otherwise
+     **/
+    bool check(const Task& task) const;
 };
 
 }

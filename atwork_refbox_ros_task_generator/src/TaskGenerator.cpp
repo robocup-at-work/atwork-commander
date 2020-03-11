@@ -749,6 +749,8 @@ TaskGenerator::TaskGenerator(const ArenaDescription& arena, const TaskDefinition
 
 TaskGenerator::~TaskGenerator() { delete mImpl; }
 
-Task TaskGenerator::operator()(string taskName) { return mImpl->operator()(taskName); }
+Task TaskGenerator::operator()(string taskName)   { return mImpl->operator()(taskName); }
+/** \todo Implement! **/
+bool TaskGenerator::check(const Task& task) const { return mImpl->check(task); }
 
 }
