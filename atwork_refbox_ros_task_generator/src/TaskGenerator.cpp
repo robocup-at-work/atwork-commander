@@ -26,17 +26,17 @@ using ObjectPtr = Object*;
 using TablePtr = Table*;
 
 enum class Orientation : unsigned int {
-  FREE,
-  VERTICAL,
-  HORIZONTAL
+  FREE,       ///< Orientation to be chosen by the Team
+  VERTICAL,   ///< Vertical Orientation
+  HORIZONTAL  ///< Horizontal Orientation
 };
 
 enum class Type : unsigned int {
-  UNKNOWN,
-  OBJECT,
-  COLORED_OBJECT,
-  CAVITY,
-  CONTAINER
+  UNKNOWN,        ///< unknown object( invalid )
+  OBJECT,         ///< Plain Object without special properties
+  COLORED_OBJECT, ///< Colored Object
+  CAVITY,         ///< PPT Cavity
+  CONTAINER       ///< Container( currently RED or BLUE )
 };
 
 struct ObjectBase {
