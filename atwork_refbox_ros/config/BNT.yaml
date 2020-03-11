@@ -1,6 +1,8 @@
 
 Tasks:
   BNT:
+    prep_time: 3
+    exec_time: 5
     object_count: 5
     decoy_count: 0
     table_height_2: 10

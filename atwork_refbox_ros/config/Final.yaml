@@ -1,5 +1,7 @@
 Tasks:
   FINAL:
+    prep_time: 3
+    exec_time: 12
     object_count: 5
     decoy_count: 3
     pp: 1

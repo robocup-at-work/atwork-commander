@@ -1,6 +1,8 @@
 
 Tasks:
   PPT:
+    prep_time: 3
+    exec_time: 5
     object_count: 3
     decoy_count: 0
     table_height_0: 0

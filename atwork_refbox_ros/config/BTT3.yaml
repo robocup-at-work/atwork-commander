@@ -1,6 +1,8 @@
 
 Tasks:
   BTT3:
+    prep_time: 3
+    exec_time: 8
     object_count: 6
     decoy_count: 3
     table_height_10: 5

@@ -1,6 +1,8 @@
 
 Tasks:
   BTT1:
+    prep_time: 3
+    exec_time: 5
     object_count: 5
     decoy_count: 3
 
