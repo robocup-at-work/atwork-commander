@@ -17,7 +17,10 @@
         <rosparam file="$(find atwork_refbox_ros)/config/Arena.yaml" />
 
         <!-- start refbox (incl task generator) -->
-        <node pkg="atwork_refbox_ros" type="atwork_refbox_ros_node" name="atwork_refbox_ros_node" required="true" output="$(arg ros_output)"/>
+        <node pkg="atwork_refbox_ros" type="atwork_refbox_ros_node" name="core" required="true" output="$(arg ros_output)">
+          <param name="publish_frequency" value="1.0"/>
+          <param name="robot_timeout" value="10.0"/>
+        </node>
 
         <!-- load com -->
         <include file="$(find atwork_refbox_ros_com)/launch/atwork_refbox_ros_com.launch">

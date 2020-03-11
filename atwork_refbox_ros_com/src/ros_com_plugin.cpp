@@ -23,8 +23,8 @@ public:
     virtual void onInit( ros::NodeHandle roshandle ) {
         this->rh = roshandle;
 
-        this->robot_state_sub = this->rh.subscribe( "/refbox/robot_state", 10, &RosCom::receiveRobotStateClb, this );
-    	this->send_task_pub = this->rh.advertise<atwork_refbox_ros_msgs::Task>("/refbox/task", 1);
+        this->robot_state_sub = this->rh.subscribe( "robot_state", 10, &RosCom::receiveRobotStateClb, this );
+    	this->send_task_pub = this->rh.advertise<atwork_refbox_ros_msgs::Task>("task", 1);
     }
 
 private:

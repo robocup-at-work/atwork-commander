@@ -24,8 +24,8 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "atwork_refbox_com_node");
     ros::NodeHandle roshandle;
 
-    ros::Subscriber send_task_sub = roshandle.subscribe("/refbox/internal/task", 1, &sendTaskClb);
-    g_robot_state_pub = roshandle.advertise<atwork_refbox_ros_msgs::RobotState>("/refbox/internal/robot_state", 10);
+    ros::Subscriber send_task_sub = roshandle.subscribe("internal/task", 1, &sendTaskClb);
+    g_robot_state_pub = roshandle.advertise<atwork_refbox_ros_msgs::RobotState>("internal/robot_state", 10);
 
     std::vector<std::string> plugins_param;
     ros::param::get("~plugins", plugins_param);
