@@ -6,18 +6,41 @@ using namespace atwork_refbox_ros;
 using namespace std;
 
 ostream& operator<<(ostream& os, const ArenaDescription& arena) {
-  os << "Arena:\n\tAllowed Cavities: ";
+  os << "Arena:\n\tAllowed Cavities: [";
   for(const auto& item: arena.cavities)
-    if ( item.second ) os << item.first << " ";
-  os << endl << "\tWorkstations: ";
+    os << item << " ";
+  os << endl << "]" << endl << "\tWorkstations:" << endl;
   for(const auto& item: arena.workstations)
-    os << item.first << "( " << item.second << ") ";
+    os << "\t\t" << item.first << "(" << item.second << ")" << endl;
+  os << endl << "\tWaypoints:";
+  for(const auto& item: arena.waypoints)
+    os << "\t\t" << item.first << "(" << item.second << ")" << endl;
+  os << endl << "\tObjects:" << endl;
+  for(const auto& item: arena.objects)
+    os << "\t\t" << item.first << "(" << item.second << ")" << endl;
   return os;
 }
 
 ostream& operator<<(ostream& os, const TaskDefinition& def) {
-  for(const auto& item : def)
-    os << "\t" << item.first << " = " << item.second << endl;
+  os <<    "\tObjects        : [";
+  for(const auto& item : def.objects)
+    os << item.first << "( " << item.second << " ) ";
+  os << "]\n\tNormal Tables  : [";
+  for(const auto& item : def.normalTableTypes)
+    os << item << " ";
+  os << "]\n\tSpecial Tables: " << endl;
+  os << "\t\tTurnTables: [";
+  for( const auto& name: def.ttTypes )
+    os << name << " ";
+  os << "]" << endl << "\t\tPrecision Placement: [";
+  for( const auto& name: def.ppTypes )
+    os << name << " ";
+  os << "]" << endl << "\t\tShelf: [";
+  for( const auto& name: def.shTypes )
+    os << name << " ";
+  os << "]" << endl << "\tParameters:" << endl;
+  for(const auto& item : def.parameters)
+    os << "\t\t" << item.first << " = " << item.second << endl;
   return os;
 }
 

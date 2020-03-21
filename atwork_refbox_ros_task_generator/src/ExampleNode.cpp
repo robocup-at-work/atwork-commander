@@ -19,26 +19,25 @@ static void activateDebug() {
 }
 
 static auto exampleTaskDef() {
-    TaskDefinition example {
+    TaskDefinition example;
+    example.parameters = ParameterType {
       { "seed"               , 1234},
       { "prep_time"          , 3},
       { "exec_time"          , 8},
-      { "waypoint_count"     , 0},
-      { "object_count"       , 5},
-      { "decoy_count"        , 3},
-      { "pp"                 , 1},
-      { "pp_team_orientation", 1},
+      { "waypoints"          , 0},
+      { "objects"            , 5},
+      { "decoys"             , 3},
+      { "pp_placing"         , 1},
+      { "ref_cavity_orientation", 1},
       { "container_placing"  , 2},
       { "container_in_shelf" , 0},
       { "container_on_rt"    , 0},
-      { "rt_grasping"        , 1},
-      { "rt_placing"         , 1},
+      { "tt_grasping"        , 1},
+      { "tt_placing"         , 1},
       { "shelfes_grasping"   , 2},
-      { "shelfes_placing"    , 2},
-      { "table_height_0"     , 1},
-      { "table_height_5"     , 1},
-      { "table_height_10"    , 1},
-      { "table_height_15"    , 1},
+      { "shelfes_placing"    , 2}
+    };
+    example.objects = ParameterType {
       { "F20_20_G"           , 1},
       { "F20_20_B"           , 1},
       { "S40_40_B"           , 1},
@@ -62,17 +61,17 @@ static auto exampleTaskDef() {
 static auto exampleArena() {
     ArenaDescription arena;
     arena.cavities=decltype(arena.cavities){
-      {"F20_20_H", true},
-      {"F20_20_V",false},
-      {"S40_40_H",true},
-      {"S40_40_V",false},
-      {"M20_H",true},
-      {"M20_V",true},
-      {"M30_H",true},
-      {"M30_V",true},
-      {"M20_100_H",true},
-      {"R20_H",true},
-      {"R20_V",true}
+      "F20_20_H",
+      "F20_20_V",
+      "S40_40_H",
+      "S40_40_V",
+      "M20_H",
+      "M20_V",
+      "M30_H",
+      "M30_V",
+      "M20_100_H",
+      "R20_H",
+      "R20_V"
     },
     arena.workstations=decltype(arena.workstations){
       {"WS01","10"},
@@ -87,6 +86,23 @@ static auto exampleArena() {
       {"TT01","TT"},
       {"SH01","SH"},
       {"SH02","SH"}
+    };
+    arena.objects=decltype(arena.objects){
+      { "F20_20_G"      , 1},
+      { "F20_20_B"      , 1},
+      { "S40_40_B"      , 1},
+      { "S40_40_G"      , 1},
+      { "M20"           , 1},
+      { "M30"           , 1},
+      { "M20_100"       , 1},
+      { "R20"           , 1},
+      { "AXIS"          , 1},
+      { "BEARING"       , 1},
+      { "BEARING_BOX"   , 1},
+      { "DISTANCE_TUBE" , 1},
+      { "MOTOR"         , 1},
+      { "CONTAINER_RED" , 1},
+      { "CONTAINER_BLUE", 1}
     };
   return arena;
 }

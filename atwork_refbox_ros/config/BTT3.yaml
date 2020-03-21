@@ -1,32 +1,14 @@
-
-Tasks:
-  BTT3:
-    prep_time: 3
-    exec_time: 8
-    object_count: 6
-    decoy_count: 3
-    table_height_10: 5
-
-    table_height_0: 0
-    table_height_5: 0
-
-    table_height_15 : 0
-
-    shelves_grasping: 2
-    shelves_placing: 1
-    pp: 0
-    rt_grasping: 0
-    rt_placing: 0
-    arbitary_surface_count: 2
-    obstacle_count: 2
-    barrier_tape_count: 1
-
-    ##Axis: true
-    M20: true
-    M30: true
-    R20: true
-    F20: false
-    S40: false
-
-    container_red: 2
-    container_blue: 2
+BTT3:
+  prep_time: 3
+  exec_time: 10
+  objects: 6
+  decoys: 3
+  tables: 5
+  shelfes_grasping: 2
+  shelfes_placing: 1
+  arbitrary_surfaces: 2
+  obstacles: 2
+  barrier_tapes: 1
+  object_types:
+    CONTAINER_RED: 2
+    CONTAINER_BLUE: 2

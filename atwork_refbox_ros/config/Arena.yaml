@@ -1,30 +1,31 @@
-
-Arena:
-  PP_cavities:
-    F20_20_H:  true
-    F20_20_V:  true
-    S40_40_H:  true
-    S40_40_V:  true
-    M20_V:     true
-    M20_H:     true
-    M30_V:     true
-    M30_H:     true
-    R20_H:     true
-    R20_V:     true
-    M20_100_H: true
-    M20_100_V: true
-
-  Workstations:
-   WS01: "10"
-   WS02: "10"
-   WS03: "05"
-   WS04: "00"
-   WS05: "00"
-   WS06: "15"
-   WS07: "15"
-   WS08: "05"
-   PP01: "PP"
-   TT01: "TT"
-   SH01: "SH"
-   SH02: "SH"
-
+arena:
+  workstations:
+    WS01: "10"
+    WS02: "10"
+    WS03: "05"
+    WS04: "00"
+    WS05: "00"
+    WS06: "15"
+    WS07: "15"
+    WS08: "05"
+    PP01: "PP"
+    TT01: "TT"
+    SH01: "SH"
+    SH02: "SH"
+  objects:
+    F20_20_G      : 10
+    F20_20_B      : 10
+    S40_40_B      : 10
+    S40_40_G      : 10
+    M20           : 10
+    M30           : 10
+    M20_100       : 10
+    R20           : 10
+    AXIS          : 10
+    BEARING       : 10
+    BEARING_BOX   : 10
+    DISTANCE_TUBE : 10
+    MOTOR         : 10
+    CONTAINER_RED :  0
+    CONTAINER_BLUE:  0
+  cavities: [ "F20_20_H", "S40_40_H", "M20_H", "M30_H", "M20_100_H", "R20_H", "F20_20_V", "S40_40_V", "M20_V", "M30_V", "R20_V" ]

@@ -14,6 +14,7 @@
 #include <iterator>
 #include <random>
 #include <numeric>
+#include <type_traits>
 
 using namespace std;
 
@@ -131,6 +132,47 @@ struct Table {
     : name(name), type(type) {}
 };
 
+template<typename T>
+void errorOut(ostringstream& os, const T* v) {
+  os << " ["  << *v << "]";
+}
+
+template<typename T>
+void errorOut(ostringstream& os, T* v) {
+  os << " [" << *v << "]";
+}
+
+template<>
+void errorOut(ostringstream& os, const char* v) {
+  os << " " << v;
+}
+
+template<typename T>
+void errorOut(ostringstream& os, T v) {
+  os << " " << v;
+}
+
+template<typename T>
+void errorPass(ostringstream& os, T first) {
+  errorOut(os, first);
+}
+
+template<typename T, typename... Args>
+void errorPass(ostringstream& os, T first, Args... args) {
+  errorOut(os, first);
+  errorPass(os, args...);
+}
+
+template<typename... Args>
+void errorImpl(const char* file, size_t line, const char* func, const char* msg, Args... args ) {
+  ostringstream os;
+  os << "Location: " << file << ":" << line << endl << "Function: " << func << endl << "Message: " << msg << endl;
+  errorPass(os, args...);
+  throw std::runtime_error( os.str() );
+}
+
+#define error( msg, ... )  errorImpl(__FILE__, __LINE__, __PRETTY_FUNCTION__, msg, __VA_ARGS__ );
+
 }
 
 ostream& operator<<(ostream& os, const atwork_refbox_ros::Type type) {
@@ -220,8 +262,7 @@ class TaskGeneratorImpl {
   static auto extractCavities(const ArenaDescription& arena) {
     vector<ObjectType> cavities;
       for (const auto& item: arena.cavities)
-        if ( item.second )
-          cavities.emplace_back(item.first, item.second);
+          cavities.emplace_back(item, 1);
     return cavities;
   }
 
@@ -232,56 +273,37 @@ class TaskGeneratorImpl {
 
   auto extractObjectTypes(const string& task) {
     vector<ObjectType> availableObjects;
-    for ( const auto& item: mTasks[task] )
+    for ( const auto& item: mTasks[task].objects )
       if ( item.second && regex_match( item.first, regex("[A-Z0-9_]+") ) )
         availableObjects.emplace_back(item.first, item.second);
     return availableObjects;
   }
 
   void sanityCheck(std::string task, const vector<ObjectType>& availableObjects) {
-    if (mTasks[task]["object_count"]>=0 && availableObjects.empty() ) {
+    auto& params = mTasks[task].parameters;
+    if (params["objects"]>=0 && availableObjects.empty() ) {
       ostringstream os;
       os << task << ": Transportation Task without allowed object defined!";
       throw runtime_error(os.str());
     }
-    if (mTasks[task]["waypoint_count"]>=0 && mTables.size()<mTasks[task]["waypoint_count"] ) {
+    if (params["waypoints"]>=0 && mTables.size()<params["waypoints"] ) {
       ostringstream os;
       os << task << ": Navigation Task without enough workstations defined!";
       throw runtime_error(os.str());
     }
-    if ( ( mTasks[task]["shelf_grasping"] || mTasks[task]["shelf_picking"] ) && mTables.count("SH")==0 ) {
+    if ( ( params["shelf_grasping"] || params["shelf_picking"] ) && mTables.count("SH")==0 ) {
       ostringstream os;
       os << task << ": Transportation Task involving shelf requested in Arena without it!";
       throw runtime_error(os.str());
     }
-    if ( ( mTasks[task]["rt_grasping"] || mTasks[task]["rt_picking"] ) && mTables.count("TT")==0 ) {
+    if ( ( params["tt_grasping"] || params["tt_picking"] ) && mTables.count("TT")==0 ) {
       ostringstream os;
       os << task << ": Transportation Task involving Rotating Table requested in Arena without it!";
       throw runtime_error(os.str());
     }
-    if ( mTasks[task]["pp"] && mTables.count("PP")==0 ) {
+    if ( params["pp_placing"] && mTables.count("PP")==0 ) {
       ostringstream os;
       os << task << ": Transportation Task involving Precision Placement requested in Arena without it!";
-      throw runtime_error(os.str());
-    }
-    if ( mTasks[task]["table_height_0"] && mTables.count("00")==0 ) {
-      ostringstream os;
-      os << task << ": Transportation Task involving zero height table requested in Arena without it!";
-      throw runtime_error(os.str());
-    }
-    if ( mTasks[task]["table_height_5"] && mTables.count("05")==0 ) {
-      ostringstream os;
-      os << task << ": Transportation Task involving 5cm table requested in Arena without it!";
-      throw runtime_error(os.str());
-    }
-    if ( mTasks[task]["table_height_10"] && mTables.count("10")==0 ) {
-      ostringstream os;
-      os << task << ": Transportation Task involving 5cm table requested in Arena without it!";
-      throw runtime_error(os.str());
-    }
-    if ( mTasks[task]["table_height_15"] && mTables.count("15")==0 ) {
-      ostringstream os;
-      os << task << ": Transportation Task involving 5cm table requested in Arena without it!";
       throw runtime_error(os.str());
     }
     //TODO
@@ -291,12 +313,12 @@ class TaskGeneratorImpl {
     if (mTables.size() < 2) throw runtime_error("At least two tables need to exist in the arena!");
     if (mTasks.empty()) throw runtime_error("No Tasks configured!");
     for (auto& task : mTasks ) {
-      if ( task.second["object_count"] == 0 && task.second["waypoint_count"] == 0 ) {
+      if ( task.second.parameters["objects"] == 0 && task.second.parameters["waypoints"] == 0 ) {
         ostringstream os;
         os << task.first << ": Empty Task defined!";
         throw runtime_error(os.str());
       }
-      if ( task.second[ "prep_time" ] <= 0 || task.second[ "exec_time" ] <= 0 ) {
+      if ( task.second.parameters[ "prep_time" ] <= 0 || task.second.parameters[ "exec_time" ] <= 0 ) {
         ostringstream os;
         os << task.first << ": preparation time or execution time specified <= 0!";
         throw runtime_error(os.str());
@@ -312,6 +334,11 @@ class TaskGeneratorImpl {
     for ( const string& type : types ) {
       auto its = mTables.equal_range( type );
       start = transform(its.first, its.second, start, []( decltype(mTables)::value_type& t ){ return &t.second; } );
+    }
+    if ( tables.empty() ) {
+      ostringstream os;
+      os << "No tables with following types exist: [" << types << "]";
+      throw runtime_error( os.str() );
     }
     return tables;
   }
@@ -486,12 +513,18 @@ class TaskGeneratorImpl {
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Generated Cavities:" << endl << cavities);
     return cavities;
   }
-
+  /** \todo Implement generation of all container types on the same table**/
   vector<Object*> generateContainers( TaskDefinition& def,  vector<ObjectType>& availableObjects, vector<Object>::iterator start)
   {
-    vector<string> allowedTableTypes { "00", "05", "10", "15"}; // TODO add to configuration
-    if ( def[ "container_in_shelf" ] )
-      allowedTableTypes.push_back("Shelf");
+    vector<string> allowedTableTypes( def.normalTableTypes );
+    if ( def.parameters[ "container_on_shelf" ] ) {
+      allowedTableTypes.resize( allowedTableTypes.size() + def.shTypes.size() );
+      copy( def.shTypes.cbegin(), def.shTypes.cend(), allowedTableTypes.begin());
+    }
+    if ( def.parameters[ "container_on_tt" ] ) {
+      allowedTableTypes.resize( allowedTableTypes.size() + def.ttTypes.size() );
+      copy( def.ttTypes.cbegin(), def.ttTypes.cend(), allowedTableTypes.begin());
+    }
 
     auto tables = extractTablesByTypes( allowedTableTypes );
 
@@ -518,6 +551,9 @@ class TaskGeneratorImpl {
     auto typeEnd = availableObjects.end();
     auto it = start;
     for ( size_t i = 0; i < objectCount + decoyCount; i++) {
+      if ( typeEnd - availableObjects.begin() == 0)
+        error("Could not generate any object", "Objects", objectCount, "Decoys", decoyCount,
+              "Generated", it-start, "Types", &availableObjects);
       uniform_int_distribution<size_t> rand(0, typeEnd - availableObjects.begin() - 1);
       size_t offset = rand( mRand );
       ObjectType& type = *availableObjects[ offset ];
@@ -564,7 +600,7 @@ class TaskGeneratorImpl {
   void place( TaskDefinition& def, Object& object, Object& container )
   {
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Place " << object << " in " << container);
-    if ( container.type == Type::CAVITY && def[ "pp_team_orientation" ] )
+    if ( container.type == Type::CAVITY && def.parameters[ "ref_cavity_orientation" ] )
       container.orientation = Orientation::FREE;
     object.destination = container.source;
     object.container = &container;
@@ -586,7 +622,12 @@ class TaskGeneratorImpl {
   }
 
   Task generate( const string& taskName){
-    TaskDefinition& def = mTasks[ taskName ];
+          auto&  def            = mTasks[ taskName ];
+          auto&  params         = def.parameters;
+    const auto&  normalTables   = def.normalTableTypes;
+    const auto&  turnTables     = def.ttTypes;
+    const auto&  shelfs         = def.shTypes;
+    const auto&  precisionTable = def.ppTypes;
     Object::reset();
     vector<Object> objects;
 
@@ -597,8 +638,8 @@ class TaskGeneratorImpl {
     ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] ObjectTypes:\n" << availableObjects);
 
     sanityCheck(taskName, availableObjects);
-    auto seedIt = def.find("seed");
-    if ( seedIt != def.end() ) mRand.seed(seedIt->second);
+    auto seedIt = params.find("seed");
+    if ( seedIt != params.end() ) mRand.seed(seedIt->second);
 
 
     // PP fill
@@ -623,13 +664,13 @@ class TaskGeneratorImpl {
     auto cavities = generateCavities( def, availableCavities, start);
     start += cavities.size();
     cleanTypes( availableCavities );
-    if ( cavities.size() < def[ "pp" ] ) {
+    if ( cavities.size() < params[ "pp_placing" ] ) {
       ostringstream os;
-      os << "Not enough cavities generated! Generated " << cavities.size() << ", min Necessary: " << def[ "pp" ] << "!";
+      os << "Not enough cavities generated! Generated " << cavities.size() << ", min Necessary: " << params[ "pp_placing" ] << "!";
       throw runtime_error(os.str());
     }
     auto end = cavities.end();
-    for ( size_t i = 0; i < def[ "pp" ]; i++ ) {
+    for ( size_t i = 0; i < params[ "pp_placing" ]; i++ ) {
       Object* selected = uniqueSelect<Object*>(cavities.begin(), end);
       auto filter = [selected](const ObjectType* t){ return t->form != selected->form; };
       auto genObjects = generateObjects(def, availableObjects, start++, 1, 0, filter);
@@ -643,59 +684,59 @@ class TaskGeneratorImpl {
     auto containers = generateContainers( def, availableObjects, start );
     start += containers.size();
     cleanTypes( availableObjects );
-    if ( containers.size() < 1 && def[ "container_placing" ] ) {
+    if ( containers.size() < 1 && params[ "container_placing" ] ) {
       ostringstream os;
       os << "Not enough containers generated! Generated " << containers.size() << ", min Necessary: 1!";
       throw runtime_error(os.str());
     }
     auto rand = uniform_int_distribution<size_t>( 0, containers.size()-1 );
-    auto genObjects = generateObjects(def, availableObjects, start, def[ "container_placing" ] );
-    start += def[ "container_placing" ];
+    auto genObjects = generateObjects(def, availableObjects, start, params[ "container_placing" ] );
+    start += params[ "container_placing" ];
     for ( Object* objPtr: genObjects)
       place( def, *objPtr, *containers[ rand(mRand) ] );
 
     size_t created = accumulate(objects.begin(), objects.end(), 0,
                                 [](size_t n, const Object& o){ return n + (o.type==Type::OBJECT || o.type == Type::COLORED_OBJECT ? 1 : 0); } );
-    genObjects = generateObjects(def, availableObjects, start, def[ "object_count" ] - created, def[ "decoy_count"] );
+    genObjects = generateObjects(def, availableObjects, start, params[ "objects" ] - created, params[ "decoys"] );
     cleanTypes( availableObjects );
-    start += def[ "object_count" ] - created + def[ "decoy_count" ];
+    start += params[ "objects" ] - created + params[ "decoys" ];
 
-    size_t shelfes_placing = def[ "shelfes_placing" ];
-    size_t rt_placing = def[ "rt_placing" ];
-    size_t shelfes_picking = def[ "shelfes_picking" ];
-    size_t rt_picking = def[ "rt_picking" ];
+    size_t shelfes_placing = params[ "shelfes_placing" ];
+    size_t rt_placing = params[ "tt_placing" ];
+    size_t shelfes_picking = params[ "shelfes_picking" ];
+    size_t rt_picking = params[ "tt_picking" ];
 
     for ( Object* objPtr: genObjects ) {
       if ( shelfes_placing ) {
-        place( def, *objPtr, { "SH" } );
+        place( def, *objPtr, shelfs );
         shelfes_placing--;
         continue;
       }
       if ( rt_placing ) {
-        place( def, *objPtr, { "TT" } );
+        place( def, *objPtr, turnTables );
         rt_placing--;
         continue;
       }
-      place(def, *objPtr, { "00", "05", "10", "15" } );
+      place(def, *objPtr, normalTables );
     }
 
     for ( Object* objPtr: genObjects ) {
       if ( shelfes_picking ) {
-        pick( def, *objPtr, { "SH" } );
+        pick( def, *objPtr, shelfs );
         shelfes_picking--;
         continue;
       }
       if ( rt_picking ) {
-        pick( def, *objPtr, { "TT" } );
+        pick( def, *objPtr, turnTables );
         rt_picking--;
         continue;
       }
-      pick(def, *objPtr, { "00", "05", "10", "15" } );
+      pick(def, *objPtr, normalTables );
     }
 
     for (auto it = objects.begin(); it < start; it++)
       if ( !it->source )
-        pick(def, *it, { "00", "05", "10", "15", "TT", "SH" } );
+        pick(def, *it, normalTables );
 
     objects.erase(start, objects.end());
 
@@ -719,9 +760,17 @@ class TaskGeneratorImpl {
       sanityCheck();
     }
 
+    /** \todo Implement **/
     bool check( const Task& task ) const {
-
-      return true;
+      try {
+        //TODO: do checks
+        return true;
+      } catch(const std::exception& e) {
+        ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Exception occured during check: " << e.what());
+        return false;
+      } catch(...) {
+        return false;
+      }
     }
 
     Task operator()(std::string taskName) {
@@ -736,8 +785,8 @@ class TaskGeneratorImpl {
         throw runtime_error( os.str() );
       }
       Task task = generate( taskIt->first );
-      task.prep_time = ros::Duration ( taskIt->second[ "prep_time" ]*60 );
-      task.exec_time = ros::Duration ( taskIt->second[ "exec_time" ]*60 );
+      task.prep_time = ros::Duration ( taskIt->second.parameters[ "prep_time" ]*60 );
+      task.exec_time = ros::Duration ( taskIt->second.parameters[ "exec_time" ]*60 );
       check( task );
       return task;
     }
@@ -750,7 +799,8 @@ TaskGenerator::TaskGenerator(const ArenaDescription& arena, const TaskDefinition
 TaskGenerator::~TaskGenerator() { delete mImpl; }
 
 Task TaskGenerator::operator()(string taskName)   { return mImpl->operator()(taskName); }
+
 /** \todo Implement! **/
-bool TaskGenerator::check(const Task& task) const { return mImpl->check(task); }
+bool TaskGenerator::check(const Task& task) const { return mImpl?mImpl->check(task):false; }
 
 }

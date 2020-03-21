@@ -1,34 +1,26 @@
-Tasks:
-  FINAL:
-    prep_time: 3
-    exec_time: 12
-    object_count: 5
-    decoy_count: 3
-    pp: 1
-    pp_team_orientation: 1
-    container_placing: 2
-    container_in_shelf: 0
-    container_on_rt: 0
-    rt_grasping: 1
-    rt_placing: 1
-    shelfes_grasping: 2
-    shelfes_placing: 2
-    table_height_0: 1
-    table_height_5: 1
-    table_height_10: 1
-    table_height_15: 1
-    F20_20_G: 1
-    F20_20_B: 1
-    S40_40_B: 1
-    S40_40_G: 1
-    M20: 1
-    M30: 1
-    M20_100: 1
-    R20: 1
-    AXIS: 1
-    BEARING: 1
-    BEARING_BOX: 1
-    DISTANCE_TUBE: 1
-    MOTOR: 1
-    CONTAINER_RED: 1
-    CONTAINER_BLUE: 1
+FINAL:
+  prep_time: 3
+  exec_time: 13
+  objects: 10
+  decoys: 5
+  tables: 8
+  obstacles: 2
+  barrier_tapes: 2
+  arbitrary_surfaces: 3
+  pp_placing: 1
+  container_placing: 2
+  tt_grasping: 1
+  tt_placing: 1
+  ref_tt_direction: true
+  shelfes_grasping: 1
+  shelfes_placing:  1
+  ref_position: true
+  ref_rotation: true
+  ref_orientation: true
+  ref_cavity_position: true
+  ref_cavity_rotation: true
+  ref_cavity_orientation: true
+  object_types:
+    CONTAINER_RED: 2
+    CONTAINER_BLUE: 2
+
