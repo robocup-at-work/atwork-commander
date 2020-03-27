@@ -8,6 +8,7 @@
 #include <atwork_commander_msgs/LoadTask.h>
 #include <atwork_commander_msgs/GenerateTask.h>
 #include <atwork_commander_msgs/StartTask.h>
+#include <atwork_commander_msgs/StateUpdate.h>
 
 #include <stdexcept>
 #include <iostream>
@@ -59,6 +60,7 @@ class StateTracker {
     ros::ServiceServer m_start_task_service;
     ros::ServiceServer m_generate_task_service;
     ros::ServiceServer m_load_task_service;
+    ros::ServiceServer m_state_update_service;
     ros::Timer m_publish_timer;
     ros::Timer m_robot_timer;
     ros::Timer m_task_timer;
@@ -107,6 +109,7 @@ public:
         m_start_task_service = m_nh.advertiseService("internal/start_task", &StateTracker::startTask, this);
         m_generate_task_service = m_nh.advertiseService("internal/generate_task", &StateTracker::generateTask, this);
         m_load_task_service = m_nh.advertiseService("internal/load_task", &StateTracker::loadTask, this);
+        m_state_update_service = m_nh.advertiseService("internal/state_update", &StateTracker::externalStateUpdate, this);
 
         m_publish_timer = nh.createTimer( ros::Duration( publish_frequency ), &StateTracker::publishUpdate, this );
 
@@ -430,6 +433,24 @@ private:
         return false;
       }
 
+      return true;
+    }
+    bool externalStateUpdate( atwork_commander_msgs::StateUpdate::Request& req, atwork_commander_msgs::StateUpdate::Response& res) {
+      if( req.state == m_state.state ) {
+        return true;
+      }
+      if( ( req.state == State::EXECUTION && m_state.state == State::PREPARATION ) ||
+          ( req.state == State::READY && m_state.state == State::PREPARATION ) ||
+          ( req.state == State::READY && m_state.state == State::EXECUTION) ) {
+        ROS_INFO_STREAM_NAMED("external", "[REFBOX] ending state manually!");
+        m_state.end = ros::Time::now();
+        stateUpdate();
+        return true;
+      }
+      std::ostringstream os;
+      os << "[REFBOX] Invalid state update received: " << ((size_t)m_state.state) << " -> " << ((size_t)req.state);
+      res.error = os.str();
+      ROS_ERROR_STREAM_NAMED("external", os.str());
       return true;
     }
 };
