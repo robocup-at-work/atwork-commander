@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<launch>
+  <arg name="refbox" default="atwork_refbox"/>
+  <arg name="robots" value=""/>
+    <node name="start_helper" pkg="atwork_refbox_ros" type="control" args="start $(arg robots)">
+      <param name="refbox" value="$(arg refbox)"/>
+    </node>
+</launch>
