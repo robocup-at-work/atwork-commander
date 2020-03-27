@@ -11,6 +11,9 @@ find_package(catkin REQUIRED COMPONENTS
   atwork_commander_com
   roscpp
 )
+
+find_package(Boost 1.63.0 COMPONENTS program_options)
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -141,7 +144,7 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES})
-target_link_libraries(control ${catkin_LIBRARIES})
+target_link_libraries(control ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 #############
 ## Install ##
