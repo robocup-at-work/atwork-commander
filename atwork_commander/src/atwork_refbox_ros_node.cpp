@@ -379,20 +379,29 @@ private:
     }
 
     bool startTask(atwork_commander_msgs::StartTask::Request& req, atwork_commander_msgs::StartTask::Response& res) {
-      if ( inState( { State::PREPARATION, State::EXECUTION } ) ) {
-        ROS_ERROR_STREAM_NAMED("state_tracker", "[REFBOX] Got start request with ongoing task! Ignoring!");
-        return false;
+      if ( notInState( { State::READY } ) ) {
+        std::ostringstream os;
+        if ( m_state.state == State::IDLE )
+          os << "Got start request while refbox not ready! Ignoring!";
+        else
+          os << "Got start request with ongoing task! Ignoring!";
+        ROS_ERROR_STREAM_NAMED("external", "[REFBOX] " << os.str());
+        res.error = os.str();
+        return true;
       }
 
       try {
         //TODO check suplied robots
         m_state.task.execute_on = req.robots;
         m_state.end = ros::Time::now() + m_state.task.prep_time;
-        ROS_DEBUG_STREAM_NAMED("state_tracker", "[REFBOX] Start Task on robots: " << std::endl << req.robots);
+        ROS_DEBUG_STREAM_NAMED("external", "[REFBOX] Start Task on robots: " << std::endl << req.robots);
         stateUpdate();
       } catch( const std::exception& e) {
-        ROS_ERROR_STREAM_NAMED("state_tracker", "[REFBOX] Supplied robots invalid:" << std::endl << e.what());
-        return false;
+        std::ostringstream os;
+        os << "Supplied robots invalid:" << std::endl << e.what();
+        ROS_ERROR_STREAM_NAMED("external", "[REFBOX] " << os.str());
+        res.error = os.str();
+        return true;
       }
 
       return true;
@@ -400,18 +409,24 @@ private:
 
     bool generateTask(atwork_commander_msgs::GenerateTask::Request& req, atwork_commander_msgs::GenerateTask::Response& res) {
       if ( inState( { State::PREPARATION, State::EXECUTION } ) ) {
-        ROS_ERROR_STREAM_NAMED("state_tracker", "[REFBOX] Got generation request with ongoing task! Ignoring!");
-        return false;
+        std::ostringstream os;
+        os << "Got generation request with ongoing task! Ignoring!";
+        ROS_ERROR_STREAM_NAMED("external", "[REFBOX] " << os.str());
+        res.error = os.str();
+        return true;
       }
 
       try {
         res.task = m_task_gen->operator()(req.task_name);
         m_state.task = res.task;
-        ROS_DEBUG_STREAM_NAMED("state_tracker", "[REFBOX] New Task generated:" << std::endl << res.task);
+        ROS_DEBUG_STREAM_NAMED("external", "[REFBOX] New Task generated:" << std::endl << res.task);
         stateUpdate();
       } catch( const std::exception& e) {
-        ROS_ERROR_STREAM_NAMED("state_tracker", "[REFBOX] Error generating requested task " << req.task_name << ":" << std::endl << e.what());
-        return false;
+        std::ostringstream os;
+        os << "Error generating requested task " << req.task_name << ":" << std::endl << e.what();
+        ROS_ERROR_STREAM_NAMED("external", "[REFBOX] " << os.str());
+        res.error = os.str();
+        return true;
       }
 
       return true;
@@ -419,18 +434,21 @@ private:
 
     bool loadTask(atwork_commander_msgs::LoadTask::Request& req, atwork_commander_msgs::LoadTask::Response& res) {
       if ( inState( { State::PREPARATION, State::EXECUTION } ) ) {
-        ROS_ERROR_STREAM_NAMED("state_tracker", "[REFBOX] Got load request with ongoing task! Ignoring!");
+        ROS_ERROR_STREAM_NAMED("external", "[REFBOX] Got load request with ongoing task! Ignoring!");
         return false;
       }
 
       try {
         m_task_gen->check(req.task);
         m_state.task = req.task;
-        ROS_DEBUG_STREAM_NAMED("state_tracker", "[REFBOX] Task loaded: " << std::endl << req.task);
+        ROS_DEBUG_STREAM_NAMED("external", "[REFBOX] Task loaded: " << std::endl << req.task);
         stateUpdate();
       } catch( const std::exception& e) {
-        ROS_ERROR_STREAM_NAMED("state_tracker", "[REFBOX] Supplied task invalid:" << std::endl << e.what());
-        return false;
+        std::ostringstream os;
+        os << "Supplied task invalid:" << std::endl << e.what();
+        ROS_ERROR_STREAM_NAMED("external", "[REFBOX] " << os.str());
+        res.error = os.str();
+        return true;
       }
 
       return true;

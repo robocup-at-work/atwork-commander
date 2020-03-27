@@ -1,3 +1,4 @@
 RobotHeader[] robots
 ---
 time end
+string error
