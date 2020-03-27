@@ -123,6 +123,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/atwork_refbox_node.cpp)
 add_executable(${PROJECT_NAME}_node src/atwork_refbox_ros_node.cpp)
+add_executable(control src/control_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -140,6 +141,7 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES})
+target_link_libraries(control ${catkin_LIBRARIES})
 
 #############
 ## Install ##

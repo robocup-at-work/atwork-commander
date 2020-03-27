@@ -3,6 +3,8 @@
 <launch>
     <arg name="ros_output" default="log" />
     <arg name="debug" default="false" />
+    <arg name="gui" default="$(eval not debug)" />
+    <arg name="remote" default="$(eval not debug)" />
 
     <group ns="atwork_refbox">
         <!-- load config -->
@@ -28,5 +30,6 @@
             <arg name="output" value="$(arg ros_output)"/>
         </include>
 
+        <include file="$(find atwork_refbox_ros_rviz)/launch/gui.launch" if="$(arg gui)"/>
     </group>
 </launch>
