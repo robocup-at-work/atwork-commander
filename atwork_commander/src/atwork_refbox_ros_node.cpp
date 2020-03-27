@@ -370,11 +370,11 @@ private:
     void receiveRobotStateClb(const atwork_commander_msgs::RobotState::ConstPtr& msg)
     {
       //TODO Find robot and update
-      auto it = find_if(m_state.robots.begin(), m_state.robots.end(), [msg](const RobotHeader& r){ return r.team_name == msg->sender.team_name && r.robot_name == msg->sender.robot_name; });
+      auto it = find_if(m_state.robots.begin(), m_state.robots.end(), [msg](const RobotState& r){ return r.sender.team_name == msg->sender.team_name && r.sender.robot_name == msg->sender.robot_name; });
       if ( it == m_state.robots.end() )
-        m_state.robots.emplace_back(msg->sender);
+        m_state.robots.emplace_back(*msg);
       else
-        *it = msg->sender;
+        *it = *msg;
       stateUpdate();
     }
 

@@ -1,7 +1,7 @@
 uint8         state
 time          end
 Task          task
-RobotHeader[] robots
+RobotState[]  robots
 
 uint8 FAILURE     = 0
 uint8 IDLE        = 1
