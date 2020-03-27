@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<library path="lib/libroscom">
+  <class type="atwork_commander::communication::RosCom" base_class_type="atwork_commander::communication::Interface">
+    <description>
+      The communication interface for robots using ROS.
+    </description>
+  </class>
+</library>

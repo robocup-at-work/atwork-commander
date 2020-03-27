@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+
+<launch>
+    <arg name="ros_output" default="log" />
+    <arg name="debug" default="false" />
+    <arg name="gui" default="$(eval not debug)" />
+    <arg name="remote" default="$(eval not debug)" />
+
+    <group ns="atwork_commander">
+        <!-- load config -->
+        <rosparam file="$(find atwork_commander)/config/BNT.yaml" ns="tasks"/>
+        <rosparam file="$(find atwork_commander)/config/BMT.yaml"  ns="tasks"/>
+        <rosparam file="$(find atwork_commander)/config/BTT1.yaml"  ns="tasks"/>
+        <rosparam file="$(find atwork_commander)/config/BTT2.yaml"  ns="tasks"/>
+        <rosparam file="$(find atwork_commander)/config/BTT3.yaml"  ns="tasks"/>
+        <rosparam file="$(find atwork_commander)/config/RTT.yaml"  ns="tasks"/>
+        <rosparam file="$(find atwork_commander)/config/PPT.yaml"  ns="tasks"/>
+        <rosparam file="$(find atwork_commander)/config/Final.yaml"  ns="tasks"/>
+        <rosparam file="$(find atwork_commander)/config/Arena.yaml"/>
+
+        <!-- start refbox (incl task generator) -->
+        <node pkg="atwork_commander" type="atwork_commander_node" name="core" required="true" output="$(arg ros_output)">
+          <param name="publish_frequency" value="1.0"/>
+          <param name="robot_timeout" value="10.0"/>
+          <param name="debug" value="$(arg debug)"/>
+        </node>
+
+        <!-- load com -->
+        <include file="$(find atwork_commander_com)/launch/atwork_commander_com.launch">
+            <arg name="output" value="$(arg ros_output)"/>
+        </include>
+
+        <include file="$(find atwork_commander_gui)/launch/gui.launch" if="$(arg gui)"/>
+    </group>
+</launch>

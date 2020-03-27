@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <arg name="output" default="log" />
+
+  <node pkg="atwork_commander_com" type="communication" name="communication" required="true" output="$(arg output)">
+    <rosparam param="plugins">['atwork_commander::communication::RosCom']</rosparam>
+  </node>
+
+</launch>

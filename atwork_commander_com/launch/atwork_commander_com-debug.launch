@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <include file="$(find atwork_commander_com)/launch/atwork_commander_com.launch">
+        <arg name="output" value="screen"/>
+        <!-- <arg name="name" value="atwork_commander::communication::RosCom"/> -->
+    </include>
+
+    <node pkg="atwork_commander_com" type="server_dummy" name="server_dummy" output="screen"/>
+
+    <node pkg="atwork_commander_com" type="robot_example" name="robot_example" output="screen"/>
+
+</launch>

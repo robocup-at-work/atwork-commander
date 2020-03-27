@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<launch>
+  <arg name="refbox" default="atwork_commander"/>
+  <node name="forward_helper" pkg="atwork_commander" type="control" args="stop">
+      <param name="refbox" value="$(arg refbox)"/>
+  </node>
+</launch>
