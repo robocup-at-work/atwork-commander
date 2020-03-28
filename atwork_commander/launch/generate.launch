@@ -2,8 +2,8 @@
 
 <launch>
   <arg name="refbox" default="atwork_commander"/>
-  <arg name="robots" value=""/>
-    <node name="start_helper" pkg="atwork_commander" type="control" args="start $(arg robots)">
+  <arg name="task"/>
+    <node name="generate_helper" pkg="atwork_commander" type="control" args="generate $(arg task)">
       <param name="refbox" value="$(arg refbox)"/>
     </node>
 </launch>

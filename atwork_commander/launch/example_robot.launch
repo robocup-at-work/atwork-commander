@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<launch>
+  <arg name="refbox" default="atwork_commander"/>
+  <arg name="team" default="exampleTeam"/>
+  <arg name="robot" default="exampleRobot"/>
+  <node pkg="atwork_commander_com" type="robot_example" name="example_robot" output="screen">
+    <param name="refboxName" value="$(arg refbox)"/>
+    <param name="teamName" value="$(arg team)"/>
+    <param name="robotName" value="$(arg robot)"/>
+  </node>
+
+</launch>
