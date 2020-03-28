@@ -144,7 +144,7 @@ private:
           }
           break;
         case ( State::PREPARATION ):
-          if ( m_state.end > ros::Time::now() ) {
+          if ( m_state.end < ros::Time::now() ) {
             ROS_DEBUG_STREAM_NAMED("state_tracker", "[REFBOX] Prep Time over going to EXECUTION ending at " << m_state.end );
             m_state.state = State::EXECUTION;
             m_state.end += m_state.task.exec_time;
