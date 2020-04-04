@@ -11,9 +11,9 @@ Additionally, a RViz GUI will be developed, which provides enhanced visualizatio
 ### Starting the Refbox
 
 1. Start the __core__ and __com__ components: `roslaunch atwork_commander atwork_commander.launch`
-2. Generate a task using the CLI: `roslaunch atwork_commander generate task:=<task to generate>`
+2. Generate a task using the CLI: `roslaunch atwork_commander generate.launch task:=<task to generate>`
 3. Wait for robots to register
-4. Start the task execution using the CLI: `roslaunch atwork_commander start`
+4. Start the task execution using the CLI: `roslaunch atwork_commander start.launch`
 
 For testing the refbox without any robot a fake robot may be used using the **example_robot**:
 `roslaunch atwork_commander example_robot.launch`
