@@ -3,7 +3,7 @@
 <launch>
   <arg name="refbox" default="atwork_commander"/>
   <arg name="task"/>
-    <node name="generate_helper" pkg="atwork_commander" type="control" args="generate $(arg task)">
+    <node name="generate_helper" pkg="atwork_commander" type="control" args="generate $(arg task)" output="screen">
       <param name="refbox" value="$(arg refbox)"/>
     </node>
 </launch>

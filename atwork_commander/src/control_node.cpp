@@ -36,6 +36,18 @@ string refboxName = "default";
 vector<string> arguments;
 bool verbose = false;
 
+static ostream& operator<<(ostream& os, Command cmd) {
+  switch( cmd ) {
+    case( Command::NOTHING ): return os << "nothing";
+    case( Command::FORWARD ): return os << "\"forward state\"";
+    case( Command::STOP    ): return os << "\"stop task\"";
+    case( Command::START   ): return os << "\"start task\"";
+    case( Command::GENERATE): return os << "\"generate task\"";
+    case( Command::STATE   ): return os << "\"print refbox state\"";
+    default                 : return os << "UNKNOWN";
+  };
+}
+
 static ostream& operator<<(ostream& os, const vector<string>& v) {
   os << "[";
   for( const auto& s: v )
@@ -58,7 +70,11 @@ static bool forward() {
     ROS_ERROR_STREAM_NAMED("forward", "[REFBOX-CONTROL] Issuing forward command failed: \n\t" << update.response.error);
     return false;
   }
- return true;
+  if( update.response.error.empty() )
+    ROS_INFO_STREAM_NAMED("forward", "[REFBOX-CONTROL] Forwarding state of refbox successfull!");
+  else
+    ROS_ERROR_STREAM_NAMED("forward", "[REFBOX-CONTROL] Forwarding state failed: " << update.response.error);
+  return true;
 }
 
 static bool generate() {
@@ -194,6 +210,8 @@ int main(int argc, char** argv)
 
     if( !ros::param::get("~refbox", refboxName) )
       ROS_WARN_STREAM_NAMED("control", "[REFBOX-CONTROL] No Refbox name specified using \"default\"!");
+
+    ROS_INFO_STREAM_NAMED("control", "[REFBOX-CONTROL] Command parsed successfull: Executing " << command << " with arguments " << arguments);
 
     stateSub = nh.subscribe(refboxName+"/internal/state", 1, &stateUpdate);
 

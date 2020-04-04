@@ -2,8 +2,8 @@
 
 <launch>
   <arg name="refbox" default="atwork_commander"/>
-  <arg name="robots" value=""/>
-    <node name="start_helper" pkg="atwork_commander" type="control" args="start $(arg robots)">
+  <arg name="file"/>
+    <node name="store_helper" pkg="atwork_commander" type="control" args="store $(arg file)" output="screen">
       <param name="refbox" value="$(arg refbox)"/>
     </node>
 </launch>
