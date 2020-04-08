@@ -9,4 +9,5 @@
 	<!-- <node pkg="atwork_refbox_ros_rviz" type="visualisation_node" name="visualisation_node" output="screen"/> -->
   <arg name="view" value="default"/>
   <node name="gui" pkg="rviz" type="rviz" args="-d $(find atwork_commander_gui)/config/$(arg view).rviz" respawn="true"/>
+  <node name="log" pkg="rqt_gui" type="rqt_gui" args="-p $(find atwork_commander_gui)/config/$(arg view).perspective" respawn="true"/>
 </launch>

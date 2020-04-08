@@ -54,6 +54,8 @@
   <depend>atwork_commander_msgs</depend>
   <depend>rviz</depend>
 
+  <exec_depend>rqt_gui</exec_depend>
+
   <build_depend>qtbase5-dev</build_depend>
   <exec_depend>libqt5-core</exec_depend>
   <exec_depend>libqt5-gui</exec_depend>
