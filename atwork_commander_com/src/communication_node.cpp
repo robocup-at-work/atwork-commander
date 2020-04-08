@@ -1,6 +1,10 @@
 #include "atwork_commander_com/plugin_interface.h"
 #include <pluginlib/class_loader.h>
 
+#include <iosfwd>
+
+using namespace std;
+
 using if_t = atwork_commander::communication::Interface;
 
 ros::Publisher g_robot_state_pub;
@@ -19,16 +23,28 @@ void receiveRobotState(atwork_commander_msgs::RobotState robot_state)
     g_robot_state_pub.publish(robot_state);
 }
 
+static ostream& operator<<(ostream& os, const vector<string>& v) {
+  os << "[";
+  for( const string& s: v)
+    os << " " << s;
+  return os << "]";
+}
+
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "communications_hub");
+    ros::init(argc, argv, "communication");
     ros::NodeHandle roshandle;
 
     ros::Subscriber send_task_sub = roshandle.subscribe("internal/task", 1, &sendTaskClb);
     g_robot_state_pub = roshandle.advertise<atwork_commander_msgs::RobotState>("internal/robot_state", 10);
 
     std::vector<std::string> plugins_param;
-    ros::param::get("~plugins", plugins_param);
+    if( !ros::param::get("~plugins", plugins_param)) {
+      ROS_ERROR_STREAM_NAMED("com", "[REFBOX-COM] No communication plugins specified!");
+      return -1;
+    }
+
+    ROS_INFO_STREAM_NAMED("com", "[REFBOX-COM] Try to load the following com plugins: " << plugins_param);
 
     pluginlib::ClassLoader<if_t> plug_in_loader("atwork_commander_com", "atwork_commander::communication::Interface");
 
