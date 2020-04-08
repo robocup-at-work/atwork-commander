@@ -4,6 +4,7 @@
   <arg name="refbox" default="atwork_commander"/>
   <arg name="team" default="example_team"/>
   <arg name="robot" default="example_robot"/>
+  <arg name="multimaster" default="true"/>
   <arg name="output" default="log"/>
 
   <group ns="$(arg team)">
@@ -13,6 +14,11 @@
       <param name="teamName" value="$(arg team)"/>
       <param name="robotName" value="$(arg robot)"/>
     </node>
+
+  <include file="$(find atwork_commander_com)launch/multimaster.launch" if="$(arg multimaster)">
+    <arg name="output" value="$(arg output)"/>
+    <arg name="refbox" value="$(arg refbox)"/>
+  </include>
 
   </group>
 </launch>

@@ -4,10 +4,16 @@
 
   <arg name="output"/>
   <arg name="coms"/>
+  <arg name="multimaster"/>
+  <arg name="refbox"/>
 
 
   <node pkg="atwork_commander_com" type="communication" name="communication" required="true" output="$(arg output)">
     <rosparam param="plugins" subst_value="true">$(arg coms)</rosparam>
   </node>
+  <include file="$(find atwork_commander_com)launch/multimaster.launch" if="$(arg multimaster)">
+    <arg name="output" value="$(arg output)"/>
+    <arg name="refbox" value="$(arg refbox)"/>
+  </include>
 
 </launch>
