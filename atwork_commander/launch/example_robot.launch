@@ -2,12 +2,17 @@
 
 <launch>
   <arg name="refbox" default="atwork_commander"/>
-  <arg name="team" default="exampleTeam"/>
-  <arg name="robot" default="exampleRobot"/>
-  <node pkg="atwork_commander_com" type="robot_example" name="example_robot" output="screen">
-    <param name="refboxName" value="$(arg refbox)"/>
-    <param name="teamName" value="$(arg team)"/>
-    <param name="robotName" value="$(arg robot)"/>
-  </node>
+  <arg name="team" default="example_team"/>
+  <arg name="robot" default="example_robot"/>
+  <arg name="output" default="log"/>
 
+  <group ns="$(arg team)">
+
+    <node pkg="atwork_commander_com" type="robot_example" name="$(arg robot)" output="$(arg output)">
+      <param name="refboxName" value="$(arg refbox)"/>
+      <param name="teamName" value="$(arg team)"/>
+      <param name="robotName" value="$(arg robot)"/>
+    </node>
+
+  </group>
 </launch>

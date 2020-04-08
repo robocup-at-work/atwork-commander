@@ -2,8 +2,10 @@
 
 <launch>
   <arg name="refbox" default="atwork_commander"/>
+  <arg name="verbose" default="false"/>
+
   <arg name="robots" value=""/>
-    <node name="start_helper" pkg="atwork_commander" type="control" args="start $(arg robots)" output="screen">
+    <node name="start_helper" pkg="atwork_commander" type="control" args="-v $(arg verbose) start $(arg robots)" output="screen">
       <param name="refbox" value="$(arg refbox)"/>
     </node>
 </launch>

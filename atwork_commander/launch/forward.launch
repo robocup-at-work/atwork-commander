@@ -2,7 +2,9 @@
 
 <launch>
   <arg name="refbox" default="atwork_commander"/>
-  <node name="forward_helper" pkg="atwork_commander" type="control" args="forward" output="screen">
+  <arg name="verbose" default="false"/>
+
+  <node name="forward_helper" pkg="atwork_commander" type="control" args="-v $(arg verbose) forward" output="screen">
     <param name="refbox" value="$(arg refbox)"/>
   </node>
 </launch>

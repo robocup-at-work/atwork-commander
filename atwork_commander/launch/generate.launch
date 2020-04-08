@@ -2,8 +2,10 @@
 
 <launch>
   <arg name="refbox" default="atwork_commander"/>
+  <arg name="verbose" default="false"/>
+
   <arg name="task"/>
-    <node name="generate_helper" pkg="atwork_commander" type="control" args="generate $(arg task)" output="screen">
+    <node name="generate_helper" pkg="atwork_commander" type="control" args="-v $(arg verbose) generate $(arg task)" output="screen">
       <param name="refbox" value="$(arg refbox)"/>
     </node>
 </launch>
