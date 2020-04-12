@@ -57,6 +57,8 @@ find_package(catkin REQUIRED COMPONENTS
    Task.msg
    Workstation.msg
    RefboxState.msg
+   Transport.msg
+   ObjectTask.msg
  )
 
 ## Generate services in the 'srv' folder
