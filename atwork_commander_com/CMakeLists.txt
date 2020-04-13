@@ -124,7 +124,7 @@ include_directories(
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/atwork_refbox_com.cpp
 # )
-add_library(${PROJECT_NAME}_ros src/ros_com_arena_centric.cpp)
+add_library(${PROJECT_NAME}_ros src/ros_com_arena_centric.cpp src/ros_com_object_centric.cpp)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -139,6 +139,7 @@ add_dependencies(${PROJECT_NAME}_ros ${catkin_EXPORTED_TARGETS})
 add_executable(communication src/communication_node.cpp)
 add_executable(server_dummy src/server_dummy.cpp)
 add_executable(robot_example_arena_centric src/robot_example_arena_centric.cpp)
+add_executable(robot_example_object_centric src/robot_example_object_centric.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -152,6 +153,7 @@ add_executable(robot_example_arena_centric src/robot_example_arena_centric.cpp)
 add_dependencies(communication ${catkin_EXPORTED_TARGETS})
 add_dependencies(server_dummy ${catkin_EXPORTED_TARGETS})
 add_dependencies(robot_example_arena_centric ${catkin_EXPORTED_TARGETS})
+add_dependencies(robot_example_object_centric ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
@@ -161,6 +163,7 @@ target_link_libraries(${PROJECT_NAME}_ros ${catkin_LIBRARIES})
 target_link_libraries(communication ${catkin_LIBRARIES})
 target_link_libraries(server_dummy ${catkin_LIBRARIES})
 target_link_libraries(robot_example_arena_centric ${catkin_LIBRARIES})
+target_link_libraries(robot_example_object_centric ${catkin_LIBRARIES})
 
 
 #############

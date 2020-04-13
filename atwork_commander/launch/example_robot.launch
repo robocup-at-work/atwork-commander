@@ -6,10 +6,17 @@
   <arg name="robot" default="example_robot"/>
   <arg name="multimaster" default="true"/>
   <arg name="output" default="log"/>
+  <arg name="object_centric" default="false"/>
 
   <group ns="$(arg team)">
 
-    <node pkg="atwork_commander_com" type="robot_example_arena_centric" name="$(arg robot)" output="$(arg output)">
+    <node pkg="atwork_commander_com" type="robot_example_arena_centric" name="$(arg robot)" output="$(arg output)" unless="$(arg object_centric)">
+      <param name="refboxName" value="$(arg refbox)"/>
+      <param name="teamName" value="$(arg team)"/>
+      <param name="robotName" value="$(arg robot)"/>
+    </node>
+
+    <node pkg="atwork_commander_com" type="robot_example_object_centric" name="$(arg robot)" output="$(arg output)" if="$(arg object_centric)">
       <param name="refboxName" value="$(arg refbox)"/>
       <param name="teamName" value="$(arg team)"/>
       <param name="robotName" value="$(arg robot)"/>

@@ -6,4 +6,9 @@
       The ROS-native arena-centric communication interface of the @Work-Refbox.
     </description>
   </class>
+  <class type="atwork_commander::com_plugin::ros::TaskObjectCentric" base_class_type="atwork_commander::com_plugin::Base">
+    <description>
+      The ROS-native object-centric communication interface of the @Work-Refbox.
+    </description>
+  </class>
 </library>
