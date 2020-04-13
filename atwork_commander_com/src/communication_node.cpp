@@ -5,7 +5,7 @@
 
 using namespace std;
 
-using if_t = atwork_commander::communication::Interface;
+using if_t = atwork_commander::com_plugin::Base;
 
 ros::Publisher g_robot_state_pub;
 std::vector<boost::shared_ptr<if_t>> g_plugins;
@@ -46,7 +46,7 @@ int main(int argc, char** argv)
 
     ROS_INFO_STREAM_NAMED("com", "[REFBOX-COM] Try to load the following com plugins: " << plugins_param);
 
-    pluginlib::ClassLoader<if_t> plug_in_loader("atwork_commander_com", "atwork_commander::communication::Interface");
+    pluginlib::ClassLoader<if_t> plug_in_loader("atwork_commander_com", "atwork_commander::com_plugin::Base");
 
     for (auto p : plugins_param) {
         try {

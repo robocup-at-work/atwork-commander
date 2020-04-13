@@ -8,19 +8,19 @@
 typedef std::function<void( atwork_commander_msgs::RobotState )> robot_state_fct_t;
 
 namespace atwork_commander {
-namespace communication {
+namespace com_plugin {
 
-class Interface {
+class Base {
 
   robot_state_fct_t robot_state_fct;
 
 protected:
 
-  Interface() {}
+  Base() {}
 
 public:
 
-  virtual ~Interface() {}
+  virtual ~Base() {}
 
   /**Initalize the global variables.
    * @param roshandle a valid ROS NodeHandle
@@ -46,5 +46,5 @@ protected:
 
 };
 
-}; //ns communication
-}; //ns atwork_refbox
+}; //ns com_plugin
+}; //ns atwork_commander

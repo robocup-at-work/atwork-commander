@@ -9,7 +9,7 @@
 
   <group ns="$(arg team)">
 
-    <node pkg="atwork_commander_com" type="robot_example" name="$(arg robot)" output="$(arg output)">
+    <node pkg="atwork_commander_com" type="robot_example_arena_centric" name="$(arg robot)" output="$(arg output)">
       <param name="refboxName" value="$(arg refbox)"/>
       <param name="teamName" value="$(arg team)"/>
       <param name="robotName" value="$(arg robot)"/>

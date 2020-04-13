@@ -124,13 +124,13 @@ include_directories(
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/atwork_refbox_com.cpp
 # )
-add_library(roscom src/ros_com_plugin.cpp)
+add_library(${PROJECT_NAME}_ros src/ros_com_arena_centric.cpp)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(roscom ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_ros ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
@@ -138,7 +138,7 @@ add_dependencies(roscom ${catkin_EXPORTED_TARGETS})
 # add_executable(${PROJECT_NAME}_node src/atwork_refbox_com_node.cpp)
 add_executable(communication src/communication_node.cpp)
 add_executable(server_dummy src/server_dummy.cpp)
-add_executable(robot_example src/robot_example.cpp)
+add_executable(robot_example_arena_centric src/robot_example_arena_centric.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -151,16 +151,16 @@ add_executable(robot_example src/robot_example.cpp)
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(communication ${catkin_EXPORTED_TARGETS})
 add_dependencies(server_dummy ${catkin_EXPORTED_TARGETS})
-add_dependencies(robot_example ${catkin_EXPORTED_TARGETS})
+add_dependencies(robot_example_arena_centric ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(roscom ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_ros ${catkin_LIBRARIES})
 target_link_libraries(communication ${catkin_LIBRARIES})
 target_link_libraries(server_dummy ${catkin_LIBRARIES})
-target_link_libraries(robot_example ${catkin_LIBRARIES})
+target_link_libraries(robot_example_arena_centric ${catkin_LIBRARIES})
 
 
 #############

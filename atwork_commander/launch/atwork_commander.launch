@@ -4,7 +4,8 @@
     <arg name="verbose" default="false" />
     <arg name="gui" default="false" />
     <arg name="ros_output" default="$(eval 'log' if arg('gui') else 'screen')" />
-    <arg name="coms" default="[atwork_commander::communication::RosCom]" />
+    <arg name="coms" default="[ 'atwork_commander::com_plugin::ros::TaskArenaCentric',
+                                 'atwork_commander::com_plugin::ros::TaskObjectCentric' ]" />
     <arg name="multimaster" default="true" />
 
 

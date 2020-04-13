@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 
-<library path="lib/libroscom">
-  <class type="atwork_commander::communication::RosCom" base_class_type="atwork_commander::communication::Interface">
+<library path="lib/libatwork_commander_com_ros">
+  <class type="atwork_commander::com_plugin::ros::TaskArenaCentric" base_class_type="atwork_commander::com_plugin::Base">
     <description>
-      The communication interface for robots using ROS.
+      The ROS-native arena-centric communication interface of the @Work-Refbox.
     </description>
   </class>
 </library>
