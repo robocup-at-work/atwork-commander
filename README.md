@@ -1,6 +1,6 @@
 # atwork_commander
 
-[![Build Status](https://travis-ci.org/steup/atwork-commander.svg?branch=master)](https://travis-ci.org/steup/atwork-comamnder)
+[![Build Status](https://travis-ci.org/steup/atwork-commander.svg?branch=master)](https://travis-ci.org/steup/atwork-commander)
 
 Complete reimplementation of a Refery Box (Refbox) for the @Work-League of the RoboCup.
 
