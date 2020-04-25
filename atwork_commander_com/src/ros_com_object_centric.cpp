@@ -104,7 +104,7 @@ class TaskObjectCentric : public Base {
     static const string& findObject(const WorkstationObjs& wsMap, const Object& o, const string& source) {
       for(const auto& ws: wsMap) {
         if( ws.first == source ) continue;
-        if( any_of(ws.second.begin(), ws.second.end(), [&o](const Object& b){return o==b;}) )
+        if( any_of(ws.second.begin(), ws.second.end(), [&o](const Object& b){return o.object == b.object && o.target == b.target;}) )
             return ws.first;
       }
       return source;
