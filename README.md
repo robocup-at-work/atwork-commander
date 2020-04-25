@@ -1,5 +1,7 @@
 # atwork_commander
 
+[![Build Status](https://travis-ci.org/steup/atwork-commander.svg?branch=master)](https://travis-ci.org/steup/atwork-comamnder)
+
 Complete reimplementation of a Refery Box (Refbox) for the @Work-League of the RoboCup.
 
 This Refbox is a native ROS application. However it aims to enable multiple communications backends through individual plugins.
