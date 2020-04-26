@@ -54,6 +54,7 @@
 <depend>atwork_commander_gen</depend>
 <depend>roscpp</depend>
 <depend>std_msgs</depend>
+<test_depend>rostest</test_depend>
 
 <exec_depend>atwork_commander_com</exec_depend>
 
