@@ -3,8 +3,9 @@
 <launch>
   <arg name="refbox" default="atwork_commander"/>
   <arg name="verbose" default="false"/>
+  <arg name="output" default="screen"/>
 
-  <node name="forward_helper" pkg="atwork_commander" type="control" args="-v $(arg verbose) stop" output="screen">
+  <node name="forward_helper" pkg="atwork_commander" type="control" args="-v $(arg verbose) stop" output="$(arg output)">
       <param name="refbox" value="$(arg refbox)"/>
   </node>
 </launch>

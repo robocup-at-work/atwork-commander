@@ -3,10 +3,11 @@
 <launch>
     <arg name="verbose" default="false" />
     <arg name="gui" default="false" />
-    <arg name="ros_output" default="$(eval 'log' if arg('gui') else 'screen')" />
+    <arg name="output" default="$(eval 'log' if arg('gui') else 'screen')" />
     <arg name="coms" default="[ 'atwork_commander::com_plugin::ros::TaskArenaCentric',
                                  'atwork_commander::com_plugin::ros::TaskObjectCentric' ]" />
     <arg name="multimaster" default="true" />
+    <arg name="publish_frequency" default="1.0"/>
 
 
     <group ns="atwork_commander">
@@ -22,15 +23,15 @@
         <rosparam file="$(find atwork_commander)/config/Arena.yaml"/>
 
         <!-- start refbox (incl task generator) -->
-        <node pkg="atwork_commander" type="atwork_commander_node" name="core" required="true" output="$(arg ros_output)">
-          <param name="publish_frequency" value="1.0"/>
+        <node pkg="atwork_commander" type="atwork_commander_node" name="core" required="true" output="$(arg output)">
+          <param name="publish_frequency" value="$(arg publish_frequency)"/>
           <param name="robot_timeout" value="10.0"/>
           <param name="debug" value="$(arg verbose)"/>
         </node>
 
         <!-- load com -->
         <include file="$(find atwork_commander_com)/launch/atwork_commander_com.launch">
-            <arg name="output" value="$(arg ros_output)"/>
+            <arg name="output" value="$(arg output)"/>
             <arg name="coms" value="$(arg coms)"/>
             <arg name="multimaster" value="$(arg multimaster)"/>
             <arg name="refbox" value="/atwork_commander"/>
