@@ -19,6 +19,10 @@
     <arg name="output" value="$(arg output)"/>
   </include>
 
+  <include file="$(find atwork_commander)/launch/start.launch">
+    <arg name="output" value="$(arg output)"/>
+  </include>
+
   <include file="$(find atwork_commander)/launch/forward.launch">
     <arg name="output" value="$(arg output)"/>
   </include>
@@ -27,14 +31,14 @@
     <param name="topic" value="/atwork_commander/task"/>
     <param name="hz" value="$(arg frequency)"/>
     <param name="hzerror" value="$(eval 0.1 * frequency)"/>
-    <param name="test_duration" value="30"/>
+    <param name="test_duration" value="10"/>
   </test>
 
   <test test-name="_object_task_reception_simple" pkg="rostest" type="hztest" name="object_task_reception">
     <param name="topic" value="/atwork_commander/object_task"/>
     <param name="hz" value="$(arg frequency)"/>
     <param name="hzerror" value="$(eval 0.1 * frequency)"/>
-    <param name="test_duration" value="30"/>
+    <param name="test_duration" value="10"/>
   </test>
 
 </launch>
