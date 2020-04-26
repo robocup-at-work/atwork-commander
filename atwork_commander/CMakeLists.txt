@@ -8,7 +8,6 @@ add_compile_options(-g -Wall -std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   atwork_commander_msgs
   atwork_commander_gen
-  atwork_commander_com
   roscpp
 )
 

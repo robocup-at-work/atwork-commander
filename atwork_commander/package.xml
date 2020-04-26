@@ -51,10 +51,11 @@
 <buildtool_depend>catkin</buildtool_depend>
 
 <depend>atwork_commander_msgs</depend>
-<depend>atwork_commander_com</depend>
 <depend>atwork_commander_gen</depend>
 <depend>roscpp</depend>
 <depend>std_msgs</depend>
+
+<exec_depend>atwork_commander_com</exec_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
