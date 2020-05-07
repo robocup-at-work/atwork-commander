@@ -49,7 +49,15 @@ public:
         message->setWindowTitle("Refbox UI");
     }
 
-    virtual ~VisGroup();
+    virtual ~VisGroup()
+    {
+        delete self;
+        delete layout;
+        delete message;
+        self = nullptr;
+        layout = nullptr;
+        message = nullptr;
+    }
 
     virtual QWidget* getWidget() { return self; }
     virtual QLayout* getLayout() { return layout; }
@@ -132,7 +140,22 @@ public:
         //         this, SLOT(timer_cb()));
     }
 
-    virtual ~MainVisGroup();
+    virtual ~MainVisGroup()
+    {
+        delete mainComboBox;
+        delete mainStackedWidget;
+        delete refreshButton;
+        delete buttonHBoxLayout;
+        // delete timer;
+        for (auto e : subGroups) {
+            delete e;
+        }
+        mainComboBox = nullptr;
+        mainStackedWidget = nullptr;
+        refreshButton = nullptr;
+        buttonHBoxLayout = nullptr;
+        // timer             = nullptr;
+    }
 
     /*!
        * \brief Reimplementation of the Qt function
@@ -237,7 +260,19 @@ public:
         this->update();
     }
 
-    virtual ~TaskGenVisGroup();
+    virtual ~TaskGenVisGroup()
+    {
+        delete taskListCombo;
+        delete pptCavatiesLineEdit;
+        delete generateButton;
+        delete loadButton;
+        delete buttonHBoxLayout;
+        taskListCombo = nullptr;
+        pptCavatiesLineEdit = nullptr;
+        generateButton = nullptr;
+        loadButton = nullptr;
+        buttonHBoxLayout = nullptr;
+    }
 
     /*!
        * \brief wire connects and disconnect ALL existing Signal-Slots Connections
