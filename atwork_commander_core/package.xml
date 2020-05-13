@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>atwork_commander</name>
+  <name>atwork_commander_core</name>
   <version>0.0.1</version>
-  <description>The new next-gen refbox of the @Work league</description>
+  <description>Core Staten-machine of the next-gen refbox of the @Work league</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
@@ -50,14 +50,9 @@
   <!--   <doc_depend>doxygen</doc_depend> -->
 <buildtool_depend>catkin</buildtool_depend>
 
+<depend>atwork_commander_msgs</depend>
+<depend>atwork_commander_gen</depend>
 <depend>roscpp</depend>
-<depend>std_msgs</depend>
-<test_depend>rostest</test_depend>
-
-<exec_depend>atwork_commander_core</exec_depend>
-<exec_depend>atwork_commander_com</exec_depend>
-<exec_depend>atwork_commander_gui</exec_depend>
-<exec_depend>atwork_commander_gen</exec_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

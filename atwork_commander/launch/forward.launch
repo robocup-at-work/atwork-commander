@@ -6,7 +6,7 @@
   <arg name="output" default="screen"/>
   <arg name="continuous" default="false"/>
 
-  <node name="forward_helper" pkg="atwork_commander" type="control" args="-v $(arg verbose) -c $(arg continuous) forward" output="$(arg output)">
+  <node name="forward_helper" pkg="atwork_commander_core" type="control" args="-v $(arg verbose) -c $(arg continuous) forward" output="$(arg output)">
     <param name="refbox" value="$(arg refbox)"/>
   </node>
 </launch>

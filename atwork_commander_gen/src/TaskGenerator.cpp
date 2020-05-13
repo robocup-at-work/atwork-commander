@@ -764,7 +764,7 @@ class TaskGeneratorImpl {
     bool check( const Task& task ) const {
       try {
         //TODO: do checks
-        return true;
+        return !task.arena_start_state.empty() && !task.arena_target_state.empty()  ;
       } catch(const std::exception& e) {
         ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Exception occured during check: " << e.what());
         return false;

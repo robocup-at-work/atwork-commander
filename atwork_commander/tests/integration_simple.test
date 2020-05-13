@@ -6,6 +6,7 @@
 
   <include file="$(find atwork_commander)/launch/atwork_commander.launch">
     <arg name="publish_frequency" value="$(arg frequency)"/>
+    <arg name="multimaster" value="false"/>
     <arg name="output" value="$(arg output)"/>
   </include>
 

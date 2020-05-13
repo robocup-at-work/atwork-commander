@@ -6,7 +6,7 @@
   <arg name="output" default="screen"/>
 
   <arg name="file"/>
-    <node name="load_helper" pkg="atwork_commander" type="control" args="-v $(arg verbose) load $(arg file)" output="$(arg output)">
+    <node name="load_helper" pkg="atwork_commander_core" type="control" args="-v $(arg verbose) load $(arg file)" output="$(arg output)">
       <param name="refbox" value="$(arg refbox)"/>
     </node>
 </launch>

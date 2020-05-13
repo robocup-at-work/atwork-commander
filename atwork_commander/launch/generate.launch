@@ -7,7 +7,7 @@
   <arg name="continuous" default="false"/>
 
   <arg name="task"/>
-    <node name="generate_helper" pkg="atwork_commander" type="control" args="-v $(arg verbose) -c $(arg continuous) generate $(arg task)" output="$(arg output)">
+    <node name="generate_helper" pkg="atwork_commander_core" type="control" args="-v $(arg verbose) -c $(arg continuous) generate $(arg task)" output="$(arg output)">
       <param name="refbox" value="$(arg refbox)"/>
     </node>
 </launch>
