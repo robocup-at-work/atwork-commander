@@ -45,6 +45,7 @@ ros::Subscriber stateSub;
 string refboxName = "atwork_commander";
 vector<string> arguments;
 bool verbose = false;
+bool continous = false;
 int result = 0;
 
 static ostream& operator<<(ostream& os, Command cmd) {
@@ -85,8 +86,10 @@ static bool forward() {
   }
   if( update.response.error.empty() )
     ROS_INFO_STREAM_NAMED("forward", "[REFBOX-CONTROL] Forwarding state of refbox successfull!");
-  else
+  else {
     ROS_ERROR_STREAM_NAMED("forward", "[REFBOX-CONTROL] Forwarding state failed: " << update.response.error);
+    return false;
+  }
   return true;
 }
 
@@ -126,6 +129,7 @@ static bool stop() {
 
 static bool start() {
   StartTask startTask;
+
   startTask.request.robots.resize( arguments.size() );
   auto it = startTask.request.robots.begin();
   for( const string& name: arguments) {
@@ -134,62 +138,50 @@ static bool start() {
       it++;
       ROS_ERROR_STREAM_NAMED("start", "Invalid robot name encountered: " << name << "! Ignoring!");
       continue;
-  if ( !ros::service::call(refboxName+"/internal/start_task", startTask) ) {
-    ROS_ERROR_STREAM_NAMED("start", "[REFBOX-CONTROL] Issuing start command failed!");
-    result = -1;
-    return false;
-  }
-  if ( !startTask.response.error.empty() ) {
-    ROS_ERROR_STREAM_NAMED("start", "[REFBOX-CONTROL] Starting task failed: \n\t" << startTask.response.error);
-    result = -1;
-  } else {
-    if ( arguments.empty() )
-      ROS_INFO_STREAM_NAMED("start", "[REFBOX-CONTROL] Started task on all registered robots!");
-    else {
-      ROS_INFO_STREAM_NAMED("start", "[REFBOX-CONTROL] Started task on following robots: " << arguments);
-    }
-  }
     }
     it->team_name = res[1];
     it->robot_name = res[2];
   }
+
   if( verbose ) {
     ostringstream os;
     for( const auto& r: startTask.request.robots)
       os << r << endl;
     ROS_INFO_STREAM_NAMED("start", "[REFBOX-CONTROL] Starting task on robots:" << os.str() );
   }
+
   if ( !ros::service::call(refboxName+"/internal/start_task", startTask) ) {
     ROS_ERROR_STREAM_NAMED("start", "[REFBOX-CONTROL] Issuing start command failed!");
     result = -1;
     return false;
   }
+
   if ( !startTask.response.error.empty() ) {
     ROS_ERROR_STREAM_NAMED("start", "[REFBOX-CONTROL] Starting task failed: \n\t" << startTask.response.error);
     result = -1;
+    return false;
   } else {
     if ( arguments.empty() )
       ROS_INFO_STREAM_NAMED("start", "[REFBOX-CONTROL] Started task on all registered robots!");
-    else {
+    else
       ROS_INFO_STREAM_NAMED("start", "[REFBOX-CONTROL] Started task on following robots: " << arguments);
-    }
   }
+
   return true;
 }
 
-static bool store() {
+static void store() {
   if( arguments.size() != 1) {
     ROS_ERROR_STREAM_NAMED("store", "[REFBOX-CONTROL] wrong number of arguments supplied: required <fileName>");
     result = -1;
-    return true;
   }
   fs::path fileName = arguments[0];
   if( fileName.has_relative_path() ) fileName = fs::current_path() / fileName;
   if( fs::exists(fileName) && !fs::is_regular_file(fileName) ) {
     ROS_ERROR_STREAM_NAMED("store", "[REFBOX-CONTROL] supplied file does exist and is not a regular file: " <<  fileName);
     result = -1;
-    return true;
   }
+
   if( fs::exists(fileName) && fs::is_regular_file(fileName) )
     ROS_WARN_STREAM_NAMED("store", "[REFBOX-CONTROL] supplied file does exist and will be overwritten: " <<  fileName);
   ROS_DEBUG_STREAM_NAMED("store", "[REFBOX-CONTROL] starting storage of current refbox task to " << arguments[0]);
@@ -201,21 +193,18 @@ static bool store() {
   file.write(reinterpret_cast<const char*>(buffer.data()), buffer.size());
   file.close();
   ROS_INFO_STREAM_NAMED("store", "[REFBOX-CONTROL] current refbox task saved to " << fileName << " size: " << buffer.size());
-  return true;
 }
 
-static bool load() {
+static void load() {
   if( arguments.size() != 1) {
     ROS_ERROR_STREAM_NAMED("load", "[REFBOX-CONTROL] wrong number of arguments supplied: required <fileName>");
     result = -1;
-    return true;
   }
   fs::path fileName = arguments[0];
   if( fileName.has_relative_path() ) fileName = fs::current_path() / fileName;
   if( !fs::exists(fileName) || !fs::is_regular_file(fileName) ) {
     ROS_ERROR_STREAM_NAMED("load", "[REFBOX-CONTROL] supplied file does not exits or is not a regular file: " <<  fileName);
     result = -1;
-    return true;
   }
 
   ROS_DEBUG_STREAM_NAMED("load", "[REFBOX-CONTROL] starting loading of task " << fileName << " to refbox");
@@ -234,14 +223,12 @@ static bool load() {
   if ( !ros::service::call(refboxName+"/internal/load_task", loadTask) ) {
     ROS_ERROR_STREAM_NAMED("load", "[REFBOX-CONTROL] Loading task into refbox failed!");
     result = -1;
-    return false;
   }
   if ( !loadTask.response.error.empty() ) {
     ROS_ERROR_STREAM_NAMED("load", "[REFBOX-CONTROL] Loading task failed: \n\t" << loadTask.response.error);
     result = -1;
   } else
     ROS_INFO_STREAM_NAMED("load", "[REFBOX-CONTROL] Loading task successfull: " << endl << loadTask.request.task);
-  return true;
 }
 
 static void printState(bool output) {
@@ -253,12 +240,12 @@ static void stateUpdate(const RefboxState::ConstPtr msgPtr) {
   state = *msgPtr;
   bool stopped = true;
   switch( command ) {
-    case( Command::FORWARD  ): stopped = forward();  break;
-    case( Command::STOP     ): stopped = stop();     break;
-    case( Command::START    ): stopped = start();    break;
-    case( Command::GENERATE ): stopped = generate(); break;
-    case( Command::STORE    ): stopped = store();    break;
-    case( Command::LOAD     ): stopped = load();     break;
+    case( Command::FORWARD  ): stopped = !continous || forward();  break;
+    case( Command::STOP     ): stopped = !continous || stop();     break;
+    case( Command::START    ): stopped = !continous || start();    break;
+    case( Command::GENERATE ): stopped = !continous || generate(); break;
+    case( Command::STORE    ): stopped =  true;  store();    break;
+    case( Command::LOAD     ): stopped =  true;  load();     break;
     default: printState(!verbose); stopped = false;
   };
   if( stopped ) {
@@ -277,6 +264,7 @@ static bool parseArgs(int argc, char** argv) {
     ("command", po::value<string>(&cmdString), "command to execute [\"start <robots>\", \"generate <taskName>\", \"stop\", \"forward\", \"state\"]")
     ("args", po::value<vector<string>>(&arguments), "command arguments")
     ("verbose,v", po::value<bool>(&verbose), "set verbosity")
+    ("continous,c", po::value<bool>(&continous), "try again after failure")
     ("help", "produce help message")
   ;
   po::positional_options_description p;
