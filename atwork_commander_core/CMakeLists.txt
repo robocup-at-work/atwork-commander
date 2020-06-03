@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
 )
 
-find_package(Boost 1.63.0 COMPONENTS program_options)
+find_package(Boost 1.58.0 COMPONENTS program_options)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
