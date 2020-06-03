@@ -94,7 +94,7 @@ find_package(Boost 1.58.0 COMPONENTS program_options)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   #INCLUDE_DIRS include
-  #LIBRARIES roscpp
+  LIBRARIES ${PROJECT_NAME}_control
   CATKIN_DEPENDS atwork_commander_msgs roscpp
   #DEPENDS system_lib
 )
@@ -106,14 +106,12 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
- # include
+  include
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
-#add_library(${PROJECT_NAME}
-# src/${PROJECT_NAME}/atwork_refbox.cpp
-#)
+add_library(${PROJECT_NAME}_control src/control.cpp)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -143,7 +141,7 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES})
-target_link_libraries(control ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_control ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 #############
 ## Install ##
