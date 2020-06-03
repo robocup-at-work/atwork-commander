@@ -94,8 +94,8 @@ find_package(Boost 1.58.0 COMPONENTS program_options)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   #INCLUDE_DIRS include
-  #LIBRARIES atwork_refbox
-  #CATKIN_DEPENDS atwork_refbox_msgs roscpp geometry_msgs nav_msgs
+  #LIBRARIES roscpp
+  CATKIN_DEPENDS atwork_commander_msgs roscpp
   #DEPENDS system_lib
 )
 
