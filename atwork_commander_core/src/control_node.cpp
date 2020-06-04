@@ -240,10 +240,10 @@ static void stateUpdate(const RefboxState::ConstPtr msgPtr) {
   state = *msgPtr;
   bool stopped = true;
   switch( command ) {
-    case( Command::FORWARD  ): stopped = !continous || forward();  break;
-    case( Command::STOP     ): stopped = !continous || stop();     break;
-    case( Command::START    ): stopped = !continous || start();    break;
-    case( Command::GENERATE ): stopped = !continous || generate(); break;
+    case( Command::FORWARD  ): stopped = forward()  || !continous; break;
+    case( Command::STOP     ): stopped = stop()     || !continous; break;
+    case( Command::START    ): stopped = start()    || !continous; break;
+    case( Command::GENERATE ): stopped = generate() || !continous; break;
     case( Command::STORE    ): stopped =  true;  store();    break;
     case( Command::LOAD     ): stopped =  true;  load();     break;
     default: printState(!verbose); stopped = false;
