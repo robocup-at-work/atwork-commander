@@ -1,4 +1,4 @@
-#include <atwork_commander/Control.hpp>
+#include "atwork_commander/Control.hpp"
 
 #include <ros/ros.h>
 
@@ -10,11 +10,13 @@
 #include <fstream>
 #include <chrono>
 #include <thread>
+#include <memory>
 
 using namespace std;
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
+using atwork_commander::Control;
 
 enum class Command {
   NOTHING,
@@ -27,12 +29,19 @@ enum class Command {
   LOAD
 } command;
 
-atwork_commander::Control gControl;
+unique_ptr<Control> gControlPtr;
 string refboxName = "atwork_commander";
 vector<string> arguments;
 bool verbose = false;
 bool continous = false;
 int result = 0;
+
+static ostream& operator<<(ostream& os, const vector<string>& v) {
+  os << "[";
+  for( const auto& s: v )
+    os << s << " ";
+  return os << "]";
+}
 
 static ostream& operator<<(ostream& os, Command cmd) {
   switch( cmd ) {
@@ -49,7 +58,7 @@ static ostream& operator<<(ostream& os, Command cmd) {
 }
 
 static bool forward() {
-  return gControl.forward();
+  return gControlPtr->forward();
 }
 
 static bool generate() {
@@ -57,15 +66,15 @@ static bool generate() {
     ROS_ERROR_STREAM_NAMED("generate", "[REFBOX-CONTROL] Invalid amount of task types supplied: Expected 1: Got " << arguments.size());
     return true;
   }
-  return gControl.generate(arguments[0]);
+  return gControlPtr->generate(arguments[0]);
 }
 
 static bool stop() {
-  return gControl.stop();
+  return gControlPtr->stop();
 }
 
 static bool start() {
-  return gControl.start(arguments);
+  return gControlPtr->start(arguments);
 }
 
 static void store() {
@@ -74,7 +83,7 @@ static void store() {
     result = -1;
   }
   fs::path fileName = arguments[0];
-  if( !gControl.store(fileName))
+  if( !gControlPtr->store(fileName))
     result = -1;
 }
 
@@ -84,11 +93,8 @@ static void load() {
     result = -1;
   }
   fs::path fileName = arguments[0];
-  if( !gControl.load(fileName))
+  if( !gControlPtr->load(fileName))
     result = -1;
-}
-
-static void printState(bool output) {
 }
 
 static void stateUpdate(const Control::RefboxState& state) {
@@ -161,12 +167,16 @@ int main(int argc, char** argv)
       std::this_thread::sleep_for(std::chrono::seconds(1)); // Necessary to allow rosconsole to react to logger level change
     }
 
+    gControlPtr.reset(new Control());
+
     if( ros::param::get("~refbox", refboxName) )
-      gControl.refboxName(refboxName);
+      gControlPtr->refbox(refboxName);
     else
-      ROS_WARN_STREAM_NAMED("control", "[REFBOX-CONTROL] No Refbox name specified using \"" << gControl.refbox() << "\"!");
+      ROS_WARN_STREAM_NAMED("control", "[REFBOX-CONTROL] No Refbox name specified using \"" << gControlPtr->refbox() << "\"!");
 
     ROS_DEBUG_STREAM_NAMED("control", "[REFBOX-CONTROL] Command parsed successfull: Executing " << command << " with arguments " << arguments);
+    
+    gControlPtr->stateUpdateCallback(&stateUpdate);
 
     while( ros::ok() )
       ros::spin();

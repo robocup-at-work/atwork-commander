@@ -142,6 +142,7 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 # )
 target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES})
 target_link_libraries(${PROJECT_NAME}_control ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(control ${PROJECT_NAME}_control ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 #############
 ## Install ##
