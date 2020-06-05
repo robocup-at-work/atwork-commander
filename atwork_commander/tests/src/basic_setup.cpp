@@ -1,8 +1,11 @@
 #include <ros/ros.h>
 
+#include <atwork_commander/Control.hpp>
+
 #include <string>
 
 using namespace std;
+using namespace atwork_commander;
 
 int main(int argc, char** argv) {
   ros::init(argc, argv, "test_setup");
@@ -10,7 +13,7 @@ int main(int argc, char** argv) {
   string refbox, taskName;
   if( !ros::param::get("~refbox", refbox) ) {
       refbox = "atwork_commander";
-      ROS_WARN_STREAM("[TEST-SETUP] No Refbox name specified using \"" << refbox << "\"!");
+      ROS_WARN_STREAM("[TEST-SETUP] No Refbox name specified! Using \"" << refbox << "\"!");
   }
   if( !ros::param::get("~task", taskName) ) {
       ROS_ERROR_STREAM("[TEST-SETUP] No task name specified! Exiting");
@@ -19,12 +22,26 @@ int main(int argc, char** argv) {
 
   Control control(refbox);
 
-  if( !control.generate(taskName) )
-    ROS_ERROR_STREAM("[TEST-Setup] Generation of Task " << taskName << "failed!");
-  if( !control.start() )
-    ROS_ERROR_STREAM("Generation of Task " << taskName << "failed!");
-  control.forward();
 
-  ROS_ERROR_STREAM("[TEST_SETUP] Not implemented yet");
+  try{
+    while(control.state().state != Control::RefboxState::IDLE)
+      ros::spinOnce();
+    
+    control.generate(taskName);
+    
+    while(control.state().state != Control::RefboxState::READY)
+      ros::spinOnce();
+    
+    control.start();
+    
+    while(control.state().state != Control::RefboxState::PREPARATION)
+      ros::spinOnce();
+
+    control.forward();
+  } catch(const ControlError& e) {
+    ROS_ERROR_STREAM("[TEST-Setup] Setup error occurred: " << e.what());
+    return -1;
+  }
+
   return 0;
 }

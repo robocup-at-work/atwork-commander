@@ -17,6 +17,7 @@ using namespace std;
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 using atwork_commander::Control;
+using atwork_commander::ControlError;
 
 enum class Command {
   NOTHING,
@@ -58,7 +59,14 @@ static ostream& operator<<(ostream& os, Command cmd) {
 }
 
 static bool forward() {
-  return gControlPtr->forward();
+  try {
+    gControlPtr->forward();
+  }
+  catch(const ControlError& e) {
+    ROS_ERROR_STREAM("[REFBOX-CONTROL] Error in forwarding state occured! " << e.what());
+    return false;
+  }
+  return true;
 }
 
 static bool generate() {
@@ -66,15 +74,33 @@ static bool generate() {
     ROS_ERROR_STREAM_NAMED("generate", "[REFBOX-CONTROL] Invalid amount of task types supplied: Expected 1: Got " << arguments.size());
     return true;
   }
-  return gControlPtr->generate(arguments[0]);
+  try {
+    gControlPtr->generate(arguments[0]);
+  } catch(const ControlError& e) {
+    ROS_ERROR_STREAM("[REFBOX-CONTROL] Error during task generation occured! " << e.what());
+    return false;
+  }
+  return true;
 }
 
 static bool stop() {
-  return gControlPtr->stop();
+  try {
+    gControlPtr->stop();
+  } catch(const ControlError& e) {
+    ROS_ERROR_STREAM("[REFBOX-CONTROL] Error during stopping occured! " << e.what());
+    return false;
+  }
+  return true;
 }
 
 static bool start() {
-  return gControlPtr->start(arguments);
+  try {
+    gControlPtr->start(arguments);
+  } catch(const ControlError& e) {
+    ROS_ERROR_STREAM("[REFBOX-CONTROL] Error during starting task occured! " << e.what());
+    return false;
+  }
+  return true;
 }
 
 static void store() {
@@ -83,8 +109,13 @@ static void store() {
     result = -1;
   }
   fs::path fileName = arguments[0];
-  if( !gControlPtr->store(fileName))
+  try {
+    gControlPtr->store(fileName);
+  }
+  catch(const ControlError& e) {
+    ROS_ERROR_STREAM("[REFBOX-CONTROL] Error in storing task occured! " << e.what());
     result = -1;
+  }
 }
 
 static void load() {
@@ -93,8 +124,13 @@ static void load() {
     result = -1;
   }
   fs::path fileName = arguments[0];
-  if( !gControlPtr->load(fileName))
+  try {
+    gControlPtr->load(fileName);
+  }
+  catch(const ControlError& e) {
+    ROS_ERROR_STREAM("[REFBOX-CONTROL] Error in loading task occured! " << e.what());
     result = -1;
+  }
 }
 
 static void stateUpdate(const Control::RefboxState& state) {
