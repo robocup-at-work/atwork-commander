@@ -52,6 +52,7 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>atwork_commander_msgs</depend>
+  <depend>atwork_commander_core</depend>
   <depend>rviz</depend>
 
   <exec_depend>rqt_gui</exec_depend>

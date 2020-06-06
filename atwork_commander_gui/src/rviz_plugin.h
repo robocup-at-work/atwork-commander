@@ -6,6 +6,7 @@
 #include <QFormLayout>
 #include <QHBoxLayout>
 #include <QLineEdit>
+#include <QLabel>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QSpinBox>
@@ -17,6 +18,8 @@
 #include <ros/ros.h>
 #include <rviz/panel.h>
 #include <std_msgs/String.h>
+
+#include <atwork_commander/Control.hpp>
 #endif
 
 namespace atwork_commander {
@@ -39,6 +42,8 @@ protected:
     //          console output
     QMessageBox* message = nullptr;
 
+    std::shared_ptr<atwork_commander::Control> control_ptr;
+
 public:
     VisGroup(QWidget* parent = nullptr)
         : QWidget(parent)
@@ -57,6 +62,14 @@ public:
         self = nullptr;
         layout = nullptr;
         message = nullptr;
+    }
+
+    virtual void setControlPtr( std::shared_ptr<atwork_commander::Control> new_control_ptr )
+    {
+      if (control_ptr) {
+        return;
+      }
+      control_ptr = new_control_ptr;
     }
 
     virtual QWidget* getWidget() { return self; }
@@ -99,6 +112,7 @@ private:
     QStackedWidget* mainStackedWidget = nullptr;
     QPushButton* refreshButton = nullptr;
     QHBoxLayout* buttonHBoxLayout = nullptr;
+    QLabel* statusLabel = nullptr;
     // QTimer*         timer             = nullptr;
 
     // save all instances passed in via the registerSubclass-Method
@@ -113,6 +127,7 @@ public:
         mainStackedWidget = new QStackedWidget(self);
         refreshButton = new QPushButton();
         buttonHBoxLayout = new QHBoxLayout();
+        statusLabel = new QLabel();
         // timer               = new QTimer();
         subGroups = std::vector<VisGroup*>();
 
@@ -123,7 +138,10 @@ public:
         buttonHBoxLayout->addWidget(mainComboBox);
         buttonHBoxLayout->addWidget(refreshButton);
 
+        statusLabel->setText("No Connection to Refbox");
+
         layout->addRow(buttonHBoxLayout);
+        layout->addRow(statusLabel);
         layout->addRow(mainStackedWidget);
 
         // timer->setInterval(30 * 1000);
@@ -146,6 +164,7 @@ public:
         delete mainStackedWidget;
         delete refreshButton;
         delete buttonHBoxLayout;
+        delete statusLabel;
         // delete timer;
         for (auto e : subGroups) {
             delete e;
@@ -154,7 +173,20 @@ public:
         mainStackedWidget = nullptr;
         refreshButton = nullptr;
         buttonHBoxLayout = nullptr;
+        statusLabel = nullptr;
         // timer             = nullptr;
+    }
+
+    virtual void setControlPtr( std::shared_ptr<atwork_commander::Control> new_control_ptr )
+    {
+      if (control_ptr) {
+        return;
+      }
+      control_ptr = new_control_ptr;
+
+      for (auto e : subGroups) {
+        e->setControlPtr(new_control_ptr);
+      }
     }
 
     /*!
@@ -242,7 +274,7 @@ public:
         buttonHBoxLayout = new QHBoxLayout();
 
         // draw
-        layout->addRow("Select Task Instance", taskListCombo);
+        layout->addRow("Task Instance: ", taskListCombo);
 
         generateButton->setText("Generate Task");
         // generateButton->setMaximumWidth(80);
@@ -286,11 +318,11 @@ public:
     {
         if (make_connections) {
             connect(taskListCombo, SIGNAL(activated(int)), this, SLOT(update()));
-            connect(generateButton, SIGNAL(clicked()), this, SLOT(update()));
+            connect(generateButton, SIGNAL(clicked()), this, SLOT(generateTask()));
             connect(loadButton, SIGNAL(clicked()), this, SLOT(update()));
         } else {
             disconnect(taskListCombo, SIGNAL(activated(int)), this, SLOT(update()));
-            disconnect(generateButton, SIGNAL(clicked()), this, SLOT(update()));
+            disconnect(generateButton, SIGNAL(clicked()), this, SLOT(generateTask()));
             disconnect(loadButton, SIGNAL(clicked()), this, SLOT(update()));
         }
     }
@@ -314,6 +346,19 @@ public:
     }
 
 public Q_SLOTS:
+
+    //! generate on push
+    virtual void generateTask()
+    {
+      try {
+        control_ptr->generate(taskListCombo->currentText().toStdString());
+      } catch(const ControlError& e) {
+        ROS_ERROR_STREAM("[REFBOX-CONTROL] Error during task generation occured! " << e.what());
+        return;
+      }
+      ROS_ERROR_STREAM("debug: generated");
+      // return true;
+    }
     /*!
        * \brief Reimplementation of the Qt fucntion - updates the UI
        *
@@ -334,8 +379,10 @@ public Q_SLOTS:
         //TODO get list of tasks instances
         taskListCombo->addItem(QString("BMT"));
         taskListCombo->addItem(QString("BTT1"));
-        taskListCombo->addItem(QString("BTTx"));
+        taskListCombo->addItem(QString("BTT2"));
+        taskListCombo->addItem(QString("BTT3"));
         taskListCombo->addItem(QString("RTT"));
+        taskListCombo->addItem(QString("PPT"));
         taskListCombo->addItem(QString("Final"));
 
         if (state.isEmpty()) {
@@ -385,6 +432,8 @@ private:
     TaskGenVisGroup taskGenVG;
 
     ros::NodeHandle nh;
+
+    std::shared_ptr<atwork_commander::Control> control_ptr;
 
 public:
     RefboxUI(QWidget* parent = nullptr);

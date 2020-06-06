@@ -9,6 +9,7 @@ add_compile_options(-std=c++11 -Wall -g)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   atwork_commander_msgs
+  atwork_commander_core
   roscpp
   rviz
 )
