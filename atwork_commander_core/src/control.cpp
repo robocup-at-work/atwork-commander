@@ -204,7 +204,7 @@ Control::Control(string name)
   : mImpl(new ControlImpl(name))
 {}
 
-Control::~Control() { delete mImpl; }
+Control::~Control() noexcept { delete mImpl; }
 
 // Functions
 Task Control::generate(const string& task)              { return mImpl->generate(task);  }

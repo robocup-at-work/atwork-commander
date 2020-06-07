@@ -41,7 +41,7 @@ class Control {
     using Task = atwork_commander_msgs::Task;
 
     Control( std::string refboxName = "atwork_commander" );
-    ~Control();
+    ~Control() noexcept;
 
     void verbose( bool value );
     bool verbose() const;
