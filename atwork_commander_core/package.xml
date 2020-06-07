@@ -2,7 +2,7 @@
 <package format="2">
   <name>atwork_commander_core</name>
   <version>0.0.1</version>
-  <description>Core Staten-machine of the next-gen refbox of the @Work league</description>
+  <description>Core State-machine of the next-gen refbox of the @Work league</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->

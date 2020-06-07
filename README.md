@@ -1,69 +1,96 @@
-# atwork_commander
+# atwork-commander
 
 [![Build Status](https://travis-ci.org/steup/atwork-commander.svg?branch=master)](https://travis-ci.org/steup/atwork-commander)
 
-Complete reimplementation of a Refery Box (Refbox) for the @Work-League of the RoboCup.
+Complete reimplementation of the [old](https://github.com/robocup-at-work/at_work_central_factory_hub)
+Referee Box (Refbox) for the @Work-League of RoboCup.
 
-This Refbox is a native ROS application. However it aims to enable multiple communications backends through individual plugins.
-Additionally, a RViz GUI will be developed, which provides enhanced visualization capabiliities for referies and visitors / spectators. Generation of tasks conforming to the rule book configurable using the ROS parameter service to be easily adaptable to future changes of the RuleBook.
+This Refbox is a native ROS application.
+However, it aims to enable multiple communication backends through individual plugins.
+Additionally, a RViz GUI will be developed, which will provide enhanced visualization
+capabilities for referees and visitors / spectators.
+Generation of tasks conforming to the [rule book](https://github.com/robocup-at-work/rulebook)
+are configurable using the ROS parameters in order to be easily adaptable for
+any future changes in rules.
 
 
 ## HowTo
 
 ### Starting the Refbox
 
-1. Start the __core__ and __com__ components: `roslaunch atwork_commander atwork_commander.launch`
-2. Generate a task using the CLI: `roslaunch atwork_commander generate.launch task:=<task to generate>`
+1. Start the __core__ and __com__ components:
+```
+roslaunch atwork_commander atwork_commander.launch
+```
+2. Generate a task using the CLI:
+```
+roslaunch atwork_commander generate.launch task:=<task to generate>
+```
 3. Wait for robots to register
-4. Start the task execution using the CLI: `roslaunch atwork_commander start.launch`
+4. Start the task execution using the CLI:
+```
+roslaunch atwork_commander start.launch
+```
 
-For testing the refbox without any robot a fake robot may be used using the **example_robot**:
+For testing the Refbox without any robot a fake robot may be used using the **example_robot**:
 `roslaunch atwork_commander example_robot.launch`
 
 ### Configurations
 
-- All launch files share the __refbox__ parameter to specify the refbox to connect to. Multiple refbox can be started on the same PC using multiple namespaces.
-- If more information is wanted the __verbose__ parameter enables more verbose logging.
-- If the task shoudl only be send to some registered robots, the robots can be specified in the __start__ command using the robots parameter in the format "<team_name>/<robot_name>"
+- All launch files share the __refbox__ parameter to specify the Refbox to connect
+  to. Multiple Refboxes can be started on the same PC using multiple namespaces.
+- When more information is needed, the __verbose__ parameter can be enabled for
+  more verbose logging.
+- If a task needs to be sent to only some registered robots, the robots can be
+  specified in the __start__ command using the robots parameter in the format
+  "<team_name>/<robot_name>"
 
 ### Runtime control
 
-- the __forward__ launch file enables manual state change from PREPARATION to EXECUTION:
-  `roslaunch atwork_commander forward.launch`
+- the __forward__ launch file enables manual state change from *PREPARATION* to *EXECUTION*:
+```
+roslaunch atwork_commander forward.launch
+```
 - the __stop__ launch file enables stopping of the currently running task:
-  `roslaunch atwork_commander stop.launch`
+```
+roslaunch atwork_commander stop.launch
+```
 
 ## Documentation
 
-Currently in the __docu__ folder. Multiple '.graphml' files showing the design of the architecture and the future GUI (Viewable and editable with e.g. [yEd Graph Editor](https://www.yworks.com/products/yed))
+Currently in the __docu__ folder. Multiple '.graphml' files showing the design
+of the architecture and the future GUI (Viewable and editable with e.g.
+[yEd Graph Editor](https://www.yworks.com/products/yed))
 
 ## Sub-Components
 
 The following section will briefly summarize the individual components purpose.
-For further information have a look at the respective sub-components README.md.
+For further information, please have a look at the respective sub-components' README.md.
 
-### core
+### [atwork\_commander\_core](atwork_commander_core/README.md)
 
-State-Machine implementation and Pub/Sub and Service implementations to couple all sub-components.
+State-Machine implementation, Pub/Sub and Service implementations to couple all
+sub-components.
 
-### msg
+### [atwork\_commander\_msgs](atwork_commander_msgs/README.md)
 
 Contains ROS messages and service descriptions necessary to communicate within
-the refbox.
+the Refbox.
 
-### com
+### [atwork\_commander\_com](atwork_commander_com/README.md)
 
 Will contain multiple communication plugins to enable flexible communication
 links to various types of robots.
 
-### gui
+### [atwork\_commander\_gui](atwork_commander_gui/README.md)
 
-Aims to enable visualization and control of multiple aspects of a Task before, during and after a run.
+Aims to enable visualization and control of multiple aspects of a Task before,
+during and after a run.
 
-### gen
+### [atwork\_commander\_gen](atwork_commander_gen/README.md)
 
-Enable dynamic task generation according to specified task types of the @Work
-RuleBook.
+Enable dynamic task generation according to specified task types of the
+[@Work RuleBook](https://github.com/robocup-at-work/rulebook).
 
 ## TODOs
 
