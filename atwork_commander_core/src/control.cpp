@@ -10,6 +10,7 @@
 #include <ros/ros.h>
 
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 #include <iostream>
 #include <sstream>
