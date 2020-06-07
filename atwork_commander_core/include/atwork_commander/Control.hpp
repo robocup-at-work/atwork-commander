@@ -18,7 +18,7 @@ class ControlError : public std::runtime_error {
       PATH_INVALID,
       TASK_INVALID,
       STATE_INVALID,
-      NO_SUCH_TASK,
+      NO_TASK,
       NO_ROBOT,
       SERVICE_ERROR,
       CONNECTION_ERROR

@@ -12,6 +12,7 @@
 #include <boost/filesystem.hpp>
 
 #include <iostream>
+#include <sstream>
 #include <regex>
 
 using namespace std;
@@ -53,8 +54,19 @@ void call(std::string service, T& arg) {
    throw ControlError(ControlError::Reasons::SERVICE_ERROR, arg.response.error);
 }
 
-static string genErrorMsg(ControlError::Reasons reasons, std::string argument) {
-  return "Not yet implemented";
+static string genErrorMsg(ControlError::Reasons reason, std::string argument) {
+  ostringstream os;
+  switch(reason) {
+    case(ControlError::Reasons::PATH_INVALID): os << argument << " is not a valid path"; break;
+    case(ControlError::Reasons::TASK_INVALID): os << argument << " is not a valid task name"; break;
+    case(ControlError::Reasons::STATE_INVALID): os << "Command invalid for state " << argument; break;
+    case(ControlError::Reasons::NO_TASK): os << "No task registered"; break;
+    case(ControlError::Reasons::NO_ROBOT): os << "No robot registered"; break;
+    case(ControlError::Reasons::SERVICE_ERROR): os << "Service call to \"" << argument << "\" failed"; break;
+    case(ControlError::Reasons::CONNECTION_ERROR): os << "Connection to service \"" << argument << "\" failed"; break;
+    default: os << "Unknown error";
+  }
+  return os.str();
 }
 
 ControlError::ControlError(ControlError::Reasons reason, string argument)
@@ -67,7 +79,7 @@ public:
   Callback callback;
   string refbox;
   bool verbose = false;
-  
+
   ros::Subscriber stateSub;
 
   void stateUpdate( RefboxState::ConstPtr msgPtr ) {
@@ -105,9 +117,9 @@ public:
   Task generate(const string& task) {
     GenerateTask genTask;
     genTask.request.task_name = task;
-    
+
     call(refbox+"/internal/generate_task", genTask);
-    
+
     ROS_DEBUG_STREAM_NAMED("control", "[CONTROL] Generate task \"" << task << "\" successfull: " << genTask.response.task);
 
     return genTask.response.task;
