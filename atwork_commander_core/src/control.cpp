@@ -128,7 +128,13 @@ public:
 
   void stop() {
     StateUpdate update;
-    update.request.state = RefboxState::READY;
+    switch( state.state ) {
+      case( RefboxState::PREPARATION ): 
+      case( RefboxState::EXECUTION )  : update.request.state = RefboxState::READY; break;
+      case( RefboxState::IDLE)        : update.request.state = RefboxState::IDLE; break;
+      default:
+        throw ControlError(ControlError::Reasons::STATE_INVALID, stateName(state.state));
+    }
     call(refbox+"/internal/state_update", update);
     ROS_DEBUG_STREAM_NAMED("control", "[CONTROL] stopping task successfull!");
   }

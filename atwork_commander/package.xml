@@ -15,6 +15,7 @@
 <buildtool_depend>catkin</buildtool_depend>
 
 <test_depend>rostest</test_depend>
+<test_depend>gtest</test_depend>
 <test_depend>atwork_commander_core</test_depend>
 
 <exec_depend>atwork_commander_core</exec_depend>
