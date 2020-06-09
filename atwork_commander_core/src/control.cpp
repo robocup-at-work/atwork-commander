@@ -129,7 +129,7 @@ public:
   void stop() {
     StateUpdate update;
     switch( state.state ) {
-      case( RefboxState::PREPARATION ): 
+      case( RefboxState::PREPARATION ):
       case( RefboxState::EXECUTION )  : update.request.state = RefboxState::READY; break;
       case( RefboxState::IDLE)        : update.request.state = RefboxState::IDLE; break;
       default:
@@ -230,4 +230,18 @@ const std::string&          Control::refbox() const              { return mImpl-
 void Control::refbox(const std::string& name)           { mImpl->refbox = name;       }
 void Control::stateUpdateCallback( Callback callback )  { mImpl->callback = callback; };
 void Control::verbose( bool value )                     { mImpl->verbose = value;     }
+}
+
+
+ostream& operator<<(ostream& os, atwork_commander::ControlError::Reasons r) {
+  switch(r) {
+    case(atwork_commander::ControlError::Reasons::PATH_INVALID     ): return  os << "PATH_INVALID"; break;
+    case(atwork_commander::ControlError::Reasons::TASK_INVALID     ): return  os << "TASK_INVALID"; break;
+    case(atwork_commander::ControlError::Reasons::STATE_INVALID    ): return  os << "STATE_INVALID"; break;
+    case(atwork_commander::ControlError::Reasons::NO_TASK          ): return  os << "NO_TASK"; break;
+    case(atwork_commander::ControlError::Reasons::NO_ROBOT         ): return  os << "NO_ROBOT"; break;
+    case(atwork_commander::ControlError::Reasons::SERVICE_ERROR    ): return  os << "SERVICE_ERROR"; break;
+    case(atwork_commander::ControlError::Reasons::CONNECTION_ERROR ): return  os << "CONNECTION_ERROR"; break;
+    default                : return os << "UNKNOWN";
+  };
 }

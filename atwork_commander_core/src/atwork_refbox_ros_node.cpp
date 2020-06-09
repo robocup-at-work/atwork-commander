@@ -381,10 +381,11 @@ private:
     bool startTask(atwork_commander_msgs::StartTask::Request& req, atwork_commander_msgs::StartTask::Response& res) {
       if ( notInState( { State::READY } ) ) {
         std::ostringstream os;
-        if ( m_state.state == State::IDLE )
-          os << "Got start request while refbox not ready! Ignoring!";
-        else
-          os << "Got start request with ongoing task! Ignoring!";
+        switch(m_state.state) {
+          case(State::IDLE ):    os << "Got start request while refbox not ready! Ignoring!"; break;
+          case(State::FAILURE ): os << "Got start request while refbox failed! Please restart!";break;
+          default:               os << "Got start request with ongoing task! Ignoring!";
+        }
         ROS_ERROR_STREAM_NAMED("external", "[REFBOX] " << os.str());
         res.error = os.str();
         return true;

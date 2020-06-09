@@ -9,7 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
 )
 
-find_package(Boost 1.58.0 COMPONENTS program_options)
+find_package(Boost 1.58.0 REQUIRED COMPONENTS filesystem program_options)
 
 catkin_package(
   INCLUDE_DIRS include
@@ -32,3 +32,15 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES})
 target_link_libraries(${PROJECT_NAME}_control ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 target_link_libraries(control ${PROJECT_NAME}_control ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  include_directories(${catkin_INCLUDE_DIRS})
+  add_executable(external tests/src/external.cpp)
+  add_executable(control_test tests/src/control.cpp)
+  target_link_libraries(external ${PROJECT_NAME}_control ${catkin_LIBRARIES}  gtest)
+  target_link_libraries(control_test ${PROJECT_NAME}_control ${catkin_LIBRARIES}  gtest gmock)
+  add_rostest(tests/control.test)
+  add_rostest(tests/external.test)
+endif()

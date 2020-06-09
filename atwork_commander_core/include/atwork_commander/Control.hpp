@@ -60,3 +60,5 @@ class Control {
 };
 
 }
+
+std::ostream& operator<<(std::ostream& os, atwork_commander::ControlError::Reasons r);
