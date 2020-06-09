@@ -51,7 +51,6 @@
 <buildtool_depend>catkin</buildtool_depend>
 <test_depend>rostest</test_depend>
 <test_depend>gtest</test_depend>
-<test_depend>gmock</test_depend>
 <depend>atwork_commander_msgs</depend>
 <depend>atwork_commander_gen</depend>
 <depend>roscpp</depend>
