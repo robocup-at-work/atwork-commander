@@ -23,6 +23,8 @@ using ::testing::Return;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::SetArgReferee;
+using ::testing::Field;
+using ::testing::Eq;
 
 struct RefboxMockBase {
   class RefboxWrapper {
@@ -107,6 +109,8 @@ struct ControlTests : public atwork_commander::testing::BasicControlTest {
 
 };
 
+MATCHER_P(IsState, state, "") { return arg.state == state; }
+
 TEST_F(ControlTests, forwardFromFail) {
   toState(RefboxState::FAILURE);
 
@@ -128,23 +132,18 @@ TEST_F(ControlTests, forwardFromReady) {
 TEST_F(ControlTests, forwardFromPrep) {
   toState(RefboxState::PREPARATION);
 
-  StateUpdate::Request req;
-  req.state = RefboxState::EXECUTION;
-
-  EXPECT_CALL(refbox, stateChange(req, _))
+  EXPECT_CALL(refbox, stateChange(IsState(RefboxState::EXECUTION), _))
     .Times(1)
     .WillOnce( Return(true) );
 
   forward();
 }
 
+
 TEST_F(ControlTests, forwardFromExec) {
   toState(RefboxState::EXECUTION);
 
-  StateUpdate::Request req;
-  req.state = RefboxState::READY;
-
-  EXPECT_CALL(refbox, stateChange(req, _))
+  EXPECT_CALL(refbox, stateChange(IsState(RefboxState::READY), _))
     .Times(1)
     .WillOnce( Return(true) );
 
