@@ -12,6 +12,7 @@
 
 #include <thread>
 #include <mutex>
+#include <atomic>
 
 using namespace std;
 namespace p = placeholders;
@@ -76,10 +77,17 @@ struct RefboxMockBase {
 
 struct RefboxMock : public RefboxMockBase {
   RefboxMock(const string& refbox) : RefboxMockBase(refbox) {}
+#ifndef MOCK_METHOD2
   MOCK_METHOD(bool, loadTask, (LoadTask::Request&, LoadTask::Response&), (override));
   MOCK_METHOD(bool, start, (StartTask::Request&, StartTask::Response&), (override));
   MOCK_METHOD(bool, generate, (GenerateTask::Request&, GenerateTask::Response&), (override));
   MOCK_METHOD(bool, stateChange, (StateUpdate::Request&, StateUpdate::Response&), (override));
+#else
+  MOCK_METHOD2(loadTask, bool(LoadTask::Request&, LoadTask::Response&));
+  MOCK_METHOD2(start, bool(StartTask::Request&, StartTask::Response&));
+  MOCK_METHOD2(generate, bool(GenerateTask::Request&, GenerateTask::Response&));
+  MOCK_METHOD2(stateChange, bool(StateUpdate::Request&, StateUpdate::Response&));
+#endif
 };
 
 struct ControlTests : public atwork_commander::testing::BasicControlTest {

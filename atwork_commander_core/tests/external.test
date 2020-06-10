@@ -10,15 +10,15 @@
     <arg name="output" value="$(arg output)"/>
   </include>
 
-  <test test-name="UnInit-Start" pkg="atwork_commander" type="uninit" name="UnInit" args="--gtest_filter=*startOnIdle">
+  <test test-name="StartOnIdle" pkg="atwork_commander_core" type="external" name="external" args="--gtest_filter=*startOnIdle">
     <param name="refbox" value="atwork_commander"/>
   </test>
 
-  <test test-name="UnInit-Stop" pkg="atwork_commander" type="uninit" name="UnInit" args="--gtest_filter=*stoponIdle">
+  <test test-name="StopOnIdle" pkg="atwork_commander_core" type="external" name="external" args="--gtest_filter=*stoponIdle">
     <param name="refbox" value="atwork_commander"/>
   </test>
 
-  <test test-name="UnInit-Forward" pkg="atwork_commander" type="uninit" name="UnInit" args="--gtest_filter=*forwardOnIdle">
+  <test test-name="ForwardOnIdle" pkg="atwork_commander_core" type="external" name="external" args="--gtest_filter=*forwardOnIdle">
     <param name="refbox" value="atwork_commander"/>
   </test>
 
