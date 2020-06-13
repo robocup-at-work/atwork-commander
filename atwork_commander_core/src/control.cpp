@@ -65,6 +65,7 @@ static string genErrorMsg(ControlError::Reasons reason, std::string argument) {
     case(ControlError::Reasons::NO_ROBOT): os << "No robot registered"; break;
     case(ControlError::Reasons::SERVICE_ERROR): os << "Service call to \"" << argument << "\" failed"; break;
     case(ControlError::Reasons::CONNECTION_ERROR): os << "Connection to service \"" << argument << "\" failed"; break;
+    case(ControlError::Reasons::ARGUMENT_INVALID): os << "Argument of service " << argument << " invalid"; break;
     default: os << "Unknown error";
   }
   return os.str();
@@ -141,18 +142,17 @@ public:
 
   void start(vector<string> robots={}) {
     StartTask startTask;
-
+    if( state.state != RefboxState::READY)
+      throw ControlError(ControlError::Reasons::STATE_INVALID, stateName(state.state));
     startTask.request.robots.resize( robots.size() );
     auto it = startTask.request.robots.begin();
     for( const string& name: robots) {
       match_results<string::const_iterator> res;
-      if( !regex_match(name, res, regex("([^[:space:]]+)/([^[:space:]]+)"))  || res.size() != 3) {
-        it++;
-        ROS_ERROR_STREAM_NAMED("start", "Invalid robot name encountered: " << name << "! Ignoring!");
-        continue;
-      }
+      if( !regex_match(name, res, regex("([^[:space:]]+)/([^[:space:]]+)"))  || res.size() != 3)
+        throw ControlError(ControlError::Reasons::ARGUMENT_INVALID, name);
       it->team_name = res[1];
       it->robot_name = res[2];
+      it++;
     }
 
     ROS_DEBUG_STREAM_NAMED("start", "[REFBOX-CONTROL] Starting task on robots:" << startTask.request.robots );
