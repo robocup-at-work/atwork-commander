@@ -3,7 +3,7 @@
 using External = atwork_commander::testing::BasicControlTest;
 
 TEST_F(External, startOnIdle) {
-  EXPECT_REASON(start(), SERVICE_ERROR);
+  EXPECT_REASON(start(), STATE_INVALID);
 }
 
 TEST_F(External, forwardOnIdle) {

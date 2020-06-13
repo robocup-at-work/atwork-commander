@@ -25,6 +25,10 @@ using ::testing::DoAll;
 using ::testing::SetArgReferee;
 using ::testing::Field;
 using ::testing::Eq;
+using ::testing::IsEmpty;
+using ::testing::SizeIs;
+using ::testing::AllOf;
+
 
 struct RefboxMockBase {
   class RefboxWrapper {
@@ -109,8 +113,6 @@ struct ControlTests : public atwork_commander::testing::BasicControlTest {
 
 };
 
-MATCHER_P(IsState, state, "") { return arg.state == state; }
-
 TEST_F(ControlTests, forwardFromFail) {
   toState(RefboxState::FAILURE);
 
@@ -132,22 +134,36 @@ TEST_F(ControlTests, forwardFromReady) {
 TEST_F(ControlTests, forwardFromPrep) {
   toState(RefboxState::PREPARATION);
 
-  EXPECT_CALL(refbox, stateChange(IsState(RefboxState::EXECUTION), _))
-    .Times(1)
-    .WillOnce( Return(true) );
+  EXPECT_CALL(refbox,
+    stateChange(
+      Field( &StateUpdate::Request::state,
+        Eq( RefboxState::EXECUTION )
+      ),
+      _
+    )
+  ).Times( 1 )
+   .WillOnce( Return( true ) );
 
-  forward();
+  EXPECT_NO_THROW(forward());
 }
 
 
 TEST_F(ControlTests, forwardFromExec) {
   toState(RefboxState::EXECUTION);
 
-  EXPECT_CALL(refbox, stateChange(IsState(RefboxState::READY), _))
-    .Times(1)
-    .WillOnce( Return(true) );
+  EXPECT_CALL(refbox,
+    stateChange(
+      Field( &StateUpdate::Request::state,
+        Eq( RefboxState::READY )
+      ),
+      _
+    )
+  ).Times( 1 )
+   .WillOnce(
+     Return( true )
+   );
 
-  forward();
+  EXPECT_NO_THROW(forward());
 }
 
 TEST_F(ControlTests, forwardServiceError) {
@@ -156,10 +172,138 @@ TEST_F(ControlTests, forwardServiceError) {
   StateUpdate::Response res;
   res.error = "Something";
 
-  EXPECT_CALL(refbox, stateChange(_, _))
+  EXPECT_CALL(refbox,
+    stateChange(
+      _,
+      _
+    )
+  ).Times(1)
+   .WillOnce(
+     DoAll(
+       SetArgReferee<1>( res ),
+       Return( true )
+     )
+   );
+  EXPECT_REASON(forward(), SERVICE_ERROR);
+}
+
+TEST_F(ControlTests, startFromFail) {
+  toState(RefboxState::FAILURE);
+
+  EXPECT_REASON(start(), STATE_INVALID);
+}
+
+TEST_F(ControlTests, startFromIdle) {
+  toState(RefboxState::IDLE);
+
+  EXPECT_REASON(start(), STATE_INVALID);
+}
+
+TEST_F(ControlTests, startFromReady) {
+  toState(RefboxState::READY);
+
+  EXPECT_CALL(refbox,
+    start(
+      Field( &StartTask::Request::robots,
+        IsEmpty()
+      ),
+      _
+    )
+  ).Times(1)
+   .WillOnce(
+     Return( true )
+   );
+
+  EXPECT_NO_THROW(start());
+}
+
+TEST_F(ControlTests, startFromPrep) {
+  toState(RefboxState::PREPARATION);
+
+  EXPECT_REASON(start(), STATE_INVALID);
+}
+
+
+TEST_F(ControlTests, startFromExec) {
+  toState(RefboxState::EXECUTION);
+
+  EXPECT_REASON(start(), STATE_INVALID);
+}
+
+TEST_F(ControlTests, startServiceError) {
+  toState(RefboxState::READY);
+
+  StartTask::Response res;
+  res.error = "Something";
+
+  EXPECT_CALL(refbox, start(_, _))
     .Times(1)
     .WillOnce( DoAll( SetArgReferee<1>(res), Return(true) ) );
-  EXPECT_REASON(forward(), SERVICE_ERROR);
+  EXPECT_REASON(start(), SERVICE_ERROR);
+}
+
+TEST_F(ControlTests, startSpecificRobot) {
+  toState(RefboxState::READY);
+
+  EXPECT_CALL(refbox,
+    start(
+      Field(&StartTask::Request::robots,
+        AllOf(
+          Contains(
+            AllOf(
+              Field( &RobotHeader::team_name, Eq("test")),
+              Field( &RobotHeader::robot_name, Eq("test"))
+            )
+          ),
+          SizeIs(1)
+        )
+      ),
+      _
+    )
+  ).Times(1)
+   .WillOnce(
+     Return( true)
+   );
+
+  EXPECT_NO_THROW(start({"test/test"}));
+}
+
+TEST_F(ControlTests, startMultipleRobots) {
+  toState(RefboxState::READY);
+
+  EXPECT_CALL(refbox,
+    start(
+      Field(&StartTask::Request::robots,
+        AllOf(
+          Contains(
+            AllOf(
+              Field( &RobotHeader::team_name, Eq("test")),
+              Field( &RobotHeader::robot_name, Eq("test"))
+            )
+          ),
+          Contains(
+            AllOf(
+              Field( &RobotHeader::team_name, Eq("test")),
+              Field( &RobotHeader::robot_name, Eq("test2"))
+            )
+          ),
+          SizeIs(2)
+        )
+      ),
+      _
+    )
+  ).Times(1)
+   .WillOnce(
+     Return(true)
+   );
+
+  EXPECT_NO_THROW(start({"test/test", "test/test2"}));
+}
+
+TEST_F(ControlTests, startInvalidRobot) {
+  toState(RefboxState::READY);
+
+  EXPECT_REASON(start({"test"}), ARGUMENT_INVALID);
 }
 
 int main(int argc, char** argv) {
