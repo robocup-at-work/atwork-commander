@@ -49,6 +49,7 @@ class StateTracker {
 
     TaskDefinitions m_task_map;
     double m_robot_timeout = 1.0;
+    double m_publish_frequency = 1.0;
     ArenaDescription m_arena;
     std::shared_ptr<TaskGenerator> m_task_gen;
     State m_state;
@@ -98,8 +99,7 @@ public:
 
         if ( !ros::param::get("~robot_timeout", m_robot_timeout) )
           ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Robot Timeout unset (private parameter: \"robot_timeout\") using default value 1.0s");
-        double publish_frequency = 1.0;
-        if ( !ros::param::get("~publish_frequency", publish_frequency) )
+        if ( !ros::param::get("~publish_frequency", m_publish_frequency) )
           ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Publication Frequency unset (private parameter: \"publish_frequency\") using default value 1.0 Hz");
         m_robot_state_sub = m_nh.subscribe("internal/robot_state", 1, &StateTracker::receiveRobotStateClb, this);
 
@@ -111,7 +111,7 @@ public:
         m_load_task_service = m_nh.advertiseService("internal/load_task", &StateTracker::loadTask, this);
         m_state_update_service = m_nh.advertiseService("internal/state_update", &StateTracker::externalStateUpdate, this);
 
-        m_publish_timer = nh.createTimer( ros::Duration( publish_frequency ), &StateTracker::publishUpdate, this );
+        m_publish_timer = nh.createTimer( ros::Duration( m_publish_frequency ), &StateTracker::publishUpdate, this );
 
     }
 
