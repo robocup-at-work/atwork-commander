@@ -14,10 +14,6 @@ class Base {
   /** Callback executed if a new atwork_commander::RobotState was received **/
   robot_state_fct_t robot_state_fct;
 
-protected:
-
-  Base() {}
-
 public:
 
   virtual ~Base() {}
