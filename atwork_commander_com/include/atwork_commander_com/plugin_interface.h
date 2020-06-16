@@ -11,7 +11,7 @@ namespace atwork_commander {
 namespace com_plugin {
 
 class Base {
-
+  /** Callback executed if a new atwork_commander::RobotState was received **/
   robot_state_fct_t robot_state_fct;
 
 protected:
@@ -23,7 +23,8 @@ public:
   virtual ~Base() {}
 
   /**Initalize the global variables.
-   * @param roshandle a valid ROS NodeHandle
+   * \param roshandle a valid ROS NodeHandle
+   * \param rsf callback to handle a newly received atwork_commander_msgs::RobotState
    **/
   void initialize( ros::NodeHandle roshandle, robot_state_fct_t rsf ) {
     onInit(roshandle);

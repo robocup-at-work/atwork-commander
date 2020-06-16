@@ -1,0 +1,23 @@
+/** \var atwork_commander_msgs::RefboxState_::READY
+ *   RefBox ready to start execution. Task is generated and at least one robot is connected.
+ */
+
+/** \var atwork_commander_msgs::RefboxState_::IDLE
+ *   RefBox started. No task generated and/or no robot is registered yet.
+ */
+
+/** \var atwork_commander_msgs::RefboxState_::FAILURE
+ *   RefBox failed. No further operations are possible. Please restart!
+ */
+
+/** \var atwork_commander_msgs::RefboxState_::PREPARATION
+ *   RefBox started task, but robot did not yet receive the generated task. Until preparation time is over no task is
+ *   send.
+ *   \see atwork_commander_msgs::Task::prep_time
+ */
+
+/** \var atwork_commander_msgs::RefboxState_::EXECUTION
+ *  RefBox started task and transmits task definition regularly to robots until execution time is over
+ *  \see atwork_commander::StateTracker::m_publish_frequency
+ *  \see atwork_commander_msgs::Task::exec_time
+ */
