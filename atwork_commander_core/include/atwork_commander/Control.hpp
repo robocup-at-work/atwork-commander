@@ -119,7 +119,7 @@ class Control {
      * of ros is executed on.  Please use stateUpdateCallback to set a callback, which is executed in the same thread
      * context and enable manual thread synchronization.
      
-     * Thread-Safety: Unsafe 
+     * \warning Thread-Safety: Unsafe
      
      * \return constant reference to RefBox state
      **/
@@ -151,9 +151,11 @@ class Control {
        *  IDLE -> READY [ font = Helvetica, fontsize=10, label="check(task) == true"];
        * }
        * \enddot
-       
+      
        * Allowed RefBox states: IDLE, READY
        * \see RefboxState
+       
+       * \throw ControlError
        
        * \param task the name of the task type to be generated
        **/
@@ -172,8 +174,10 @@ class Control {
        * \enddot
        
        * Allowed RefBox states: READY
-       
        * \see RefboxState
+       
+       * \throw ControlError
+
        
        * \param robots List of robot names to start task on.
        **/
@@ -192,7 +196,7 @@ class Control {
        
        * Allowed RefBox states: PREPARATION, EXECUTION
        
-       * \see RefboxState
+       * \throw ControlError
        **/
       void forward();
 
@@ -213,7 +217,7 @@ class Control {
        
        * Allowed RefBox states: IDLE, READY, PREPARATION, EXECUTION
        
-       * \see RefboxState
+       * \throw ControlError
        **/
       void stop();
 
@@ -221,10 +225,9 @@ class Control {
        * RefBox the command will fail with a SERVICE_ERROR. If the supplied path is not existing it will be created. If
        * the supplied path is a directory or non-regular file, the command will fail with PATH_INVALID.
        
-       * Allowed RefBox states: IDLE, READY, PREPARATION, EXECUTION
+       * Allowed RefBox states: atwork_commander_msgs::RefboxState_#IDLE, atwork_commander_msgs::RefboxState_#READY, atwork_commander_msgs::RefboxState_#PREPARATION, atwork_commander_msgs::RefboxState_#EXECUTION
        
-       * \see RefboxState
-       
+       * \throw ControlError
        * \param fileName filesystem path to store task to
        **/
        void store( boost::filesystem::path fileName );
@@ -235,8 +238,7 @@ class Control {
         
         * Allowed RefBox states: IDLE, READY
         
-        * \see RefboxState
-        
+        * \throw ControlError
         * \param fileName filesystem path to load task from
         **/
         void load( boost::filesystem::path fileName );
