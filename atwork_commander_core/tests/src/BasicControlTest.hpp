@@ -12,7 +12,9 @@
 namespace atwork_commander {
 namespace testing {
 
-  struct BasicControlTest : public ::testing::Test, public Control {
+  struct BasicControlTest : public ::testing::Test {
+    
+    Control control;
 
     static std::string readRefboxName() {
       std::string refbox;
@@ -23,9 +25,8 @@ namespace testing {
       return refbox;
     }
 
-    BasicControlTest(bool check = true) : Control(readRefboxName()) {
-      while(check && state().state == RefboxState::FAILURE)
-        ros::spinOnce();
+    void SetUp() override {
+      control.refbox(readRefboxName());
     }
 
     void expectReason(std::function<void()> func, ControlError::Reasons reason) {

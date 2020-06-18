@@ -32,11 +32,15 @@ using ::testing::AllOf;
 
 struct RefboxMockBase {
   class RefboxWrapper {
-    RefboxState state;
-    mutex m;
+    RefboxState mState;
+    mutex mMutex;
     public:
-      RefboxWrapper& operator=(const RefboxState& state) { lock_guard<mutex> lock(m); this->state = state; return *this;}
-      RefboxState load() { lock_guard<mutex> lock(m); return state; }
+      RefboxWrapper& operator=(const RefboxState& state) { 
+        lock_guard<mutex> lock(mMutex); 
+        mState = state;
+        return *this;
+      }
+      RefboxState load() { lock_guard<mutex> lock(mMutex); return mState; }
   } state;
   ros::Publisher statePub;
   ros::CallbackQueue queue;
@@ -59,22 +63,56 @@ struct RefboxMockBase {
   bool stateChangeCall(StateUpdate::Request& req, StateUpdate::Response& res) { return stateChange(req, res); }
   bool generateCall(GenerateTask::Request& req, GenerateTask::Response& res) { return generate(req, res); }
 
-  RefboxMockBase(const string& refbox)
+  RefboxMockBase()
     : stopped(false),
       run([this](){ while( !stopped.load() ) queue.callAvailable(ros::WallDuration(1)); } )
-  {
+  {}
+
+  void connect(const string& refbox) {
     ros::NodeHandle nh;
     statePub = nh.advertise<RefboxState>(refbox + "/internal/state", 1);
-    auto loadSrvOpts = AdSrvOpts::create<LoadTask>( refbox + "/internal/load_task", std::bind(&RefboxMockBase::loadTaskCall, this, p::_1, p::_2), ros::VoidConstPtr(), &queue );
+
+    auto loadSrvOpts = AdSrvOpts::create<LoadTask>( refbox + "/internal/load_task",
+                                                    std::bind(&RefboxMockBase::loadTaskCall, this, p::_1, p::_2),
+                                                    ros::VoidConstPtr(),
+                                                    &queue 
+                                                  );
     loadSrv = nh.advertiseService( loadSrvOpts );
-    auto scSrvOpts = AdSrvOpts::create<StateUpdate>( refbox + "/internal/state_update", std::bind(&RefboxMockBase::stateChangeCall, this, p::_1, p::_2), ros::VoidConstPtr(), &queue );
+    
+    auto scSrvOpts = AdSrvOpts::create<StateUpdate>( refbox + "/internal/state_update",
+                                                     std::bind(&RefboxMockBase::stateChangeCall, this, p::_1, p::_2),
+                                                     ros::VoidConstPtr(),
+                                                     &queue
+                                                   );
     stateChangeSrv = nh.advertiseService( scSrvOpts );
-    auto startSrvOpts = AdSrvOpts::create<StartTask>( refbox + "/internal/start_task", std::bind(&RefboxMockBase::startCall, this, p::_1, p::_2), ros::VoidConstPtr(), &queue );
+
+    auto startSrvOpts = AdSrvOpts::create<StartTask>( refbox + "/internal/start_task",
+                                                      std::bind(&RefboxMockBase::startCall, this, p::_1, p::_2), 
+                                                      ros::VoidConstPtr(),
+                                                      &queue
+                                                    );
     startSrv = nh.advertiseService( startSrvOpts );
-    auto genSrvOpts = AdSrvOpts::create<GenerateTask>( refbox + "/internal/generate_task", std::bind(&RefboxMockBase::generateCall, this, p::_1, p::_2), ros::VoidConstPtr(), &queue );
+
+    auto genSrvOpts = AdSrvOpts::create<GenerateTask>( refbox + "/internal/generate_task",
+                                                       std::bind(&RefboxMockBase::generateCall, this, p::_1, p::_2),
+                                                       ros::VoidConstPtr(),
+                                                       &queue
+                                                     );
     generateSrv = nh.advertiseService( genSrvOpts );
+
     auto timOpts = ros::TimerOptions( ros::Duration(1), std::bind(&RefboxMockBase::periodic, this, p::_1), &queue );
+
     timer = nh.createTimer( timOpts );
+  }
+
+  void disconnect() {
+    stopped = true;
+    timer.stop();
+    statePub.shutdown();
+    loadSrv.shutdown();
+    startSrv.shutdown();
+    generateSrv.shutdown();
+    stateChangeSrv.shutdown();
   }
 
   virtual ~RefboxMockBase() { stopped = true; run.join(); }
@@ -82,7 +120,6 @@ struct RefboxMockBase {
 };
 
 struct RefboxMock : public RefboxMockBase {
-  RefboxMock(const string& refbox) : RefboxMockBase(refbox) {}
 #ifndef MOCK_METHOD2
   MOCK_METHOD(bool, loadTask, (LoadTask::Request&, LoadTask::Response&), (override));
   MOCK_METHOD(bool, start, (StartTask::Request&, StartTask::Response&), (override));
@@ -100,14 +137,21 @@ struct ControlTests : public atwork_commander::testing::BasicControlTest {
 
   RefboxMock refbox;
 
-  ControlTests() : BasicControlTest(false), refbox(readRefboxName()) {
+  void SetUp() override {
+    atwork_commander::testing::BasicControlTest::SetUp();
+    refbox.connect(readRefboxName());
+  }
+  
+  void TearDown() override {
+    atwork_commander::testing::BasicControlTest::TearDown();
+    refbox.disconnect();
   }
 
   void toState(unsigned int next) {
     RefboxState state;
     state.state = next;
     refbox.state = state;
-    while( this->state().state != next)
+    while( control.state().state != next)
       ros::spinOnce();
   }
 
@@ -116,19 +160,19 @@ struct ControlTests : public atwork_commander::testing::BasicControlTest {
 TEST_F(ControlTests, forwardFromFail) {
   toState(RefboxState::FAILURE);
 
-  EXPECT_REASON(forward(), STATE_INVALID);
+  EXPECT_REASON(control.forward(), STATE_INVALID);
 }
 
 TEST_F(ControlTests, forwardFromIdle) {
   toState(RefboxState::IDLE);
 
-  EXPECT_REASON(forward(), STATE_INVALID);
+  EXPECT_REASON(control.forward(), STATE_INVALID);
 }
 
 TEST_F(ControlTests, forwardFromReady) {
   toState(RefboxState::READY);
 
-  EXPECT_REASON(forward(), STATE_INVALID);
+  EXPECT_REASON(control.forward(), STATE_INVALID);
 }
 
 TEST_F(ControlTests, forwardFromPrep) {
@@ -144,7 +188,7 @@ TEST_F(ControlTests, forwardFromPrep) {
   ).Times( 1 )
    .WillOnce( Return( true ) );
 
-  EXPECT_NO_THROW(forward());
+  EXPECT_NO_THROW(control.forward());
 }
 
 
@@ -163,7 +207,7 @@ TEST_F(ControlTests, forwardFromExec) {
      Return( true )
    );
 
-  EXPECT_NO_THROW(forward());
+  EXPECT_NO_THROW(control.forward());
 }
 
 TEST_F(ControlTests, forwardServiceError) {
@@ -184,19 +228,19 @@ TEST_F(ControlTests, forwardServiceError) {
        Return( true )
      )
    );
-  EXPECT_REASON(forward(), SERVICE_ERROR);
+  EXPECT_REASON(control.forward(), SERVICE_ERROR);
 }
 
 TEST_F(ControlTests, startFromFail) {
   toState(RefboxState::FAILURE);
 
-  EXPECT_REASON(start(), STATE_INVALID);
+  EXPECT_REASON(control.start(), STATE_INVALID);
 }
 
 TEST_F(ControlTests, startFromIdle) {
   toState(RefboxState::IDLE);
 
-  EXPECT_REASON(start(), STATE_INVALID);
+  EXPECT_REASON(control.start(), STATE_INVALID);
 }
 
 TEST_F(ControlTests, startFromReady) {
@@ -214,20 +258,20 @@ TEST_F(ControlTests, startFromReady) {
      Return( true )
    );
 
-  EXPECT_NO_THROW(start());
+  EXPECT_NO_THROW(control.start());
 }
 
 TEST_F(ControlTests, startFromPrep) {
   toState(RefboxState::PREPARATION);
 
-  EXPECT_REASON(start(), STATE_INVALID);
+  EXPECT_REASON(control.start(), STATE_INVALID);
 }
 
 
 TEST_F(ControlTests, startFromExec) {
   toState(RefboxState::EXECUTION);
 
-  EXPECT_REASON(start(), STATE_INVALID);
+  EXPECT_REASON(control.start(), STATE_INVALID);
 }
 
 TEST_F(ControlTests, startServiceError) {
@@ -239,7 +283,7 @@ TEST_F(ControlTests, startServiceError) {
   EXPECT_CALL(refbox, start(_, _))
     .Times(1)
     .WillOnce( DoAll( SetArgReferee<1>(res), Return(true) ) );
-  EXPECT_REASON(start(), SERVICE_ERROR);
+  EXPECT_REASON(control.start(), SERVICE_ERROR);
 }
 
 TEST_F(ControlTests, startSpecificRobot) {
@@ -265,7 +309,7 @@ TEST_F(ControlTests, startSpecificRobot) {
      Return( true)
    );
 
-  EXPECT_NO_THROW(start({"test/test"}));
+  EXPECT_NO_THROW(control.start({"test/test"}));
 }
 
 TEST_F(ControlTests, startMultipleRobots) {
@@ -297,13 +341,13 @@ TEST_F(ControlTests, startMultipleRobots) {
      Return(true)
    );
 
-  EXPECT_NO_THROW(start({"test/test", "test/test2"}));
+  EXPECT_NO_THROW(control.start({"test/test", "test/test2"}));
 }
 
 TEST_F(ControlTests, startInvalidRobot) {
   toState(RefboxState::READY);
 
-  EXPECT_REASON(start({"test"}), ARGUMENT_INVALID);
+  EXPECT_REASON(control.start({"test"}), ARGUMENT_INVALID);
 }
 
 int main(int argc, char** argv) {
