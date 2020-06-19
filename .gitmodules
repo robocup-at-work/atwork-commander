@@ -1,0 +1,4 @@
+[submodule "docu/generated"]
+	path = docu/html
+	url = git@github.com:steup/atwork-commander
+	branch = gh-pages
