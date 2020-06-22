@@ -39,15 +39,21 @@ echo 'Setting up the script...'
 # Exit with nonzero exit code if anything fails
 set -e
 
-cd $CI_SOURCE_PATH/docu
-git submodule update --init
+if [[ -z $TRAVIS_BUILD_NUMBER ]] ; then
+  TRAVIS_BUILD_NUMBER=manual
+  TRAVIS_COMMIT=$(eval "git rev-parse HEAD")
+  DOXYFILE=./Doxyfile
+else
+  cd $CI_SOURCE_PATH/docu
+  ##### Configure git.
+  # Set the push default to simple i.e. push only the current branch.
+  git config --global push.default simple
+  # Pretend to be an user called Travis CI.
+  git config user.name "Travis CI"
+  git config user.email "travis@travis-ci.org"
+fi
 
-##### Configure git.
-# Set the push default to simple i.e. push only the current branch.
-git config --global push.default simple
-# Pretend to be an user called Travis CI.
-git config user.name "Travis CI"
-git config user.email "travis@travis-ci.org"
+git submodule update --init
 
 # Remove everything currently in the gh-pages branch.
 # GitHub is smart enough to know which files have changed and which files have
