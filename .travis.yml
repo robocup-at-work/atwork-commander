@@ -65,6 +65,7 @@ env:
     # Set the python path manually to include /usr/-/python2.7/dist-packages
     # as this is where apt-get installs python packages.
     - PYTHONPATH=$PYTHONPATH:/usr/lib/python2.7/dist-packages:/usr/local/lib/python2.7/dist-packages
+    - DOXYFILE=${CI_SOURCE_PATH}/atwork_commander/docu/Doxyfile
 
 ################################################################################
 
@@ -120,5 +121,5 @@ script:
   - catkin_make $( [ -f $CATKIN_OPTIONS ] && cat $CATKIN_OPTIONS )
   # Run the tests, ensuring the path is set correctly.
   - source devel/setup.bash
+  - sh src/atwork_commander/docu/generate.sh
   - catkin_make run_tests && catkin_test_results
-
