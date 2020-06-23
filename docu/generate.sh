@@ -42,7 +42,6 @@ set -e
 if [ -z $TRAVIS_BUILD_NUMBER ] ; then
   TRAVIS_BUILD_NUMBER=manual
   TRAVIS_COMMIT=$(eval "git rev-parse HEAD")
-  DOXYFILE=./Doxyfile
 else
   cd $CI_SOURCE_PATH/docu
   ##### Configure git.
@@ -72,7 +71,7 @@ echo "" > .nojekyll
 ##### Generate the Doxygen code documentation and log the output.          #####
 echo 'Generating Doxygen code documentation...'
 # Redirect both stderr and stdout to the log file AND the console.
-doxygen $DOXYFILE 2>&1 | tee doxygen.log
+doxygen Doxyfile 2>&1 | tee doxygen.log
 
 ################################################################################
 ##### Upload the documentation to the gh-pages branch of the repository.   #####
