@@ -70,8 +70,9 @@ env:
 
 # Install system dependencies, namely a very barebones ROS setup.
 before_install:
-  - openssl aes-256-cbc -K $encrypted_b47cedfbbf03_key -iv $encrypted_b47cedfbbf03_iv -in deploy.key.enc -out $CI_SOURCE_PATH/deploy.key -d
-  - git config core.sshCommand 'ssh -i $CI_SOURCE_PATH/deploy.key'
+  - openssl aes-256-cbc -K $encrypted_b47cedfbbf03_key -iv $encrypted_b47cedfbbf03_iv -in deploy.key.enc -out deploy.key -d
+  - mkdir ~/.ssh
+  - mv deploy.key ~/.ssh/id_rsa
   - sudo sh -c "echo \"deb http://packages.ros.org/ros/ubuntu $ROS_CI_DESKTOP main\" > /etc/apt/sources.list.d/ros-latest.list"
   - sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
   - sudo apt-get update -qq
