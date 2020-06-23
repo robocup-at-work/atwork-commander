@@ -39,7 +39,7 @@ echo 'Setting up the script...'
 # Exit with nonzero exit code if anything fails
 set -e
 
-if [[ -z $TRAVIS_BUILD_NUMBER ]] ; then
+if [ -z $TRAVIS_BUILD_NUMBER ] ; then
   TRAVIS_BUILD_NUMBER=manual
   TRAVIS_COMMIT=$(eval "git rev-parse HEAD")
   DOXYFILE=./Doxyfile
