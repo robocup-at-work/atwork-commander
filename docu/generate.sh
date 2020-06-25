@@ -1,9 +1,7 @@
 #!/bin/sh
-################################################################################
-# Title         : generateDocumentationAndDeploy.sh
-# Date created  : 2016/02/22
-# Notes         :
-__AUTHOR__="Jeroen de Bruijn"
+
+__AUTHOR__="Jeroen de Bruijn, Christoph Steup"
+
 # Preconditions:
 # - Packages doxygen doxygen-doc doxygen-latex doxygen-gui graphviz
 #   must be installed.
@@ -14,11 +12,7 @@ __AUTHOR__="Jeroen de Bruijn"
 #
 # Required global variables:
 # - TRAVIS_BUILD_NUMBER : The number of the current build.
-# - TRAVIS_COMMIT       : The commit that the current build is testing.
 # - DOXYFILE            : The Doxygen configuration file.
-# - GH_REPO_NAME        : The name of the repository.
-# - GH_REPO_REF         : The GitHub reference to the repository.
-# - GH_REPO_TOKEN       : Secure token to the github repository.
 #
 # For information on how to encrypt variables for Travis CI please go to
 # https://docs.travis-ci.com/user/environment-variables/#Encrypted-Variables
@@ -31,19 +25,10 @@ __AUTHOR__="Jeroen de Bruijn"
 # Before this script is used there should already be a gh-pages branch in the
 # repository.
 # 
-################################################################################
 
-################################################################################
-##### Setup this script and get the current gh-pages branch.               #####
-echo 'Setting up the script...'
-# Exit with nonzero exit code if anything fails
 set -e
 
-if [[ -z $TRAVIS_BUILD_NUMBER ]] ; then
-  TRAVIS_BUILD_NUMBER=manual
-  TRAVIS_COMMIT=$(eval "git rev-parse HEAD")
-  DOXYFILE=./Doxyfile
-else
+if [[ -n $TRAVIS_BUILD_NUMBER ]] ; then
   cd $CI_SOURCE_PATH/docu
   ##### Configure git.
   # Set the push default to simple i.e. push only the current branch.
@@ -51,7 +36,6 @@ else
   # Pretend to be an user called Travis CI.
   git config user.name "Travis CI"
   git config user.email "travis@travis-ci.org"
-fi
 
 git submodule update --init
 
@@ -68,11 +52,16 @@ rm -rf html/*
 # to NO, which it is by default. So creating the file just in case.
 echo "" > .nojekyll
 
+
+else
+  cd $(dirname $0)
+fi
+
 ################################################################################
 ##### Generate the Doxygen code documentation and log the output.          #####
 echo 'Generating Doxygen code documentation...'
 # Redirect both stderr and stdout to the log file AND the console.
-doxygen $DOXYFILE 2>&1 | tee doxygen.log
+doxygen Doxyfile > doxygen.log 2>&1
 
 ################################################################################
 ##### Upload the documentation to the gh-pages branch of the repository.   #####
@@ -80,27 +69,29 @@ doxygen $DOXYFILE 2>&1 | tee doxygen.log
 # Check this by verifying that the html directory and the file html/index.html
 # both exist. This is a good indication that Doxygen did it's work.
 if [ -d "html" ] && [ -f "html/index.html" ]; then
-
+  echo "Documentation generated in" $(dirname $0)"/html"
+  if [ -z $TRAVIS_BUILD_NUMBER ] || [ -z $TRAVIS_COMMIT ]; then
+    exit 0
+  fi
     cd html
 
-    echo 'Uploading documentation to the gh-pages branch...'
-    # Add everything in this directory (the Doxygen code documentation) to the
-    # gh-pages branch.
-    # GitHub is smart enough to know which files have changed and which files have
-    # stayed the same and will only update the changed files.
-    git add --all
+      echo 'Uploading documentation to the gh-pages branch...'
+      # Add everything in this directory (the Doxygen code documentation) to the
+      # gh-pages branch.
+      # GitHub is smart enough to know which files have changed and which files have
+      # stayed the same and will only update the changed files.
+      git add --all
 
-    # Commit the added files with a title and description containing the Travis CI
-    # build number and the GitHub commit reference that issued this build.
-    git commit -m "Deploy code docs to GitHub Pages Travis build: ${TRAVIS_BUILD_NUMBER}" -m "Commit: ${TRAVIS_COMMIT}"
+      # Commit the added files with a title and description containing the Travis CI
+      # build number and the GitHub commit reference that issued this build.
+      git commit -m "Deploy code docs to GitHub Pages Travis build: ${TRAVIS_BUILD_NUMBER}" -m "Commit: ${TRAVIS_COMMIT}"
 
-    # Force push to the remote gh-pages branch.
-    # The ouput is redirected to /dev/null to hide any sensitive credential data
-    # that might otherwise be exposed.
-    git push --force > /dev/null 2>&1
+      # Force push to the remote gh-pages branch.
+      # The ouput is redirected to /dev/null to hide any sensitive credential data
+      # that might otherwise be exposed.
+      git push --force
 else
     echo '' >&2
-    echo 'Warning: No documentation (html) files have been found!' >&2
-    echo 'Warning: Not going to push the documentation to GitHub!' >&2
+    echo 'Warning: No documentation files have been generated!' >&2
     exit 1
 fi
