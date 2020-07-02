@@ -248,6 +248,30 @@ ostream& operator<<(ostream& os, const unordered_multimap<K, V>& m) {
   return os;
 }
 
+template<typename T, size_t n>
+ostream& operator<<(ostream& os, const vector<array<T,n>>& vec)
+{
+  for(size_t i=0; i<vec.size(); i++)
+		os << vec[i];
+  return os << endl;
+}
+
+template<typename T>
+ostream& operator<<(ostream& os, const vector<vector<T>>& vec)
+{
+  for(size_t i=0; i<vec.size(); i++)
+		os << vec[i];
+  return os << endl;
+}
+
+template<typename T, size_t n>
+ostream& operator<<(ostream& os, const array<T,n>& vec)
+{
+  for(size_t i=0; i<vec.size(); i++)
+		os << vec[i] << (i==vec.size()-1?"":" ");
+  return os << endl;
+}
+
 namespace atwork_commander {
 
 /** Task Generation Implementation
@@ -621,130 +645,412 @@ class TaskGeneratorImpl {
     object.source = table;
   }
 
+//-------------------------------------------------------------------------------------------------------------------------
+//Beware Jurek code below this line >,<
+
+        std::vector<std::string> mTableMapping;
+        std::vector<unsigned int> mTables;
+        std::vector<unsigned int> mTables0;
+        std::vector<unsigned int> mTables5;
+        std::vector<unsigned int> mTables10;
+        std::vector<unsigned int> mTables15;
+        std::vector<unsigned int> mConveyors;
+        std::vector<unsigned int> mPpts;
+        std::vector<unsigned int> mShelfs;
+        std::vector<unsigned int> mWaypoints;
+        std::vector<unsigned int> mObjects;
+        std::vector<unsigned int> mPptObjects;
+        std::vector<size_t> mAllTables;
+
+        int mdiscipline;
+        static const size_t obj_id = 0;
+        static const size_t src_id = 1;
+        static const size_t dst_id = 2;
+        static const size_t cont_id = 3;
+        static const size_t obj_id_id = 4;
+
+        static const size_t blue = 0;
+        static const size_t red = 1;
+
+        static const size_t tables0_id = 0;
+        static const size_t tables5_id = 1;
+        static const size_t tables10_id = 2;
+        static const size_t tables15_id = 3;
+        static const size_t conveyors_id = 4;
+        static const size_t ppts_id = 5;
+        static const size_t shelfs_id = 6;
+        std::map<std::string, int> paramBNT;
+        std::map<std::string, int> paramBTT3;
+        std::map<std::string, int> paramFinal;
+        int estimatet_active;
+        bool paramContainerInShelf;
+        bool paramContainerOnPpt;
+        bool paramContainerOnTurntable;
+        bool paramFlexibleHeight;
+        std::vector<std::array<size_t, 3>> container_ids;
+        std::vector<std::vector<size_t>> validpicks;
+        std::vector<size_t> picksleft;
+        std::unordered_map<size_t, size_t> mTableTypes;
+
+        size_t tabletypes;
+using run = vector<array<int, 5>>;
+
+  void debugAll(const string info, const run &tasks) {
+    cout<<info<<"\n===========================\n";
+    cout<<"mAllTables\n"<<mAllTables;
+    cout<<"validpicks\n"<<validpicks;
+    cout<<"picksleft\n"<<picksleft;
+    cout<<"tabletypes "<<tabletypes<<"\n";
+    cout<<"container_ids\n"<<container_ids;
+    cout<<"tasks\n"<<tasks;
+  }
+
+  void debug_tasks(const string info, const run &tasks) {
+    ostringstream os;
+    for(size_t i=0; i<tasks.size(); ++i) {
+      os << tasks.at(i).at(obj_id)<<" "<<tasks.at(i).at(src_id)<<" "<<tasks.at(i).at(dst_id)<<" "<<tasks.at(i).at(cont_id)<<" "<<tasks.at(i).at(obj_id_id) << endl;
+    ROS_DEBUG(os.str());
+    }
+  }
+
+  /* obj, src, dst, cont
+   * BNT: location, orientation [0,1,2,3], time [ca. 1-5s]
+   * objects is the number of tasks
+   */
+
+  // for every task set random object type
+  // if there are already entries select ppt objects only
+  void generate_objects(run &tasks) {
+    const size_t objects = mObjects.size();
+    const size_t pptobjects = mPptObjects.size();
+    const size_t count = tasks.size();
+    srand(time(NULL));
+    for(size_t i=0; i<count; ++i) {
+      if(tasks.at(i).at(obj_id) == -1) {
+        if(tasks.at(i).at(dst_id) == -1) {
+          size_t obj = rand() % objects;
+          tasks.at(i).at(obj_id) = mObjects.at(obj);
+        }
+        else {
+          size_t pptobj = rand() % pptobjects;
+          tasks.at(i).at(obj_id) = mPptObjects.at(pptobj);
+        }
+      }
+    }
+  }
+
+  // retuns an ascending order of int 0,..., n-1
+  std::vector<size_t> order (size_t n) {
+    std::vector<size_t> up(n);
+    for(size_t i=0; i<n; ++i) {
+      up.at(i) = i;
+    }
+    return up;
+  }
+
+  /* Input: integers n and k
+   * Output: vector with k random entries between 0<= entry <n in ascending order
+   */
+  void variation(vector<size_t> position, size_t k, vector<size_t> &vec_k, vector<size_t> &vec_n_k) {
+    size_t n = position.size();
+    vec_k.resize(k);
+    vec_n_k.resize(n-k);
+    size_t a;
+    srand(time(NULL));
+    for(size_t i=0; i<k; ++i) {
+      a = rand() % (n-i);
+      std::swap(position.at(i), position.at(n-a-1));
+    }
+    copy(position.begin(), position.begin()+k, vec_k.begin());
+    copy(position.begin()+k, position.end(), vec_n_k.begin());
+  }
+
+  // if the second vector isn't needed, this function can be used as an adapter
+  void variation(vector<size_t> &positions, size_t k, vector<size_t> &vec_k) {
+    vector<size_t> trash;
+    variation(positions, k, vec_k, trash);
+  }
+
+  size_t get_container_id(size_t table, size_t color) {
+    // if there already is a container of this color on the same table
+    for(size_t i=0; i<container_ids.size(); ++i) {
+      if (container_ids.at(i).at(0) == table && container_ids.at(i).at(1) == color) {
+        return container_ids.at(i).at(2);
+      }
+    }
+    //else get new id from the worldmodel
+    if(color == blue) {
+      size_t new_id = insertContainer(-1, robotto_msgs::BLUE_CONTAINER, table);
+      std::array<size_t, 3> id = {table, blue, new_id};
+      container_ids.push_back(id);
+      return id.at(2);
+    }
+    else if(color == red) {
+      size_t new_id = insertContainer(-1, robotto_msgs::RED_CONTAINER, table);
+      std::array<size_t, 3> id = {table, red, new_id};
+      container_ids.push_back(id);
+      return id.at(2);
+    }
+    else {throw 229;}
+  }
+
+  void initialize_mAllTables() {
+    size_t size = mTables0.size() + mTables5.size() + mTables10.size()
+            + mTables15.size() + mConveyors.size()
+            + mPpts.size() + mShelfs.size();
+    mAllTables.resize(size);
+    auto end = copy(mTables0.begin(), mTables0.end(), mAllTables.begin());
+    end = copy(mTables5.begin(), mTables5.end(), end);
+    end = copy(mTables10.begin(), mTables10.end(), end);
+    end = copy(mPpts.begin(), mPpts.end(), end);
+    end = copy(mConveyors.begin(), mConveyors.end(), end);
+    end = copy(mTables15.begin(), mTables15.end(), end);
+    end = copy(mShelfs.begin(), mShelfs.end(), end);
+    /*
+    std::cout<<"Tables0: "<<mTables0;
+    std::cout<<"Tables5: "<<mTables5;
+    std::cout<<"Tables10: "<<mTables10;
+    std::cout<<"Ppts: "<<mPpts;
+    std::cout<<"Conveyors: "<<mConveyors;
+    std::cout<<"Tables15: "<<mTables15;
+    std::cout<<"Shelfs: "<<mShelfs;
+    */
+  }
+
+  // fills in all for every task every table where it isn't placed
+  void initialize_validpicks(run &tasks) {
+    size_t objects = paramFinal["objects"];
+    size_t tables = mAllTables.size();
+    validpicks.resize(objects);
+    for(size_t i=0; i<objects; ++i) {
+      validpicks.at(i).resize(0);
+      for(size_t j=0; j<tables; ++j) {
+        size_t table = mAllTables.at(j);
+        if((table != size_t(tasks.at(i).at(dst_id))) && (picksleft.at(mTableTypes.at(table)) > 0)) {	// all picking tables exept the table for placing are valid
+          validpicks.at(i).push_back(table);
+        }
+      }
+    }
+  }
+
+  // reads how many picks from every table have to be done
+  void initialize_picksleft() {
+    picksleft.resize(tabletypes);
+    picksleft.at(tables0_id) = paramFinal["pick_tables0"];
+    picksleft.at(tables5_id) = paramFinal["pick_tables5"];
+    picksleft.at(tables10_id) = paramFinal["pick_tables10"];
+    picksleft.at(tables15_id) = paramFinal["pick_tables15"];
+    picksleft.at(conveyors_id) = paramFinal["pick_turntables"];
+    picksleft.at(ppts_id) = paramFinal["pick_cavity_plattforms"];
+    picksleft.at(shelfs_id) = paramFinal["pick_shelf"];
+  }
+
+
+  void initialize_mTableTypes() {
+    for(size_t table : mTables0) {
+      mTableTypes[table] = tables0_id;
+    }
+    for(size_t table : mTables5) {
+      mTableTypes[table] = tables5_id;
+    }
+    for(size_t table : mTables10) {
+      mTableTypes[table] = tables10_id;
+    }
+    for(size_t table : mTables15) {
+      mTableTypes[table] = tables15_id;
+    }
+    for(size_t table : mConveyors) {
+      mTableTypes[table] = conveyors_id;
+    }
+    for(size_t table : mPpts) {
+      mTableTypes[table] = ppts_id;
+    }
+    for(size_t table : mShelfs) {
+      mTableTypes[table] = shelfs_id;
+    }
+  }
+
+  // coputes the sum of all entries in a vector
+  size_t sum_vector(vector<size_t> & vec) {
+    size_t sum = 0;
+    for(size_t i=0; i<vec.size(); ++i) {
+      sum += vec.at(i);
+    }
+    return sum;
+  }
+
+  // finds the index with the shortest list of validpicks
+  size_t shortest_list(size_t &min) {						// the lenght of the shortest list as refference
+    size_t minindex;													// define minindex
+    for(size_t i=0; i<validpicks.size(); ++i) {							// for all other table types
+      if(validpicks.at(i).size() != 0) {								// if there are valid picks left
+        if(validpicks.at(i).size() < min) {							// if the list is shorter than the actual minimum
+          min = validpicks.at(i).size();							// update min
+          minindex = i;											// and minindex
+        }
+      }
+    }
+    return minindex;													// returns th index of the shortest list
+  }
+
+  void update_validpicks(size_t type_id) {
+    if(picksleft.at(type_id) == 0) {									// if no picks from this type left => picking from
+      for(size_t i=0; i<validpicks.size(); ++i) {						// this table type is no more valid
+        auto end = remove_if(validpicks.at(i).begin(), validpicks.at(i).end(),  [type_id, this](size_t table_id){
+          return type_id == mTableTypes.at(table_id);
+        });
+        validpicks.at(i).erase(end, validpicks.at(i).end());
+      }
+    }
+  }
+
   Task generate( const string& taskName){
-          auto&  def            = mTasks[ taskName ];
-          auto&  params         = def.parameters;
-    const auto&  normalTables   = def.normalTableTypes;
-    const auto&  turnTables     = def.ttTypes;
-    const auto&  shelfs         = def.shTypes;
-    const auto&  precisionTable = def.ppTypes;
-    Object::reset();
-    vector<Object> objects;
+    // initialize tasks
+    run tasks(paramFinal["objects"], {-1, -1, -1, -1, -1});
+    size_t shelfs = mShelfs.size();
+    size_t tables = mTables.size();
+    size_t ppts = mPpts.size();
+    size_t conveyors = mConveyors.size();
+    size_t containers = paramFinal["B_Container"] + paramFinal["R_Container"];
+    size_t table0 = mTables0.size();
+    size_t table5 = mTables5.size();
+    size_t table10 = mTables10.size();
+    size_t table15 = mTables15.size();
 
-    auto availableObjects = extractObjectTypes( taskName );
-    vector<ObjectType> availableCavities = mAvailableCavities; // TODO: filter according to allowed Objects from Task
-    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Tables:\n" << mTables);
-    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Cavities:\n" << mAvailableCavities);
-    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] ObjectTypes:\n" << availableObjects);
-
-    sanityCheck(taskName, availableObjects);
-    auto seedIt = params.find("seed");
-    if ( seedIt != params.end() ) mRand.seed(seedIt->second);
-
-
-    // PP fill
-    // generate places on PP
-    // Container generate and distribute
-    // generate places on Container
-    // generate places on shelf
-    // generate remaining places
-    // generate picks on shelf
-    // generate picks on rt
-    // generate remaining picks
-
-
-    size_t objectCount = accumulate(availableCavities.begin(), availableCavities.end(), 0,
-                                    [](size_t n, const ObjectType& t){ return n + t.count; } );
-    objectCount += accumulate(availableObjects.begin(), availableObjects.end(), 0,
-                                    [](size_t n, const ObjectType& t){ return n + t.count; } );
-
-    objects.resize(objectCount);
-    auto start = objects.begin();
-
-    auto cavities = generateCavities( def, availableCavities, start);
-    start += cavities.size();
-    cleanTypes( availableCavities );
-    if ( cavities.size() < params[ "pp_placing" ] ) {
-      ostringstream os;
-      os << "Not enough cavities generated! Generated " << cavities.size() << ", min Necessary: " << params[ "pp_placing" ] << "!";
-      throw runtime_error(os.str());
-    }
-    auto end = cavities.end();
-    for ( size_t i = 0; i < params[ "pp_placing" ]; i++ ) {
-      Object* selected = uniqueSelect<Object*>(cavities.begin(), end);
-      auto filter = [selected](const ObjectType* t){ return t->form != selected->form; };
-      auto genObjects = generateObjects(def, availableObjects, start++, 1, 0, filter);
-      if ( genObjects.empty() ) {
-        throw runtime_error("Did not generate any objects!");
-      }
-      place( def, *genObjects.front(), *selected );
-    }
-    cleanTypes( availableObjects );
-
-    auto containers = generateContainers( def, availableObjects, start );
-    start += containers.size();
-    cleanTypes( availableObjects );
-    if ( containers.size() < 1 && params[ "container_placing" ] ) {
-      ostringstream os;
-      os << "Not enough containers generated! Generated " << containers.size() << ", min Necessary: 1!";
-      throw runtime_error(os.str());
-    }
-    auto rand = uniform_int_distribution<size_t>( 0, containers.size()-1 );
-    auto genObjects = generateObjects(def, availableObjects, start, params[ "container_placing" ] );
-    start += params[ "container_placing" ];
-    for ( Object* objPtr: genObjects)
-      place( def, *objPtr, *containers[ rand(mRand) ] );
-
-    size_t created = accumulate(objects.begin(), objects.end(), 0,
-                                [](size_t n, const Object& o){ return n + (o.type==Type::OBJECT || o.type == Type::COLORED_OBJECT ? 1 : 0); } );
-    genObjects = generateObjects(def, availableObjects, start, params[ "objects" ] - created, params[ "decoys"] );
-    cleanTypes( availableObjects );
-    start += params[ "objects" ] - created + params[ "decoys" ];
-
-    size_t shelfes_placing = params[ "shelfes_placing" ];
-    size_t rt_placing = params[ "tt_placing" ];
-    size_t shelfes_picking = params[ "shelfes_picking" ];
-    size_t rt_picking = params[ "tt_picking" ];
-
-    for ( Object* objPtr: genObjects ) {
-      if ( shelfes_placing ) {
-        place( def, *objPtr, shelfs );
-        shelfes_placing--;
-        continue;
-      }
-      if ( rt_placing ) {
-        place( def, *objPtr, turnTables );
-        rt_placing--;
-        continue;
-      }
-      place(def, *objPtr, normalTables );
+    if(paramFinal["FlexibleHeight"] == true) {
+      tabletypes = 8;
+    } else {
+      tabletypes = 7;
     }
 
-    for ( Object* objPtr: genObjects ) {
-      if ( shelfes_picking ) {
-        pick( def, *objPtr, shelfs );
-        shelfes_picking--;
-        continue;
-      }
-      if ( rt_picking ) {
-        pick( def, *objPtr, turnTables );
-        rt_picking--;
-        continue;
-      }
-      pick(def, *objPtr, normalTables );
+    // check validity
+    if (mObjects.size() == 0) {throw 220;}																			// No Objects
+    if (shelfs == 0 && (paramFinal["pick_shelf"] > 0 || paramFinal["place_shelf"] > 0)) {throw 221;}				// No shelfpick/place without shelf
+    if (tables == 0 && paramFinal["objects"] > paramFinal["pick_shelf"]) {throw 222;}								// No tables
+    if (shelfs + tables + conveyors + paramFinal["B_Container"] + paramFinal["R_Container"] <= 1) {throw 223;}		// pick = place
+    if (paramContainerInShelf == true) {
+      if (tables + shelfs == 0 && paramFinal["B_Container"] + paramFinal["R_Container"] > 0) {throw 224;}			// No tables, no shelfs, no conveyors, No container place in air
+    }
+    else if(tables == 0 && paramFinal["B_Container"] + paramFinal["R_Container"] > 0) {throw 225;}					// No tables No container place in air
+    if (ppts == 0 && paramFinal["place_cavity_plattforms"] > 0) {throw 226;}										// No cavity plattforms
+    if (conveyors == 0 && (paramFinal["pick_turntables"] > 0 || paramFinal["place_turntbales"] > 0)) {throw 227;}	// No conveyors
+    if (table0 == 0 && paramFinal["pick_tables0"] > 0) {throw 231;}													// No tables0
+    if (table5 == 0 && paramFinal["pick_tables5"] > 0) {throw 232;}													// No tables5
+    if (table10 == 0 && paramFinal["pick_tables10"] > 0) {throw 233;}												// No tables10
+    if (table15 == 0 && paramFinal["pick_tables15"] > 0) {throw 234;}												// No tables15
+    if (paramFinal["pick_cavity_plattforms"] > 0) {throw 235;}														// Picks from cavity plattform are not implemented yet
+
+    /* select #place_shelf + #place_turntables + #ppts random tasks
+     * select #place_shelf + #place_turntables of these
+     * the rest of the places are on a random turntable
+     * select #place_shelf of these and set place to a random shelf
+     * the rest of the places are into a random ppt
+     *
+     * the vectors contains the indexes of tasks for the places
+     */
+    std::vector<size_t>position = order(paramFinal["objects"]);
+    std::vector<size_t>normalplace;
+    std::vector<size_t>specialplace;
+    std::vector<size_t>placeShelfTurntable;
+    std::vector<size_t>placeShelf;
+    std::vector<size_t>placeTurntable;
+    std::vector<size_t>placePpt;
+    std::vector<size_t>container;
+    std::vector<size_t>b_container;
+    std::vector<size_t>r_container;
+    size_t specialplaces = paramFinal["place_shelf"] + paramFinal["place_turntables"] + paramFinal["place_cavity_plattforms"];
+    size_t shelfTurntables = paramFinal["place_shelf"] + paramFinal["place_turntables"];
+    size_t a;
+    variation(position, specialplaces, specialplace, normalplace);
+    variation(specialplace, shelfTurntables ,placeShelfTurntable, placePpt);
+    variation(placeShelfTurntable, paramFinal["place_shelf"], placeShelf, placeTurntable);
+    /*
+    std::cout<<"placeShelf "<<placeShelf;
+    std::cout<<"placeTurntable "<<placeTurntable;
+    std::cout<<"placePpt "<<placePpt;
+    std::cout<<"normalplace "<<normalplace;
+    */
+
+    // write the Ppts as destinations to the tasks
+    for(size_t i=0; i<placePpt.size(); ++i) {
+      a = rand() % ppts;
+      tasks.at(placePpt.at(i)).at(dst_id) = mPpts.at(a);
     }
 
-    for (auto it = objects.begin(); it < start; it++)
-      if ( !it->source )
-        pick(def, *it, normalTables );
+    // generate the objects, pptobjects seperately from the others
+    // in the tasks wich already have vaild entries select ppt objects only
+    generate_objects(tasks);
 
-    objects.erase(start, objects.end());
+    // write all the other distinations to the tasks
+    for(size_t i=0; i<placeShelf.size(); ++i) {
+      a = rand() % shelfs;
+      tasks.at(placeShelf.at(i)).at(dst_id) = mShelfs.at(a);
+    }
+    for(size_t i=0; i<placeTurntable.size(); ++i) {
+      a = rand() % conveyors;
+      tasks.at(placeTurntable.at(i)).at(dst_id) = mConveyors.at(a);
+    }
+    // PLACES NOCH BEARBEITEN KEINE PLACES, FALLS KEINE PICK VON DER TISCHHÖHE
+    for(size_t i=0; i<normalplace.size(); ++i) {
+      a = rand() % tables;
+      tasks.at(normalplace.at(i)).at(dst_id) = mTables.at(a);
+    }
 
-    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Objects:\n" << objects);
-    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Available Objects:\n" << availableObjects);
-    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Available Cavities:\n" << availableCavities);
+    // collect all valid places to place a Container
+    // If the respective setting is active add these dst to the valid containerplaces
+    vector<size_t>valid_containerplaces = normalplace;
+    vector<size_t>mBContainer, mRContainer;
+    if(paramContainerInShelf == true) {
+      copy(placeShelf.begin(), placeShelf.end(), back_inserter(valid_containerplaces));
+    }
+    if(paramContainerOnTurntable == true) {
+      copy(placeTurntable.begin(), placeTurntable.end(), back_inserter(valid_containerplaces));
+    }
+    if(paramContainerOnPpt == true) {
+      copy(placePpt.begin(), placePpt.end(), back_inserter(valid_containerplaces));
+    }
 
-    return toTask(objects);
+    variation(valid_containerplaces, containers, container);
+    variation(container, paramFinal["B_Container"], b_container, r_container);
+
+    for(size_t i=0; i<size_t(paramFinal["B_Container"]); ++i) {
+      size_t table = tasks.at(b_container.at(i)).at(dst_id);
+      size_t blue_container_id = get_container_id(table, blue);
+      tasks.at(b_container.at(i)).at(cont_id) = blue_container_id;
+    }
+    for(size_t i=0; i<size_t(paramFinal["R_Container"]); ++i) {
+      size_t table = tasks.at(r_container.at(i)).at(dst_id);
+      size_t red_container_id = get_container_id(table, red);
+      tasks.at(r_container.at(i)).at(cont_id) = red_container_id;
+    }
+
+    initialize_mAllTables();
+    initialize_picksleft();
+    initialize_mTableTypes();
+    initialize_validpicks(tasks);										// generate a list of valid picks for each task
+    //debugAll("after initialize_mTableTypes", tasks);
+
+    while(sum_vector(picksleft) > 0) {
+      size_t min = numeric_limits<size_t>::max();						// set min to the mximum value of size_t;
+      size_t index = shortest_list(min);								// min is a refference
+      if (min == numeric_limits<size_t>::max()) {throw 230;}			// if all validpick vectors are empty
+      a = rand() % min;												// select a random valid pick for these table
+      size_t table = validpicks.at(index).at(a);						// set table to the ID for these table
+      tasks.at(index).at(src_id) = table;
+      validpicks.at(index).resize(0);									// task has table => no validpicks left
+      size_t type_id = mTableTypes.at(table);							// set type to the type of table (mTableTypes is a map)
+      --picksleft.at(type_id);										// reduce the number of picks left
+      update_validpicks(type_id);										// update the lists of vaild picks
+      //debugAll("taskgenerierung", tasks);
+    }
+
+    for(int i=0; i<paramFinal["decoys"]; ++i) {       // add tasks for the decoys
+      size_t local = rand() % tables;
+      tasks.push_back({-1,int(mAllTables.at(local)),-1,-1,-1});
+    }
+    generate_objects(tasks);                            // generate objects for the decoys
+    //debugAll("after initialize_mTableTypes", tasks);
+    return toTask(tasks);
   }
 
   public:
@@ -760,17 +1066,57 @@ class TaskGeneratorImpl {
       sanityCheck();
     }
 
-    /** \todo Implement **/
-    bool check( const Task& task ) const {
-      try {
-        //TODO: do checks
-        return !task.arena_start_state.empty() && !task.arena_target_state.empty()  ;
-      } catch(const std::exception& e) {
-        ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX-GEN] Exception occured during check: " << e.what());
-        return false;
-      } catch(...) {
-        return false;
+
+    void checkPickCounts(const run& tasks) {
+      std::vector<size_t> counter(tabletypes,0);
+      for(size_t i=0; i<tasks.size(); ++i) {
+        if(tasks.at(i).at(src_id) != -1) {
+          counter.at(mTableTypes.at(tasks.at(i).at(src_id)))++;
+        }
       }
+      if(counter.at(tables0_id) != size_t(paramFinal["pick_tables0"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["pick_tables0"]));
+        errormessage += " wanted, but " + to_string(counter.at(tables0_id)) + "found.\n";
+        throw errormessage;
+      }
+      if(counter.at(tables5_id) != size_t(paramFinal["pick_tables5"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["pick_tables5"]));
+        errormessage += " wanted, but " + to_string(counter.at(tables5_id)) + "found.\n";
+        throw errormessage;
+      }
+      if(counter.at(tables10_id) != size_t(paramFinal["pick_tables10"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["pick_tables10"]));
+        errormessage += " wanted, but " + to_string(counter.at(tables10_id)) + "found.\n";
+        throw errormessage;
+      }
+      if(counter.at(tables15_id) != size_t(paramFinal["pick_tables15"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["pick_tables15"]));
+        errormessage += " wanted, but " + to_string(counter.at(tables15_id)) + "found.\n";
+        throw errormessage;
+      }
+      if(counter.at(conveyors_id) != size_t(paramFinal["pick_turntables"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["pick_turntables"]));
+        errormessage += " wanted, but " + to_string(counter.at(conveyors_id)) + "found.\n";
+        throw errormessage;
+      }
+      if(counter.at(shelfs_id) != size_t(paramFinal["pick_shelfs"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["pick_shelfs"]));
+        errormessage += " wanted, but " + to_string(counter.at(shelfs_id)) + "found.\n";
+        throw errormessage;
+      }
+      if(counter.at(ppts_id) != size_t(paramFinal["pick_ppts"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["pick_ppts"]));
+        errormessage += " wanted, but " + to_string(counter.at(ppts_id)) + "found.\n";
+        throw errormessage;
+      }
+      std::cout<<"All table types occure with correct multiplicities.\n";
+    }
+
+    bool check( const Task& task ) const {
+      const run taskToRun = fromTask(task);
+      debug_tasks("final tasks", taskToRun);
+      checkPickNeqPlace(taskToRun);
+      checkPickCounts(taskToRun);
     }
 
     Task operator()(std::string taskName) {
