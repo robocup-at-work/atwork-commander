@@ -496,6 +496,19 @@ class TaskGeneratorImpl {
     return task;
   }
 
+  Task toTask(const vector<array<int, 5>>& run) const {
+    ROS_DEBUG_STREAM("[REFBOX] Converting generated object list to task description");
+    return Task();
+  }
+
+  vector<array<int, 5>> fromTask(const Task& task) const {
+    ROS_DEBUG_STREAM("[REFBOX] Converting generated object list to task description");
+
+    return {};
+  }
+
+
+
   template<typename T>
   T& uniqueSelect(typename vector<T>::iterator start, typename vector<T>::iterator& end) {
     if ( start == end )
@@ -646,8 +659,45 @@ class TaskGeneratorImpl {
     object.source = table;
   }
 
+
+  unsigned int contId = 1;
+
+
 //-------------------------------------------------------------------------------------------------------------------------
 //Beware Jurek code below this line >,<
+
+/**
+        catch(int error) {
+                switch (error) {
+                        case 100 : ROS_ERROR_STREAM(error<<"Undefined discipline"); break;
+                        case 200 : ROS_ERROR_STREAM(error<<"[BTT3] No objects: Can't generate tasks without objects"); break;
+                        case 201 : ROS_ERROR_STREAM(error<<"[BTT3] No shelfs: Can't generate shelf tasks without shelf"); break;
+                        case 202 : ROS_ERROR_STREAM(error<<"[BTT3] No tables: Can't generate more tasks than pick_shelfs without tables"); break;
+                        case 203 : ROS_ERROR_STREAM(error<<"[BTT3] infeasible constraints for task creation: place = pick"); break;
+                        case 204 : ROS_ERROR_STREAM(error<<"[BTT3] No tables, no shelfs: Can't place Container in air"); break;
+                        case 205 : ROS_ERROR_STREAM(error<<"[BTT3] No tables: Can't place Container in air"); break;
+                        case 210 : ROS_ERROR_STREAM(error<<"[BNT] No waypoints"); break;
+                        case 211 : ROS_ERROR_STREAM(error<<"[BNT] No tables"); break;
+                        case 220 : ROS_ERROR_STREAM(error<<"[Final] No objects"); break;
+                        case 221 : ROS_ERROR_STREAM(error<<"[Final] No shelfs: Can't generate shelf tasks without shelf"); break;
+                        case 222 : ROS_ERROR_STREAM(error<<"[Final] No tables: Can't generate more tasks than pick_shelfs without tables"); break;
+                        case 223 : ROS_ERROR_STREAM(error<<"[Final] infeasible constraints for task creation: place = pick"); break;
+                        case 224 : ROS_ERROR_STREAM(error<<"[Final] No tables, no shelfs: Can't place Container in air"); break;
+                        case 225 : ROS_ERROR_STREAM(error<<"[Final] No tables: Can't place Container in air"); break;
+                        case 226 : ROS_ERROR_STREAM(error<<"[Final] No cavity plattforms: Can't generate cavity plattform tasks without cavity plattforms"); break;
+                        case 227 : ROS_ERROR_STREAM(error<<"[Final] No conveyers: Can't generate conveyer tasks without conveyers"); break;
+                        case 228 : ROS_ERROR_STREAM(error<<"[Final] No valid object for PPT"); break;
+                        case 229 : ROS_ERROR_STREAM(error<<"[Final] Unknown color of container"); break;
+                        case 230 : ROS_ERROR_STREAM(error<<"[Final] No valid picks left"); break;
+                        case 231 : ROS_ERROR_STREAM(error<<"[Final] No tables0 : Can't generate table0 picks without table0"); break;
+                        case 232 : ROS_ERROR_STREAM(error<<"[Final] No tables5 : Can't generate table0 picks without table5"); break;
+                        case 233 : ROS_ERROR_STREAM(error<<"[Final] No tables10 : Can't generate table0 picks without table10"); break;
+                        case 234 : ROS_ERROR_STREAM(error<<"[Final] No tables15 : Can't generate table0 picks without table15"); break;
+                        case 235 : ROS_ERROR_STREAM(error<<"[Final] Picks from cavity plattforms are not implemented yet"); break;
+                        default  : ROS_ERROR_STREAM(error<<"Unknown error");
+                }
+        }
+**/
 
         std::vector<std::string> mTableMapping;
         std::vector<unsigned int> mJTables;
@@ -782,14 +832,12 @@ using run = vector<array<int, 5>>;
     }
     //else get new id from the worldmodel
     if(color == blue) {
-      size_t new_id = insertContainer(-1, atwork_commander_msgs::Object::CONTAINER_BLUE, table);
-      std::array<size_t, 3> id = {table, blue, new_id};
+      std::array<size_t, 3> id = {table, blue, contId++};
       container_ids.push_back(id);
       return id.at(2);
     }
     else if(color == red) {
-      size_t new_id = insertContainer(-1, atwork_commander_msgs::Object::CONTAINER_RED, table);
-      std::array<size_t, 3> id = {table, red, new_id};
+      std::array<size_t, 3> id = {table, red, contId++};
       container_ids.push_back(id);
       return id.at(2);
     }
