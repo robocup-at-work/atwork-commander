@@ -132,49 +132,6 @@ struct Table {
     : name(name), type(type) {}
 };
 
-template<typename T>
-void errorOut(ostringstream& os, const T* v) {
-  os << " ["  << *v << "]";
-}
-
-template<typename T>
-void errorOut(ostringstream& os, T* v) {
-  os << " [" << *v << "]";
-}
-
-template<>
-void errorOut(ostringstream& os, const char* v) {
-  os << " " << v;
-}
-
-template<typename T>
-void errorOut(ostringstream& os, T v) {
-  os << " " << v;
-}
-
-template<typename T>
-void errorPass(ostringstream& os, T first) {
-  errorOut(os, first);
-}
-
-template<typename T, typename... Args>
-void errorPass(ostringstream& os, T first, Args... args) {
-  errorOut(os, first);
-  errorPass(os, args...);
-}
-
-template<typename... Args>
-void errorImpl(const char* file, size_t line, const char* func, const char* msg, Args... args ) {
-  ostringstream os;
-  os << "Location: " << file << ":" << line << endl << "Function: " << func << endl << "Message: " << msg << endl;
-  errorPass(os, args...);
-  throw std::runtime_error( os.str() );
-}
-
-#define error( msg, ... )  errorImpl(__FILE__, __LINE__, __PRETTY_FUNCTION__, msg, __VA_ARGS__ );
-
-}
-
 ostream& operator<<(ostream& os, const atwork_commander::Type type) {
   switch ( type ) {
     case ( atwork_commander::Type::CAVITY ):         return os << "Cavity";
@@ -228,6 +185,16 @@ ostream& operator<<(ostream& os, const vector<atwork_commander::Object>& v) {
 }
 
 template<typename T>
+void errorOut(ostringstream& os, const T* v) {
+  os << " ["  << *v << "]";
+}
+
+template<typename T>
+void errorOut(ostringstream& os, T* v) {
+  os << " [" << *v << "]";
+}
+
+template<typename T>
 ostream& operator<<(ostream& os, const vector<T*>& v) {
   for (size_t i=0; i<v.size(); i++)
     os << *v[i] << (i+1!=v.size()?" ":"");
@@ -249,6 +216,14 @@ ostream& operator<<(ostream& os, const unordered_multimap<K, V>& m) {
 }
 
 template<typename T, size_t n>
+ostream& operator<<(ostream& os, const array<T,n>& vec)
+{
+  for(size_t i=0; i<vec.size(); i++)
+		os << vec[i] << (i==vec.size()-1?"":" ");
+  return os << endl;
+}
+
+template<typename T, size_t n>
 ostream& operator<<(ostream& os, const vector<array<T,n>>& vec)
 {
   for(size_t i=0; i<vec.size(); i++)
@@ -264,12 +239,38 @@ ostream& operator<<(ostream& os, const vector<vector<T>>& vec)
   return os << endl;
 }
 
-template<typename T, size_t n>
-ostream& operator<<(ostream& os, const array<T,n>& vec)
-{
-  for(size_t i=0; i<vec.size(); i++)
-		os << vec[i] << (i==vec.size()-1?"":" ");
-  return os << endl;
+
+template<>
+void errorOut(ostringstream& os, const char* v) {
+  os << " " << v;
+}
+
+template<typename T>
+void errorOut(ostringstream& os, T v) {
+  os << " " << v;
+}
+
+template<typename T>
+void errorPass(ostringstream& os, T first) {
+  errorOut(os, first);
+}
+
+template<typename T, typename... Args>
+void errorPass(ostringstream& os, T first, Args... args) {
+  errorOut(os, first);
+  errorPass(os, args...);
+}
+
+template<typename... Args>
+void errorImpl(const char* file, size_t line, const char* func, const char* msg, Args... args ) {
+  ostringstream os;
+  os << "Location: " << file << ":" << line << endl << "Function: " << func << endl << "Message: " << msg << endl;
+  errorPass(os, args...);
+  throw std::runtime_error( os.str() );
+}
+
+#define error( msg, ... )  errorImpl(__FILE__, __LINE__, __PRETTY_FUNCTION__, msg, __VA_ARGS__ );
+
 }
 
 namespace atwork_commander {
@@ -649,7 +650,7 @@ class TaskGeneratorImpl {
 //Beware Jurek code below this line >,<
 
         std::vector<std::string> mTableMapping;
-        std::vector<unsigned int> mTables;
+        std::vector<unsigned int> mJTables;
         std::vector<unsigned int> mTables0;
         std::vector<unsigned int> mTables5;
         std::vector<unsigned int> mTables10;
@@ -679,9 +680,10 @@ class TaskGeneratorImpl {
         static const size_t conveyors_id = 4;
         static const size_t ppts_id = 5;
         static const size_t shelfs_id = 6;
-        std::map<std::string, int> paramBNT;
-        std::map<std::string, int> paramBTT3;
-        std::map<std::string, int> paramFinal;
+        using Parameters = std::map<std::string, int>;
+        Parameters paramBNT;
+        Parameters paramBTT3;
+        Parameters paramFinal;
         int estimatet_active;
         bool paramContainerInShelf;
         bool paramContainerOnPpt;
@@ -705,11 +707,11 @@ using run = vector<array<int, 5>>;
     cout<<"tasks\n"<<tasks;
   }
 
-  void debug_tasks(const string info, const run &tasks) {
+  void debug_tasks(const string info, const run &tasks) const {
     ostringstream os;
     for(size_t i=0; i<tasks.size(); ++i) {
       os << tasks.at(i).at(obj_id)<<" "<<tasks.at(i).at(src_id)<<" "<<tasks.at(i).at(dst_id)<<" "<<tasks.at(i).at(cont_id)<<" "<<tasks.at(i).at(obj_id_id) << endl;
-    ROS_DEBUG(os.str());
+    ROS_DEBUG_STREAM(os.str());
     }
   }
 
@@ -780,13 +782,13 @@ using run = vector<array<int, 5>>;
     }
     //else get new id from the worldmodel
     if(color == blue) {
-      size_t new_id = insertContainer(-1, robotto_msgs::BLUE_CONTAINER, table);
+      size_t new_id = insertContainer(-1, atwork_commander_msgs::Object::CONTAINER_BLUE, table);
       std::array<size_t, 3> id = {table, blue, new_id};
       container_ids.push_back(id);
       return id.at(2);
     }
     else if(color == red) {
-      size_t new_id = insertContainer(-1, robotto_msgs::RED_CONTAINER, table);
+      size_t new_id = insertContainer(-1, atwork_commander_msgs::Object::CONTAINER_RED, table);
       std::array<size_t, 3> id = {table, red, new_id};
       container_ids.push_back(id);
       return id.at(2);
@@ -993,7 +995,7 @@ using run = vector<array<int, 5>>;
     // PLACES NOCH BEARBEITEN KEINE PLACES, FALLS KEINE PICK VON DER TISCHHÖHE
     for(size_t i=0; i<normalplace.size(); ++i) {
       a = rand() % tables;
-      tasks.at(normalplace.at(i)).at(dst_id) = mTables.at(a);
+      tasks.at(normalplace.at(i)).at(dst_id) = mJTables.at(a);
     }
 
     // collect all valid places to place a Container
@@ -1067,56 +1069,72 @@ using run = vector<array<int, 5>>;
     }
 
 
-    void checkPickCounts(const run& tasks) {
+    void checkPickCounts(const run& tasks, Parameters params) const {
       std::vector<size_t> counter(tabletypes,0);
       for(size_t i=0; i<tasks.size(); ++i) {
         if(tasks.at(i).at(src_id) != -1) {
           counter.at(mTableTypes.at(tasks.at(i).at(src_id)))++;
         }
       }
-      if(counter.at(tables0_id) != size_t(paramFinal["pick_tables0"])) {
-        std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["pick_tables0"]));
+      if(counter.at(tables0_id) != size_t(params["pick_tables0"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_tables0"]));
         errormessage += " wanted, but " + to_string(counter.at(tables0_id)) + "found.\n";
         throw errormessage;
       }
-      if(counter.at(tables5_id) != size_t(paramFinal["pick_tables5"])) {
-        std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["pick_tables5"]));
+      if(counter.at(tables5_id) != size_t(params["pick_tables5"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_tables5"]));
         errormessage += " wanted, but " + to_string(counter.at(tables5_id)) + "found.\n";
         throw errormessage;
       }
-      if(counter.at(tables10_id) != size_t(paramFinal["pick_tables10"])) {
-        std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["pick_tables10"]));
+      if(counter.at(tables10_id) != size_t(params["pick_tables10"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_tables10"]));
         errormessage += " wanted, but " + to_string(counter.at(tables10_id)) + "found.\n";
         throw errormessage;
       }
-      if(counter.at(tables15_id) != size_t(paramFinal["pick_tables15"])) {
-        std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["pick_tables15"]));
+      if(counter.at(tables15_id) != size_t(params["pick_tables15"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_tables15"]));
         errormessage += " wanted, but " + to_string(counter.at(tables15_id)) + "found.\n";
         throw errormessage;
       }
-      if(counter.at(conveyors_id) != size_t(paramFinal["pick_turntables"])) {
-        std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["pick_turntables"]));
+      if(counter.at(conveyors_id) != size_t(params["pick_turntables"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_turntables"]));
         errormessage += " wanted, but " + to_string(counter.at(conveyors_id)) + "found.\n";
         throw errormessage;
       }
-      if(counter.at(shelfs_id) != size_t(paramFinal["pick_shelfs"])) {
-        std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["pick_shelfs"]));
+      if(counter.at(shelfs_id) != size_t(params["pick_shelfs"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_shelfs"]));
         errormessage += " wanted, but " + to_string(counter.at(shelfs_id)) + "found.\n";
         throw errormessage;
       }
-      if(counter.at(ppts_id) != size_t(paramFinal["pick_ppts"])) {
-        std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["pick_ppts"]));
+      if(counter.at(ppts_id) != size_t(params["pick_ppts"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_ppts"]));
         errormessage += " wanted, but " + to_string(counter.at(ppts_id)) + "found.\n";
         throw errormessage;
       }
       std::cout<<"All table types occure with correct multiplicities.\n";
     }
 
+    void checkPickNeqPlace(const run& tasks) const {
+      for(size_t i=0; i<tasks.size(); ++i) {
+        if(tasks.at(i).at(dst_id) == tasks.at(i).at(src_id)) {
+          std::string errormessage = "Task " + to_string(i);
+          errormessage += " violates the rule pick != place.\n";
+          throw errormessage;
+        }
+      }
+      ROS_INFO_STREAM("All tasks satisfy the rule pick != place.");
+    }
+
     bool check( const Task& task ) const {
       const run taskToRun = fromTask(task);
+      try {
       debug_tasks("final tasks", taskToRun);
       checkPickNeqPlace(taskToRun);
-      checkPickCounts(taskToRun);
+      checkPickCounts(taskToRun, paramFinal);
+      } catch(...) {
+        return false;
+      }
+      return true;
     }
 
     Task operator()(std::string taskName) {
