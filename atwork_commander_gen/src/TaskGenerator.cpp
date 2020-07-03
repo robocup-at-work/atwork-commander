@@ -497,12 +497,14 @@ class TaskGeneratorImpl {
   }
 
   Task toTask(const vector<array<int, 5>>& run) const {
-    ROS_DEBUG_STREAM("[REFBOX] Converting generated object list to task description");
+    // TODO
+    ROS_ERROR_STREAM("[REFBOX] Converting generated sub-task list task description not implemented");
     return Task();
   }
 
   vector<array<int, 5>> fromTask(const Task& task) const {
-    ROS_DEBUG_STREAM("[REFBOX] Converting generated object list to task description");
+    // TODO
+    ROS_ERROR_STREAM("[REFBOX] Converting Task to sub-task list not implemented");
 
     return {};
   }
@@ -666,38 +668,36 @@ class TaskGeneratorImpl {
 //-------------------------------------------------------------------------------------------------------------------------
 //Beware Jurek code below this line >,<
 
-/**
-        catch(int error) {
-                switch (error) {
-                        case 100 : ROS_ERROR_STREAM(error<<"Undefined discipline"); break;
-                        case 200 : ROS_ERROR_STREAM(error<<"[BTT3] No objects: Can't generate tasks without objects"); break;
-                        case 201 : ROS_ERROR_STREAM(error<<"[BTT3] No shelfs: Can't generate shelf tasks without shelf"); break;
-                        case 202 : ROS_ERROR_STREAM(error<<"[BTT3] No tables: Can't generate more tasks than pick_shelfs without tables"); break;
-                        case 203 : ROS_ERROR_STREAM(error<<"[BTT3] infeasible constraints for task creation: place = pick"); break;
-                        case 204 : ROS_ERROR_STREAM(error<<"[BTT3] No tables, no shelfs: Can't place Container in air"); break;
-                        case 205 : ROS_ERROR_STREAM(error<<"[BTT3] No tables: Can't place Container in air"); break;
-                        case 210 : ROS_ERROR_STREAM(error<<"[BNT] No waypoints"); break;
-                        case 211 : ROS_ERROR_STREAM(error<<"[BNT] No tables"); break;
-                        case 220 : ROS_ERROR_STREAM(error<<"[Final] No objects"); break;
-                        case 221 : ROS_ERROR_STREAM(error<<"[Final] No shelfs: Can't generate shelf tasks without shelf"); break;
-                        case 222 : ROS_ERROR_STREAM(error<<"[Final] No tables: Can't generate more tasks than pick_shelfs without tables"); break;
-                        case 223 : ROS_ERROR_STREAM(error<<"[Final] infeasible constraints for task creation: place = pick"); break;
-                        case 224 : ROS_ERROR_STREAM(error<<"[Final] No tables, no shelfs: Can't place Container in air"); break;
-                        case 225 : ROS_ERROR_STREAM(error<<"[Final] No tables: Can't place Container in air"); break;
-                        case 226 : ROS_ERROR_STREAM(error<<"[Final] No cavity plattforms: Can't generate cavity plattform tasks without cavity plattforms"); break;
-                        case 227 : ROS_ERROR_STREAM(error<<"[Final] No conveyers: Can't generate conveyer tasks without conveyers"); break;
-                        case 228 : ROS_ERROR_STREAM(error<<"[Final] No valid object for PPT"); break;
-                        case 229 : ROS_ERROR_STREAM(error<<"[Final] Unknown color of container"); break;
-                        case 230 : ROS_ERROR_STREAM(error<<"[Final] No valid picks left"); break;
-                        case 231 : ROS_ERROR_STREAM(error<<"[Final] No tables0 : Can't generate table0 picks without table0"); break;
-                        case 232 : ROS_ERROR_STREAM(error<<"[Final] No tables5 : Can't generate table0 picks without table5"); break;
-                        case 233 : ROS_ERROR_STREAM(error<<"[Final] No tables10 : Can't generate table0 picks without table10"); break;
-                        case 234 : ROS_ERROR_STREAM(error<<"[Final] No tables15 : Can't generate table0 picks without table15"); break;
-                        case 235 : ROS_ERROR_STREAM(error<<"[Final] Picks from cavity plattforms are not implemented yet"); break;
-                        default  : ROS_ERROR_STREAM(error<<"Unknown error");
-                }
-        }
-**/
+  void printError(int error) const {
+    switch (error) {
+            case 100 : ROS_ERROR_STREAM(error<<"Undefined discipline"); break;
+            case 200 : ROS_ERROR_STREAM(error<<"[BTT3] No objects: Can't generate tasks without objects"); break;
+            case 201 : ROS_ERROR_STREAM(error<<"[BTT3] No shelfs: Can't generate shelf tasks without shelf"); break;
+            case 202 : ROS_ERROR_STREAM(error<<"[BTT3] No tables: Can't generate more tasks than pick_shelfs without tables"); break;
+            case 203 : ROS_ERROR_STREAM(error<<"[BTT3] infeasible constraints for task creation: place = pick"); break;
+            case 204 : ROS_ERROR_STREAM(error<<"[BTT3] No tables, no shelfs: Can't place Container in air"); break;
+            case 205 : ROS_ERROR_STREAM(error<<"[BTT3] No tables: Can't place Container in air"); break;
+            case 210 : ROS_ERROR_STREAM(error<<"[BNT] No waypoints"); break;
+            case 211 : ROS_ERROR_STREAM(error<<"[BNT] No tables"); break;
+            case 220 : ROS_ERROR_STREAM(error<<"[Final] No objects"); break;
+            case 221 : ROS_ERROR_STREAM(error<<"[Final] No shelfs: Can't generate shelf tasks without shelf"); break;
+            case 222 : ROS_ERROR_STREAM(error<<"[Final] No tables: Can't generate more tasks than pick_shelfs without tables"); break;
+            case 223 : ROS_ERROR_STREAM(error<<"[Final] infeasible constraints for task creation: place = pick"); break;
+            case 224 : ROS_ERROR_STREAM(error<<"[Final] No tables, no shelfs: Can't place Container in air"); break;
+            case 225 : ROS_ERROR_STREAM(error<<"[Final] No tables: Can't place Container in air"); break;
+            case 226 : ROS_ERROR_STREAM(error<<"[Final] No cavity plattforms: Can't generate cavity plattform tasks without cavity plattforms"); break;
+            case 227 : ROS_ERROR_STREAM(error<<"[Final] No conveyers: Can't generate conveyer tasks without conveyers"); break;
+            case 228 : ROS_ERROR_STREAM(error<<"[Final] No valid object for PPT"); break;
+            case 229 : ROS_ERROR_STREAM(error<<"[Final] Unknown color of container"); break;
+            case 230 : ROS_ERROR_STREAM(error<<"[Final] No valid picks left"); break;
+            case 231 : ROS_ERROR_STREAM(error<<"[Final] No tables0 : Can't generate table0 picks without table0"); break;
+            case 232 : ROS_ERROR_STREAM(error<<"[Final] No tables5 : Can't generate table0 picks without table5"); break;
+            case 233 : ROS_ERROR_STREAM(error<<"[Final] No tables10 : Can't generate table0 picks without table10"); break;
+            case 234 : ROS_ERROR_STREAM(error<<"[Final] No tables15 : Can't generate table0 picks without table15"); break;
+            case 235 : ROS_ERROR_STREAM(error<<"[Final] Picks from cavity plattforms are not implemented yet"); break;
+            default  : ROS_ERROR_STREAM(error<<"Unknown error");
+    }
+  }
 
         std::vector<std::string> mTableMapping;
         std::vector<unsigned int> mJTables;
@@ -746,6 +746,43 @@ class TaskGeneratorImpl {
 
         size_t tabletypes;
 using run = vector<array<int, 5>>;
+
+  void readParameters(const string& taskName) {
+    unsigned int id = 0;
+    for( const pair<string, Table>& e : mTables ) {
+      const Table& t = e.second;
+      if( t.type == "00" ) { mTables0.push_back(++id); mJTables.push_back(id); continue; }
+      if( t.type == "05" ) { mTables5.push_back(++id); mJTables.push_back(id); continue; }
+      if( t.type == "10" ) { mTables10.push_back(++id); mJTables.push_back(id); continue; }
+      if( t.type == "15" ) { mTables15.push_back(++id); mJTables.push_back(id); continue; }
+      if( t.type == "TT" || t.type == "CB") { mConveyors.push_back(++id); continue; }
+      if( t.type == "PP" ) { mPpts.push_back(++id); continue; }
+      if( t.type == "SH" ) { mShelfs.push_back(++id); continue; }
+      ROS_ERROR_STREAM("Unknown table type" << t);
+      }
+
+    ROS_DEBUG_STREAM("All Tables    : " << mAllTables);
+    ROS_DEBUG_STREAM("Normal Tables : " << mJTables);
+    ROS_DEBUG_STREAM("0cm Tables    : " << mTables0);
+    ROS_DEBUG_STREAM("5cm Tables    : " << mTables5);
+    ROS_DEBUG_STREAM("10cm Tables   : " << mTables10);
+    ROS_DEBUG_STREAM("15cm Tables   : " << mTables15);
+    ROS_DEBUG_STREAM("Conveyors     : " << mConveyors);
+    ROS_DEBUG_STREAM("PPTs          : " << mPpts);
+    ROS_DEBUG_STREAM("Shelfs        : " << mShelfs);
+
+    TaskDefinition& taskParams = mTasks[taskName];
+
+   for ( const pair<string, int>& e : taskParams.objects) {
+     ObjectType obj(e.first, e.second);
+     atwork_commander_msgs::Object objType = toTaskObject(obj);
+     mObjects.push_back(objType.object);
+   }
+   ROS_DEBUG_STREAM("Objects: " << mObjects);
+   // TODO: Transfer cavities to ppt objects
+   // TODO: transfer task parameters
+  }
+
 
   void debugAll(const string info, const run &tasks) {
     cout<<info<<"\n===========================\n";
@@ -931,7 +968,7 @@ using run = vector<array<int, 5>>;
 
   // finds the index with the shortest list of validpicks
   size_t shortest_list(size_t &min) {						// the lenght of the shortest list as refference
-    size_t minindex;													// define minindex
+    size_t minindex=0;													// define minindex
     for(size_t i=0; i<validpicks.size(); ++i) {							// for all other table types
       if(validpicks.at(i).size() != 0) {								// if there are valid picks left
         if(validpicks.at(i).size() < min) {							// if the list is shorter than the actual minimum
@@ -955,152 +992,166 @@ using run = vector<array<int, 5>>;
   }
 
   Task generate( const string& taskName){
-    // initialize tasks
-    run tasks(paramFinal["objects"], {-1, -1, -1, -1, -1});
-    size_t shelfs = mShelfs.size();
-    size_t tables = mTables.size();
-    size_t ppts = mPpts.size();
-    size_t conveyors = mConveyors.size();
-    size_t containers = paramFinal["B_Container"] + paramFinal["R_Container"];
-    size_t table0 = mTables0.size();
-    size_t table5 = mTables5.size();
-    size_t table10 = mTables10.size();
-    size_t table15 = mTables15.size();
+    readParameters(taskName);
+    try {
+      // initialize tasks
+      run tasks(paramFinal["objects"], {-1, -1, -1, -1, -1});
+      size_t shelfs = mShelfs.size();
+      size_t tables = mTables.size();
+      size_t ppts = mPpts.size();
+      size_t conveyors = mConveyors.size();
+      size_t containers = paramFinal["B_Container"] + paramFinal["R_Container"];
+      size_t table0 = mTables0.size();
+      size_t table5 = mTables5.size();
+      size_t table10 = mTables10.size();
+      size_t table15 = mTables15.size();
 
-    if(paramFinal["FlexibleHeight"] == true) {
-      tabletypes = 8;
-    } else {
-      tabletypes = 7;
-    }
+      if(paramFinal["FlexibleHeight"] == true) {
+        tabletypes = 8;
+      } else {
+        tabletypes = 7;
+      }
 
-    // check validity
-    if (mObjects.size() == 0) {throw 220;}																			// No Objects
-    if (shelfs == 0 && (paramFinal["pick_shelf"] > 0 || paramFinal["place_shelf"] > 0)) {throw 221;}				// No shelfpick/place without shelf
-    if (tables == 0 && paramFinal["objects"] > paramFinal["pick_shelf"]) {throw 222;}								// No tables
-    if (shelfs + tables + conveyors + paramFinal["B_Container"] + paramFinal["R_Container"] <= 1) {throw 223;}		// pick = place
-    if (paramContainerInShelf == true) {
-      if (tables + shelfs == 0 && paramFinal["B_Container"] + paramFinal["R_Container"] > 0) {throw 224;}			// No tables, no shelfs, no conveyors, No container place in air
-    }
-    else if(tables == 0 && paramFinal["B_Container"] + paramFinal["R_Container"] > 0) {throw 225;}					// No tables No container place in air
-    if (ppts == 0 && paramFinal["place_cavity_plattforms"] > 0) {throw 226;}										// No cavity plattforms
-    if (conveyors == 0 && (paramFinal["pick_turntables"] > 0 || paramFinal["place_turntbales"] > 0)) {throw 227;}	// No conveyors
-    if (table0 == 0 && paramFinal["pick_tables0"] > 0) {throw 231;}													// No tables0
-    if (table5 == 0 && paramFinal["pick_tables5"] > 0) {throw 232;}													// No tables5
-    if (table10 == 0 && paramFinal["pick_tables10"] > 0) {throw 233;}												// No tables10
-    if (table15 == 0 && paramFinal["pick_tables15"] > 0) {throw 234;}												// No tables15
-    if (paramFinal["pick_cavity_plattforms"] > 0) {throw 235;}														// Picks from cavity plattform are not implemented yet
+      // check validity
+      if (mObjects.size() == 0) {throw 220;}																			// No Objects
+      if (shelfs == 0 && (paramFinal["pick_shelf"] > 0 || paramFinal["place_shelf"] > 0)) {throw 221;}				// No shelfpick/place without shelf
+      if (tables == 0 && paramFinal["objects"] > paramFinal["pick_shelf"]) {throw 222;}								// No tables
+      if (shelfs + tables + conveyors + paramFinal["B_Container"] + paramFinal["R_Container"] <= 1) {throw 223;}		// pick = place
+      if (paramContainerInShelf == true) {
+        if (tables + shelfs == 0 && paramFinal["B_Container"] + paramFinal["R_Container"] > 0) {throw 224;}			// No tables, no shelfs, no conveyors, No container place in air
+      }
+      else if(tables == 0 && paramFinal["B_Container"] + paramFinal["R_Container"] > 0) {throw 225;}					// No tables No container place in air
+      if (ppts == 0 && paramFinal["place_cavity_plattforms"] > 0) {throw 226;}										// No cavity plattforms
+      if (conveyors == 0 && (paramFinal["pick_turntables"] > 0 || paramFinal["place_turntbales"] > 0)) {throw 227;}	// No conveyors
+      if (table0 == 0 && paramFinal["pick_tables0"] > 0) {throw 231;}													// No tables0
+      if (table5 == 0 && paramFinal["pick_tables5"] > 0) {throw 232;}													// No tables5
+      if (table10 == 0 && paramFinal["pick_tables10"] > 0) {throw 233;}												// No tables10
+      if (table15 == 0 && paramFinal["pick_tables15"] > 0) {throw 234;}												// No tables15
+      if (paramFinal["pick_cavity_plattforms"] > 0) {throw 235;}														// Picks from cavity plattform are not implemented yet
 
-    /* select #place_shelf + #place_turntables + #ppts random tasks
-     * select #place_shelf + #place_turntables of these
-     * the rest of the places are on a random turntable
-     * select #place_shelf of these and set place to a random shelf
-     * the rest of the places are into a random ppt
-     *
-     * the vectors contains the indexes of tasks for the places
-     */
-    std::vector<size_t>position = order(paramFinal["objects"]);
-    std::vector<size_t>normalplace;
-    std::vector<size_t>specialplace;
-    std::vector<size_t>placeShelfTurntable;
-    std::vector<size_t>placeShelf;
-    std::vector<size_t>placeTurntable;
-    std::vector<size_t>placePpt;
-    std::vector<size_t>container;
-    std::vector<size_t>b_container;
-    std::vector<size_t>r_container;
-    size_t specialplaces = paramFinal["place_shelf"] + paramFinal["place_turntables"] + paramFinal["place_cavity_plattforms"];
-    size_t shelfTurntables = paramFinal["place_shelf"] + paramFinal["place_turntables"];
-    size_t a;
-    variation(position, specialplaces, specialplace, normalplace);
-    variation(specialplace, shelfTurntables ,placeShelfTurntable, placePpt);
-    variation(placeShelfTurntable, paramFinal["place_shelf"], placeShelf, placeTurntable);
-    /*
-    std::cout<<"placeShelf "<<placeShelf;
-    std::cout<<"placeTurntable "<<placeTurntable;
-    std::cout<<"placePpt "<<placePpt;
-    std::cout<<"normalplace "<<normalplace;
-    */
+      /* select #place_shelf + #place_turntables + #ppts random tasks
+       * select #place_shelf + #place_turntables of these
+       * the rest of the places are on a random turntable
+       * select #place_shelf of these and set place to a random shelf
+       * the rest of the places are into a random ppt
+       *
+       * the vectors contains the indexes of tasks for the places
+       */
+      std::vector<size_t>position = order(paramFinal["objects"]);
+      std::vector<size_t>normalplace;
+      std::vector<size_t>specialplace;
+      std::vector<size_t>placeShelfTurntable;
+      std::vector<size_t>placeShelf;
+      std::vector<size_t>placeTurntable;
+      std::vector<size_t>placePpt;
+      std::vector<size_t>container;
+      std::vector<size_t>b_container;
+      std::vector<size_t>r_container;
+      size_t specialplaces = paramFinal["place_shelf"] + paramFinal["place_turntables"] + paramFinal["place_cavity_plattforms"];
+      size_t shelfTurntables = paramFinal["place_shelf"] + paramFinal["place_turntables"];
+      size_t a;
+      variation(position, specialplaces, specialplace, normalplace);
+      variation(specialplace, shelfTurntables ,placeShelfTurntable, placePpt);
+      variation(placeShelfTurntable, paramFinal["place_shelf"], placeShelf, placeTurntable);
+      /*
+      std::cout<<"placeShelf "<<placeShelf;
+      std::cout<<"placeTurntable "<<placeTurntable;
+      std::cout<<"placePpt "<<placePpt;
+      std::cout<<"normalplace "<<normalplace;
+      */
 
-    // write the Ppts as destinations to the tasks
-    for(size_t i=0; i<placePpt.size(); ++i) {
-      a = rand() % ppts;
-      tasks.at(placePpt.at(i)).at(dst_id) = mPpts.at(a);
-    }
+      // write the Ppts as destinations to the tasks
+      for(size_t i=0; i<placePpt.size(); ++i) {
+        a = rand() % ppts;
+        tasks.at(placePpt.at(i)).at(dst_id) = mPpts.at(a);
+      }
 
-    // generate the objects, pptobjects seperately from the others
-    // in the tasks wich already have vaild entries select ppt objects only
-    generate_objects(tasks);
+      // generate the objects, pptobjects seperately from the others
+      // in the tasks wich already have vaild entries select ppt objects only
+      generate_objects(tasks);
 
-    // write all the other distinations to the tasks
-    for(size_t i=0; i<placeShelf.size(); ++i) {
-      a = rand() % shelfs;
-      tasks.at(placeShelf.at(i)).at(dst_id) = mShelfs.at(a);
-    }
-    for(size_t i=0; i<placeTurntable.size(); ++i) {
-      a = rand() % conveyors;
-      tasks.at(placeTurntable.at(i)).at(dst_id) = mConveyors.at(a);
-    }
-    // PLACES NOCH BEARBEITEN KEINE PLACES, FALLS KEINE PICK VON DER TISCHHÖHE
-    for(size_t i=0; i<normalplace.size(); ++i) {
-      a = rand() % tables;
-      tasks.at(normalplace.at(i)).at(dst_id) = mJTables.at(a);
-    }
+      // write all the other distinations to the tasks
+      for(size_t i=0; i<placeShelf.size(); ++i) {
+        a = rand() % shelfs;
+        tasks.at(placeShelf.at(i)).at(dst_id) = mShelfs.at(a);
+      }
+      for(size_t i=0; i<placeTurntable.size(); ++i) {
+        a = rand() % conveyors;
+        tasks.at(placeTurntable.at(i)).at(dst_id) = mConveyors.at(a);
+      }
+      // PLACES NOCH BEARBEITEN KEINE PLACES, FALLS KEINE PICK VON DER TISCHHÖHE
+      for(size_t i=0; i<normalplace.size(); ++i) {
+        a = rand() % tables;
+        tasks.at(normalplace.at(i)).at(dst_id) = mJTables.at(a);
+      }
 
-    // collect all valid places to place a Container
-    // If the respective setting is active add these dst to the valid containerplaces
-    vector<size_t>valid_containerplaces = normalplace;
-    vector<size_t>mBContainer, mRContainer;
-    if(paramContainerInShelf == true) {
-      copy(placeShelf.begin(), placeShelf.end(), back_inserter(valid_containerplaces));
-    }
-    if(paramContainerOnTurntable == true) {
-      copy(placeTurntable.begin(), placeTurntable.end(), back_inserter(valid_containerplaces));
-    }
-    if(paramContainerOnPpt == true) {
-      copy(placePpt.begin(), placePpt.end(), back_inserter(valid_containerplaces));
-    }
+      // collect all valid places to place a Container
+      // If the respective setting is active add these dst to the valid containerplaces
+      vector<size_t>valid_containerplaces = normalplace;
+      vector<size_t>mBContainer, mRContainer;
+      if(paramContainerInShelf == true) {
+        copy(placeShelf.begin(), placeShelf.end(), back_inserter(valid_containerplaces));
+      }
+      if(paramContainerOnTurntable == true) {
+        copy(placeTurntable.begin(), placeTurntable.end(), back_inserter(valid_containerplaces));
+      }
+      if(paramContainerOnPpt == true) {
+        copy(placePpt.begin(), placePpt.end(), back_inserter(valid_containerplaces));
+      }
 
-    variation(valid_containerplaces, containers, container);
-    variation(container, paramFinal["B_Container"], b_container, r_container);
+      variation(valid_containerplaces, containers, container);
+      variation(container, paramFinal["B_Container"], b_container, r_container);
 
-    for(size_t i=0; i<size_t(paramFinal["B_Container"]); ++i) {
-      size_t table = tasks.at(b_container.at(i)).at(dst_id);
-      size_t blue_container_id = get_container_id(table, blue);
-      tasks.at(b_container.at(i)).at(cont_id) = blue_container_id;
-    }
-    for(size_t i=0; i<size_t(paramFinal["R_Container"]); ++i) {
-      size_t table = tasks.at(r_container.at(i)).at(dst_id);
-      size_t red_container_id = get_container_id(table, red);
-      tasks.at(r_container.at(i)).at(cont_id) = red_container_id;
-    }
+      for(size_t i=0; i<size_t(paramFinal["B_Container"]); ++i) {
+        size_t table = tasks.at(b_container.at(i)).at(dst_id);
+        size_t blue_container_id = get_container_id(table, blue);
+        tasks.at(b_container.at(i)).at(cont_id) = blue_container_id;
+      }
+      for(size_t i=0; i<size_t(paramFinal["R_Container"]); ++i) {
+        size_t table = tasks.at(r_container.at(i)).at(dst_id);
+        size_t red_container_id = get_container_id(table, red);
+        tasks.at(r_container.at(i)).at(cont_id) = red_container_id;
+      }
 
-    initialize_mAllTables();
-    initialize_picksleft();
-    initialize_mTableTypes();
-    initialize_validpicks(tasks);										// generate a list of valid picks for each task
-    //debugAll("after initialize_mTableTypes", tasks);
+      initialize_mAllTables();
+      initialize_picksleft();
+      initialize_mTableTypes();
+      initialize_validpicks(tasks);										// generate a list of valid picks for each task
+      //debugAll("after initialize_mTableTypes", tasks);
 
-    while(sum_vector(picksleft) > 0) {
-      size_t min = numeric_limits<size_t>::max();						// set min to the mximum value of size_t;
-      size_t index = shortest_list(min);								// min is a refference
-      if (min == numeric_limits<size_t>::max()) {throw 230;}			// if all validpick vectors are empty
-      a = rand() % min;												// select a random valid pick for these table
-      size_t table = validpicks.at(index).at(a);						// set table to the ID for these table
-      tasks.at(index).at(src_id) = table;
-      validpicks.at(index).resize(0);									// task has table => no validpicks left
-      size_t type_id = mTableTypes.at(table);							// set type to the type of table (mTableTypes is a map)
-      --picksleft.at(type_id);										// reduce the number of picks left
-      update_validpicks(type_id);										// update the lists of vaild picks
-      //debugAll("taskgenerierung", tasks);
-    }
+      while(sum_vector(picksleft) > 0) {
+        size_t min = numeric_limits<size_t>::max();						// set min to the mximum value of size_t;
+        size_t index = shortest_list(min);								// min is a refference
+        if (min == numeric_limits<size_t>::max()) {throw 230;}			// if all validpick vectors are empty
+        a = rand() % min;												// select a random valid pick for these table
+        size_t table = validpicks.at(index).at(a);						// set table to the ID for these table
+        tasks.at(index).at(src_id) = table;
+        validpicks.at(index).resize(0);									// task has table => no validpicks left
+        size_t type_id = mTableTypes.at(table);							// set type to the type of table (mTableTypes is a map)
+        --picksleft.at(type_id);										// reduce the number of picks left
+        update_validpicks(type_id);										// update the lists of vaild picks
+        //debugAll("taskgenerierung", tasks);
+      }
 
-    for(int i=0; i<paramFinal["decoys"]; ++i) {       // add tasks for the decoys
-      size_t local = rand() % tables;
-      tasks.push_back({-1,int(mAllTables.at(local)),-1,-1,-1});
+      for(int i=0; i<paramFinal["decoys"]; ++i) {       // add tasks for the decoys
+        size_t local = rand() % tables;
+        tasks.push_back({-1,int(mAllTables.at(local)),-1,-1,-1});
+      }
+      generate_objects(tasks);                            // generate objects for the decoys
+      debugAll("Resulting Task", tasks);
+      return toTask(tasks);
+    } catch(int i) {
+      printError(i);
+      throw;
     }
-    generate_objects(tasks);                            // generate objects for the decoys
-    //debugAll("after initialize_mTableTypes", tasks);
-    return toTask(tasks);
+    catch(const string& e) {
+      ROS_ERROR_STREAM(e);
+      throw;
+    }
+    catch(...) {
+      ROS_ERROR_STREAM("Unknown error");
+      return Task();
+    }
   }
 
   public:
