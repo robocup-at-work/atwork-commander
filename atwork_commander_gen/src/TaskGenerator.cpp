@@ -119,6 +119,7 @@ struct Object : public ObjectBase {
   ObjectPtr container = nullptr;
   Object() = default;
   Object(ObjectType& type): ObjectBase(type), id(globalID++) { type--; }
+  Object(ObjectType&& type): ObjectBase(type), id(globalID++) {}
   static void reset() { globalID = 0; }
 };
 
@@ -295,6 +296,7 @@ class TaskGeneratorImpl {
   TaskDefinitions mTasks;
   unordered_multimap<string, Table> mTables;
   const vector<ObjectType> mAvailableCavities;
+  const vector<ObjectType> mAvailableObjects;
 
   auto extractObjectTypes(const string& task) {
     vector<ObjectType> availableObjects;
@@ -303,6 +305,15 @@ class TaskGeneratorImpl {
         availableObjects.emplace_back(item.first, item.second);
     return availableObjects;
   }
+
+  auto extractObjectTypes(const ArenaDescription& arena) {
+    vector<ObjectType> availableObjects;
+    for ( const auto& item: arena.objects )
+      if ( item.second && regex_match( item.first, regex("[A-Z0-9_]+") ) )
+        availableObjects.emplace_back(item.first, item.second);
+      return availableObjects;
+  }
+
 
   void sanityCheck(std::string task, const vector<ObjectType>& availableObjects) {
     auto& params = mTasks[task].parameters;
@@ -779,7 +790,47 @@ using run = vector<array<int, 5>>;
      mObjects.push_back(objType.object);
    }
    ROS_DEBUG_STREAM("Objects: " << mObjects);
-   // TODO: Transfer cavities to ppt objects
+   for(const ObjectType& o: mAvailableObjects) {
+    bool found = false;
+    for(const ObjectType& c: mAvailableCavities)
+      if (o.form == c.form) { found = true; break; }
+    for(const string& c: mTasks[taskName].cavities) {
+      ObjectType cT(c, 1);
+      if (o.form == cT.form) { found = false; break; }
+    }
+      if( found ) mPptObjects.push_back(toTaskObject(ObjectType(o)).object);
+   }
+   const auto& nTables = mTasks[taskName].normalTableTypes;
+   paramFinal.emplace("pick_shelf", mTasks[taskName].parameters["shelfes_grasping"]);
+   paramFinal.emplace("place_shelf", mTasks[taskName].parameters["shelfes_placing"]);
+   paramFinal.emplace("objects", mTasks[taskName].parameters["objects"]);
+   paramFinal.emplace("decoys", mTasks[taskName].parameters["decoys"]);
+   paramFinal.emplace("B_Container", mTasks[taskName].parameters["container_placing"]/2);
+   paramFinal.emplace("R_Container", mTasks[taskName].parameters["container_placing"]-mTasks[taskName].parameters["container_placing"]/2);
+   paramFinal.emplace("place_cavity_container", 0);
+   paramFinal.emplace("pick_turntables", mTasks[taskName].parameters["tt_grasping"]);
+   paramFinal.emplace("place_turntables", mTasks[taskName].parameters["tt_placing"]);
+   unsigned int allocated = 0;
+   if( count(nTables.begin(), nTables.end(), "00")) {
+    unsigned int num = mTasks[taskName].parameters["objects"]/mTasks[taskName].normalTableTypes.size();
+    allocated+=num;
+    paramFinal.emplace("pick_tables0", num);
+   }
+   if( count(nTables.begin(), nTables.end(), "05")) {
+    unsigned int num = mTasks[taskName].parameters["objects"]/mTasks[taskName].normalTableTypes.size();
+    allocated+=num;
+    paramFinal.emplace("pick_tables5", num);
+   }
+   if( count(nTables.begin(), nTables.end(), "15")) {
+    unsigned int num = mTasks[taskName].parameters["objects"]/mTasks[taskName].normalTableTypes.size();
+    allocated+=num;
+    paramFinal.emplace("pick_tables15", num);
+   }
+   paramFinal.emplace("pick_tables10", mTasks[taskName].parameters["objects"]-allocated);
+   paramFinal.emplace("pick_ppts", 0);
+   paramFinal.emplace("place_cavity_plattforms", mTasks[taskName].parameters["pp_placing"]);
+   paramFinal.emplace("pick_cavity_plattforms", 0);
+   paramFinal.emplace("FlexibleHeight", 0);
    // TODO: transfer task parameters
   }
 
@@ -1148,15 +1199,20 @@ using run = vector<array<int, 5>>;
       ROS_ERROR_STREAM(e);
       throw;
     }
+    catch(const exception& e) {
+      ROS_ERROR_STREAM("Exception: " << e.what());
+      throw;
+    }
     catch(...) {
       ROS_ERROR_STREAM("Unknown error");
-      return Task();
+      throw;
     }
   }
 
   public:
     TaskGeneratorImpl(const ArenaDescription& arena, const TaskDefinitions& tasks)
-      : mTasks(tasks), mAvailableCavities( extractCavities( arena ) )
+      : mTasks(tasks), mAvailableCavities( extractCavities( arena ) ),
+        mAvailableObjects( extractObjectTypes( arena) )
     {
 
       for (const auto& table: arena.workstations)
