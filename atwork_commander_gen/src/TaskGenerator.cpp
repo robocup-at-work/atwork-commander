@@ -305,6 +305,7 @@ class TaskGeneratorImpl {
   unordered_multimap<string, Table> mTables;
   const vector<ObjectType> mAvailableCavities;
   const vector<ObjectType> mAvailableObjects;
+  vector<std::array<size_t, 3>> container_ids;
 
   auto extractObjectTypes(const string& task) {
     vector<ObjectType> availableObjects;
@@ -516,15 +517,40 @@ class TaskGeneratorImpl {
   }
 
   Task toTask(const vector<array<int, 5>>& run) const {
-    // TODO
-    ROS_ERROR_STREAM("[REFBOX] Converting generated sub-task list task description not implemented");
-    return Task();
+    Task task;
+    task.arena_start_state.resize(mTables.size());
+    task.arena_target_state.resize(mTables.size());
+    unsigned int i=0;
+    for( const pair<string, Table>& e : mTables ) {
+      task.arena_start_state[i].workstation_name = e.second.name;
+      task.arena_target_state[i++].workstation_name = e.second.name;
+    }
+    for( const array<size_t, 3>& cont : container_ids) {
+      atwork_commander_msgs::Object o;
+      o.object = cont[1];
+      o.target = atwork_commander_msgs::Object::EMPTY;
+      task.arena_start_state[cont[0]-1].objects.push_back(o);
+      task.arena_target_state[cont[0]-1].objects.push_back(o);
+    }
+    for(const array<int, 5>& obj : run) {
+      atwork_commander_msgs::Object o;
+      o.object = obj[obj_id];
+      if( obj[cont_id] == -1)
+        o.target = atwork_commander_msgs::Object::EMPTY;
+      else
+        o.target = container_ids[obj[cont_id]][1];
+      task.arena_start_state[obj[src_id]-1].objects.push_back(o);
+      if ( obj[dst_id] == -1 )
+        task.arena_target_state[obj[src_id]-1].objects.push_back(o);
+      else
+        task.arena_target_state[obj[dst_id]-1].objects.push_back(o);
+    }
+    return task;
   }
 
   vector<array<int, 5>> fromTask(const Task& task) const {
-    // TODO
+    // TODO: implement
     ROS_ERROR_STREAM("[REFBOX] Converting Task to sub-task list not implemented");
-
     return {};
   }
 
@@ -758,7 +784,6 @@ class TaskGeneratorImpl {
         bool paramContainerOnPpt;
         bool paramContainerOnTurntable;
         bool paramFlexibleHeight;
-        std::vector<std::array<size_t, 3>> container_ids;
         std::vector<std::vector<size_t>> validpicks;
         std::vector<size_t> picksleft;
         std::unordered_map<size_t, size_t> mTableTypes;
