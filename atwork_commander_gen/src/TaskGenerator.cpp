@@ -240,6 +240,14 @@ ostream& operator<<(ostream& os, const vector<vector<T>>& vec)
   return os << endl;
 }
 
+template<typename T1, typename T2>
+ostream& operator<<(ostream& os, const map<T1, T2>& m)
+{
+  for(const typename map<T1, T2>::value_type& v: m)
+		os << v.first << ": " << v.second << endl;
+  return os;
+}
+
 
 template<>
 void errorOut(ostringstream& os, const char* v) {
@@ -679,34 +687,34 @@ class TaskGeneratorImpl {
 //-------------------------------------------------------------------------------------------------------------------------
 //Beware Jurek code below this line >,<
 
-  void printError(int error) const {
+  string printError(int error) const {
     switch (error) {
-            case 100 : ROS_ERROR_STREAM(error<<"Undefined discipline"); break;
-            case 200 : ROS_ERROR_STREAM(error<<"[BTT3] No objects: Can't generate tasks without objects"); break;
-            case 201 : ROS_ERROR_STREAM(error<<"[BTT3] No shelfs: Can't generate shelf tasks without shelf"); break;
-            case 202 : ROS_ERROR_STREAM(error<<"[BTT3] No tables: Can't generate more tasks than pick_shelfs without tables"); break;
-            case 203 : ROS_ERROR_STREAM(error<<"[BTT3] infeasible constraints for task creation: place = pick"); break;
-            case 204 : ROS_ERROR_STREAM(error<<"[BTT3] No tables, no shelfs: Can't place Container in air"); break;
-            case 205 : ROS_ERROR_STREAM(error<<"[BTT3] No tables: Can't place Container in air"); break;
-            case 210 : ROS_ERROR_STREAM(error<<"[BNT] No waypoints"); break;
-            case 211 : ROS_ERROR_STREAM(error<<"[BNT] No tables"); break;
-            case 220 : ROS_ERROR_STREAM(error<<"[Final] No objects"); break;
-            case 221 : ROS_ERROR_STREAM(error<<"[Final] No shelfs: Can't generate shelf tasks without shelf"); break;
-            case 222 : ROS_ERROR_STREAM(error<<"[Final] No tables: Can't generate more tasks than pick_shelfs without tables"); break;
-            case 223 : ROS_ERROR_STREAM(error<<"[Final] infeasible constraints for task creation: place = pick"); break;
-            case 224 : ROS_ERROR_STREAM(error<<"[Final] No tables, no shelfs: Can't place Container in air"); break;
-            case 225 : ROS_ERROR_STREAM(error<<"[Final] No tables: Can't place Container in air"); break;
-            case 226 : ROS_ERROR_STREAM(error<<"[Final] No cavity plattforms: Can't generate cavity plattform tasks without cavity plattforms"); break;
-            case 227 : ROS_ERROR_STREAM(error<<"[Final] No conveyers: Can't generate conveyer tasks without conveyers"); break;
-            case 228 : ROS_ERROR_STREAM(error<<"[Final] No valid object for PPT"); break;
-            case 229 : ROS_ERROR_STREAM(error<<"[Final] Unknown color of container"); break;
-            case 230 : ROS_ERROR_STREAM(error<<"[Final] No valid picks left"); break;
-            case 231 : ROS_ERROR_STREAM(error<<"[Final] No tables0 : Can't generate table0 picks without table0"); break;
-            case 232 : ROS_ERROR_STREAM(error<<"[Final] No tables5 : Can't generate table0 picks without table5"); break;
-            case 233 : ROS_ERROR_STREAM(error<<"[Final] No tables10 : Can't generate table0 picks without table10"); break;
-            case 234 : ROS_ERROR_STREAM(error<<"[Final] No tables15 : Can't generate table0 picks without table15"); break;
-            case 235 : ROS_ERROR_STREAM(error<<"[Final] Picks from cavity plattforms are not implemented yet"); break;
-            default  : ROS_ERROR_STREAM(error<<"Unknown error");
+            case 100 : return "Undefined discipline";
+            case 200 : return "[BTT3] No objects: Can't generate tasks without objects";
+            case 201 : return "[BTT3] No shelfs: Can't generate shelf tasks without shelf";
+            case 202 : return "[BTT3] No tables: Can't generate more tasks than pick_shelfs without tables";
+            case 203 : return "[BTT3] infeasible constraints for task creation: place = pick";
+            case 204 : return "[BTT3] No tables, no shelfs: Can't place Container in air";
+            case 205 : return "[BTT3] No tables: Can't place Container in air";
+            case 210 : return "[BNT] No waypoints";
+            case 211 : return "[BNT] No tables";
+            case 220 : return "[Final] No objects";
+            case 221 : return "[Final] No shelfs: Can't generate shelf tasks without shelf";
+            case 222 : return "[Final] No tables: Can't generate more tasks than pick_shelfs without tables";
+            case 223 : return "[Final] infeasible constraints for task creation: place = pick";
+            case 224 : return "[Final] No tables, no shelfs: Can't place Container in air";
+            case 225 : return "[Final] No tables: Can't place Container in air";
+            case 226 : return "[Final] No cavity plattforms: Can't generate cavity plattform tasks without cavity plattforms";
+            case 227 : return "[Final] No conveyers: Can't generate conveyer tasks without conveyers";
+            case 228 : return "[Final] No valid object for PPT";
+            case 229 : return "[Final] Unknown color of container";
+            case 230 : return "[Final] No valid picks left";
+            case 231 : return "[Final] No tables0 : Can't generate table0 picks without table0";
+            case 232 : return "[Final] No tables5 : Can't generate table0 picks without table5";
+            case 233 : return "[Final] No tables10 : Can't generate table0 picks without table10";
+            case 234 : return "[Final] No tables15 : Can't generate table0 picks without table15";
+            case 235 : return "[Final] Picks from cavity plattforms are not implemented yet";
+            default  : return "Unknown error";
     }
   }
 
@@ -772,7 +780,6 @@ using run = vector<array<int, 5>>;
       ROS_ERROR_STREAM("Unknown table type" << t);
       }
 
-    ROS_DEBUG_STREAM("All Tables    : " << mAllTables);
     ROS_DEBUG_STREAM("Normal Tables : " << mJTables);
     ROS_DEBUG_STREAM("0cm Tables    : " << mTables0);
     ROS_DEBUG_STREAM("5cm Tables    : " << mTables5);
@@ -810,19 +817,20 @@ using run = vector<array<int, 5>>;
    paramFinal.emplace("place_cavity_container", 0);
    paramFinal.emplace("pick_turntables", mTasks[taskName].parameters["tt_grasping"]);
    paramFinal.emplace("place_turntables", mTasks[taskName].parameters["tt_placing"]);
-   unsigned int allocated = 0;
+   unsigned int tableObjects = mTasks[taskName].parameters["objects"]-mTasks[taskName].parameters["shelfes_grasping"] - mTasks[taskName].parameters["tt_grasping"];
+   unsigned int allocated = mTasks[taskName].parameters["shelfes_grasping"] + mTasks[taskName].parameters["tt_grasping"];
    if( count(nTables.begin(), nTables.end(), "00")) {
-    unsigned int num = mTasks[taskName].parameters["objects"]/mTasks[taskName].normalTableTypes.size();
+    unsigned int num = tableObjects / mTasks[taskName].normalTableTypes.size();
     allocated+=num;
     paramFinal.emplace("pick_tables0", num);
    }
    if( count(nTables.begin(), nTables.end(), "05")) {
-    unsigned int num = mTasks[taskName].parameters["objects"]/mTasks[taskName].normalTableTypes.size();
+    unsigned int num = tableObjects / mTasks[taskName].normalTableTypes.size();
     allocated+=num;
     paramFinal.emplace("pick_tables5", num);
    }
    if( count(nTables.begin(), nTables.end(), "15")) {
-    unsigned int num = mTasks[taskName].parameters["objects"]/mTasks[taskName].normalTableTypes.size();
+    unsigned int num = tableObjects / mTasks[taskName].normalTableTypes.size();
     allocated+=num;
     paramFinal.emplace("pick_tables15", num);
    }
@@ -831,7 +839,9 @@ using run = vector<array<int, 5>>;
    paramFinal.emplace("place_cavity_plattforms", mTasks[taskName].parameters["pp_placing"]);
    paramFinal.emplace("pick_cavity_plattforms", 0);
    paramFinal.emplace("FlexibleHeight", 0);
-   // TODO: transfer task parameters
+
+    ROS_DEBUG_STREAM("PPT Objects   : " << mPptObjects);
+    ROS_DEBUG_STREAM("Parameters    : " << paramFinal);
   }
 
 
@@ -1048,7 +1058,7 @@ using run = vector<array<int, 5>>;
       // initialize tasks
       run tasks(paramFinal["objects"], {-1, -1, -1, -1, -1});
       size_t shelfs = mShelfs.size();
-      size_t tables = mTables.size();
+      size_t tables = mJTables.size();
       size_t ppts = mPpts.size();
       size_t conveyors = mConveyors.size();
       size_t containers = paramFinal["B_Container"] + paramFinal["R_Container"];
@@ -1192,20 +1202,10 @@ using run = vector<array<int, 5>>;
       debugAll("Resulting Task", tasks);
       return toTask(tasks);
     } catch(int i) {
-      printError(i);
-      throw;
+      throw runtime_error(printError(i));
     }
     catch(const string& e) {
-      ROS_ERROR_STREAM(e);
-      throw;
-    }
-    catch(const exception& e) {
-      ROS_ERROR_STREAM("Exception: " << e.what());
-      throw;
-    }
-    catch(...) {
-      ROS_ERROR_STREAM("Unknown error");
-      throw;
+      throw runtime_error(e);
     }
   }
 

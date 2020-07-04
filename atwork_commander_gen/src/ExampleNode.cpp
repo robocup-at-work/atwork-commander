@@ -35,7 +35,7 @@ static auto exampleTaskDef() {
       { "tt_grasping"        , 1},
       { "tt_placing"         , 1},
       { "shelfes_grasping"   , 2},
-      { "shelfes_placing"    , 2}
+      { "shelfes_placing"    , 1}
     };
     example.objects = ParameterType {
       { "F20_20_G"           , 1},
@@ -117,15 +117,10 @@ int main(int argc, char** argv) {
   ROS_DEBUG_STREAM_NAMED("example", "[REFBOX-GEN] " << arena);
   ROS_DEBUG_STREAM_NAMED("example", "[REFBOX-GEN] " << def);
 
-  try {
-    TaskGenerator gen(arena, def);
-    Task task = gen("EXAMPLE");
-    ROS_DEBUG_STREAM_NAMED("example", "[REFBOX-GEN] Tasks:\n" << task);
-  }
-  catch(exception& e) {
-    ROS_ERROR_STREAM_NAMED("example", "[REFBOX-GEN] Exception occured: \n" << e.what());
-  }
-
+  TaskGenerator gen(arena, def);
+  Task task = gen("EXAMPLE");
+  ROS_DEBUG_STREAM_NAMED("example", "[REFBOX-GEN] Tasks:\n" << task);
+  ros::shutdown();
   while(ros::ok())
     ros::spin();
   return 0;
