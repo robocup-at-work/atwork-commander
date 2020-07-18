@@ -865,8 +865,10 @@ using run = vector<array<int, 5>>;
    paramFinal.emplace("pick_cavity_plattforms", 0);
    paramFinal.emplace("FlexibleHeight", 0);
 
-    ROS_DEBUG_STREAM("PPT Objects   : " << mPptObjects);
-    ROS_DEBUG_STREAM("Parameters    : " << paramFinal);
+   paramFinal.emplace("paired_containers", 0);
+
+   ROS_DEBUG_STREAM("PPT Objects   : " << mPptObjects);
+   ROS_DEBUG_STREAM("Parameters    : " << paramFinal);
   }
 
 
@@ -946,7 +948,7 @@ using run = vector<array<int, 5>>;
     variation(positions, k, vec_k, trash);
   }
 
-  size_t get_container_id(size_t table, size_t color) {
+  size_t get_container_id(const size_t table, const size_t color) {
     // if there already is a container of this color on the same table
     for(size_t i=0; i<container_ids.size(); ++i) {
       if (container_ids.at(i).at(0) == table && container_ids.at(i).at(1) == color) {
@@ -1184,11 +1186,17 @@ using run = vector<array<int, 5>>;
         size_t table = tasks.at(b_container.at(i)).at(dst_id);
         size_t blue_container_id = get_container_id(table, blue);
         tasks.at(b_container.at(i)).at(cont_id) = blue_container_id;
+        if(paramFinal["paired_containers"] == true) {
+          get_container_id(table,red);
+        }
       }
       for(size_t i=0; i<size_t(paramFinal["R_Container"]); ++i) {
         size_t table = tasks.at(r_container.at(i)).at(dst_id);
         size_t red_container_id = get_container_id(table, red);
         tasks.at(r_container.at(i)).at(cont_id) = red_container_id;
+        if(paramFinal["paired_containers"] == true) {
+          get_container_id(table,blue);
+        }
       }
 
       initialize_mAllTables();
@@ -1221,6 +1229,7 @@ using run = vector<array<int, 5>>;
         checkPickNeqPlace(tasks);
         checkPickCounts(tasks, paramFinal);
         checkPlaceCounts(tasks, paramFinal);
+        checkContainers(tasks, paramFinal);
       }
       catch(std::string error) {
         ROS_ERROR_STREAM(error);
@@ -1251,7 +1260,7 @@ using run = vector<array<int, 5>>;
 
     void checkPickNeqPlace(const run& tasks) const {
       for(size_t i=0; i<tasks.size(); ++i) {
-        if(tasks.at(i).at(dst_id) == tasks.at(i).at(src_id)) {
+        if(tasks.at(i).at(dst_id) == tasks.at(i).at(src_id) && tasks.at(i).at(cont_id) == -1) { // if place in container pick = place is valid
           std::string errormessage = "Task " + to_string(i);
           errormessage += " violates the rule pick != place.\n";
           throw errormessage;
@@ -1318,6 +1327,7 @@ using run = vector<array<int, 5>>;
       if(decoys != params["decoys"]) {
         std::string errormessage = "Missmatch: " + to_string(size_t(params["decoys"]));
         errormessage += " wanted, but " + to_string(decoys) + " decoys found.\n";
+        throw errormessage;
       }
       else {
         ROS_INFO_STREAM("Decoys occure with correct multiplicities.");
@@ -1338,9 +1348,56 @@ using run = vector<array<int, 5>>;
         throw errormessage;
       }
       size_t normalplaces_found = counter.at(tables0_id) + counter.at(tables5_id) + counter.at(tables10_id) + counter.at(tables15_id);
-      size_t normelplaces_wanted = params["objects"] - params["place_turntables"] - params["place_shelfs"] - params["place_ppts"];
-      if(normalplaces != )
-      ROS_INFO_STREAM("All table types occure wirh correct multiplicities in places.");
+      size_t normalplaces_wanted = params["objects"] - params["place_turntables"] - params["place_shelfs"] - params["place_ppts"];
+      if(normalplaces_found != normalplaces_wanted) {
+        std::string errormessage = "Missmatch: " + to_string(normalplaces_wanted);
+        errormessage += " wanted, but " + to_string(normalplaces_found) + " normalplaces found.\n";
+        throw errormessage;
+      }
+      ROS_INFO_STREAM("All table types occure with correct multiplicities in places.");
+    }
+
+    void checkContainers(const run& tasks, Parameters params) {
+      size_t bluecontainer = 0, redcontainer = 0;
+      for(size_t i=0; i<container_ids.size(); ++i) {
+        if(container_ids.at(i).at(1) == blue) {
+          ++bluecontainer;
+        } else {
+          ++redcontainer;
+        }
+      }
+      if(bluecontainer != paramFinal["B_Container"]) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["B_Container"]));
+        errormessage += " wated, but " + to_string(bluecontainer) + " blue containers found.\n";
+        throw errormessage;
+      }
+      if(redcontainer != paramFinal["R_Container"]) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["R_Container"]));
+        errormessage += " wated, but " + to_string(redcontainer) + " red containers found.\n";
+        throw errormessage;
+      }
+
+      if(paramFinal["paired_containers"] == true) {
+        vector<std::array<size_t, 3>> red_container_ids, blue_container_ids;
+        for(size_t i=0; i<container_ids.size(); ++i) {
+          if(container_ids.at(i).at(1) == blue) {
+              blue_container_ids.push_back(container_ids.at(i));
+          }
+          else {
+            red_container_ids.push_back(container_ids.at(i));
+          }
+        }
+        auto comp = [](const auto& left, const auto& right){return left.at(1) < right.at(1);};
+        std::sort(begin(blue_container_ids),end(blue_container_ids), comp);
+        std::sort(begin(red_container_ids),end(red_container_ids), comp);
+        for(size_t i=0; i<container_ids.size(); ++i) {
+          if(blue_container_ids.at(i).at(1) != red_container_ids.at(i).at(1)) {
+            std::string errormessage = "There is only one color of containers on table with id " + to_string(i) +".";
+            throw errormessage;
+          }
+        }
+      }
+      ROS_INFO_STREAM("All container types occure with correct multiplicities.");
     }
 
 
