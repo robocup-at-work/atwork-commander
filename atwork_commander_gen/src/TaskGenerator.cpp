@@ -288,7 +288,7 @@ namespace atwork_commander {
  *
  * Implements the generation of Task according to supplied configurations.
  *
- * 
+ *
  *
  **/
 class TaskGeneratorImpl {
@@ -711,7 +711,7 @@ class TaskGeneratorImpl {
 
 
 //-------------------------------------------------------------------------------------------------------------------------
-//Beware Jurek code below this line >,<
+//Beware Jureks code below this line >,<
 
   string printError(int error) const {
     switch (error) {
@@ -821,7 +821,7 @@ using run = vector<array<int, 5>>;
      atwork_commander_msgs::Object objType = toTaskObject(obj);
      mObjects.push_back(objType.object);
    }
-   ROS_DEBUG_STREAM("Objects: " << mObjects);
+   ROS_DEBUG_STREAM("Objects       : " << mObjects);
    for(const ObjectType& o: mAvailableObjects) {
     bool found = false;
     for(const ObjectType& c: mAvailableCavities)
@@ -833,8 +833,8 @@ using run = vector<array<int, 5>>;
       if( found ) mPptObjects.push_back(toTaskObject(ObjectType(o)).object);
    }
    const auto& nTables = mTasks[taskName].normalTableTypes;
-   paramFinal.emplace("pick_shelf", mTasks[taskName].parameters["shelfes_grasping"]);
-   paramFinal.emplace("place_shelf", mTasks[taskName].parameters["shelfes_placing"]);
+   paramFinal.emplace("pick_shelfs", mTasks[taskName].parameters["shelfes_grasping"]);
+   paramFinal.emplace("place_shelfs", mTasks[taskName].parameters["shelfes_placing"]);
    paramFinal.emplace("objects", mTasks[taskName].parameters["objects"]);
    paramFinal.emplace("decoys", mTasks[taskName].parameters["decoys"]);
    paramFinal.emplace("B_Container", mTasks[taskName].parameters["container_placing"]/2);
@@ -861,7 +861,7 @@ using run = vector<array<int, 5>>;
    }
    paramFinal.emplace("pick_tables10", mTasks[taskName].parameters["objects"]-allocated);
    paramFinal.emplace("pick_ppts", 0);
-   paramFinal.emplace("place_cavity_plattforms", mTasks[taskName].parameters["pp_placing"]);
+   paramFinal.emplace("place_ppts", mTasks[taskName].parameters["pp_placing"]);
    paramFinal.emplace("pick_cavity_plattforms", 0);
    paramFinal.emplace("FlexibleHeight", 0);
 
@@ -979,15 +979,6 @@ using run = vector<array<int, 5>>;
     end = copy(mConveyors.begin(), mConveyors.end(), end);
     end = copy(mTables15.begin(), mTables15.end(), end);
     end = copy(mShelfs.begin(), mShelfs.end(), end);
-    /*
-    std::cout<<"Tables0: "<<mTables0;
-    std::cout<<"Tables5: "<<mTables5;
-    std::cout<<"Tables10: "<<mTables10;
-    std::cout<<"Ppts: "<<mPpts;
-    std::cout<<"Conveyors: "<<mConveyors;
-    std::cout<<"Tables15: "<<mTables15;
-    std::cout<<"Shelfs: "<<mShelfs;
-    */
   }
 
   // fills in all for every task every table where it isn't placed
@@ -1015,7 +1006,7 @@ using run = vector<array<int, 5>>;
     picksleft.at(tables15_id) = paramFinal["pick_tables15"];
     picksleft.at(conveyors_id) = paramFinal["pick_turntables"];
     picksleft.at(ppts_id) = paramFinal["pick_cavity_plattforms"];
-    picksleft.at(shelfs_id) = paramFinal["pick_shelf"];
+    picksleft.at(shelfs_id) = paramFinal["pick_shelfs"];
   }
 
 
@@ -1099,26 +1090,26 @@ using run = vector<array<int, 5>>;
       }
 
       // check validity
-      if (mObjects.size() == 0) {throw 220;}																			// No Objects
-      if (shelfs == 0 && (paramFinal["pick_shelf"] > 0 || paramFinal["place_shelf"] > 0)) {throw 221;}				// No shelfpick/place without shelf
-      if (tables == 0 && paramFinal["objects"] > paramFinal["pick_shelf"]) {throw 222;}								// No tables
-      if (shelfs + tables + conveyors + paramFinal["B_Container"] + paramFinal["R_Container"] <= 1) {throw 223;}		// pick = place
+      if (mObjects.size() == 0) {throw 220;}																			                               // No Objects
+      if (shelfs == 0 && (paramFinal["pick_shelfs"] > 0 || paramFinal["place_shelfs"] > 0)) {throw 221;}				   // No shelfpick/place without shelf
+      if (tables == 0 && paramFinal["objects"] > paramFinal["pick_shelfs"]) {throw 222;}								           // No tables
+      if (shelfs + tables + conveyors + paramFinal["B_Container"] + paramFinal["R_Container"] <= 1) {throw 223;} // pick = place
       if (paramContainerInShelf == true) {
-        if (tables + shelfs == 0 && paramFinal["B_Container"] + paramFinal["R_Container"] > 0) {throw 224;}			// No tables, no shelfs, no conveyors, No container place in air
+        if (tables + shelfs == 0 && paramFinal["B_Container"] + paramFinal["R_Container"] > 0) {throw 224;}			 // No tables, no shelfs, no conveyors, No container place in air
       }
-      else if(tables == 0 && paramFinal["B_Container"] + paramFinal["R_Container"] > 0) {throw 225;}					// No tables No container place in air
-      if (ppts == 0 && paramFinal["place_cavity_plattforms"] > 0) {throw 226;}										// No cavity plattforms
+      else if(tables == 0 && paramFinal["B_Container"] + paramFinal["R_Container"] > 0) {throw 225;}					   // No tables No container place in air
+      if (ppts == 0 && paramFinal["place_ppts"] > 0) {throw 226;}										                             // No cavity plattforms
       if (conveyors == 0 && (paramFinal["pick_turntables"] > 0 || paramFinal["place_turntbales"] > 0)) {throw 227;}	// No conveyors
       if (table0 == 0 && paramFinal["pick_tables0"] > 0) {throw 231;}													// No tables0
       if (table5 == 0 && paramFinal["pick_tables5"] > 0) {throw 232;}													// No tables5
       if (table10 == 0 && paramFinal["pick_tables10"] > 0) {throw 233;}												// No tables10
       if (table15 == 0 && paramFinal["pick_tables15"] > 0) {throw 234;}												// No tables15
-      if (paramFinal["pick_cavity_plattforms"] > 0) {throw 235;}														// Picks from cavity plattform are not implemented yet
+      if (paramFinal["pick_cavity_plattforms"] > 0) {throw 235;}														  // Picks from cavity plattform are not implemented yet
 
-      /* select #place_shelf + #place_turntables + #ppts random tasks
-       * select #place_shelf + #place_turntables of these
+      /* select #place_shelfs + #place_turntables + #ppts random tasks
+       * select #place_shelfs + #place_turntables of these
        * the rest of the places are on a random turntable
-       * select #place_shelf of these and set place to a random shelf
+       * select #place_shelfs of these and set place to a random shelf
        * the rest of the places are into a random ppt
        *
        * the vectors contains the indexes of tasks for the places
@@ -1133,17 +1124,18 @@ using run = vector<array<int, 5>>;
       std::vector<size_t>container;
       std::vector<size_t>b_container;
       std::vector<size_t>r_container;
-      size_t specialplaces = paramFinal["place_shelf"] + paramFinal["place_turntables"] + paramFinal["place_cavity_plattforms"];
-      size_t shelfTurntables = paramFinal["place_shelf"] + paramFinal["place_turntables"];
+      size_t specialplaces = paramFinal["place_shelfs"] + paramFinal["place_turntables"] + paramFinal["place_ppts"];
+      size_t shelfTurntables = paramFinal["place_shelfs"] + paramFinal["place_turntables"];
       size_t a;
       variation(position, specialplaces, specialplace, normalplace);
       variation(specialplace, shelfTurntables ,placeShelfTurntable, placePpt);
-      variation(placeShelfTurntable, paramFinal["place_shelf"], placeShelf, placeTurntable);
+      variation(placeShelfTurntable, paramFinal["place_shelfs"], placeShelf, placeTurntable);
+
       /*
-      std::cout<<"placeShelf "<<placeShelf;
-      std::cout<<"placeTurntable "<<placeTurntable;
-      std::cout<<"placePpt "<<placePpt;
-      std::cout<<"normalplace "<<normalplace;
+      std::cout<<"placeShelf \n"<<placeShelf<<endl;
+      std::cout<<"placeTurntable \n"<<placeTurntable<<endl;
+      std::cout<<"placePpt \n"<<placePpt<<endl;
+      std::cout<<"normalplace \n"<<normalplace<<endl;
       */
 
       // write the Ppts as destinations to the tasks
@@ -1202,29 +1194,37 @@ using run = vector<array<int, 5>>;
       initialize_mAllTables();
       initialize_picksleft();
       initialize_mTableTypes();
-      initialize_validpicks(tasks);										// generate a list of valid picks for each task
-      //debugAll("after initialize_mTableTypes", tasks);
+      initialize_validpicks(tasks);										                          // generate a list of valid picks for each task
 
       while(sum_vector(picksleft) > 0) {
-        size_t min = numeric_limits<size_t>::max();						// set min to the mximum value of size_t;
-        size_t index = shortest_list(min);								// min is a refference
-        if (min == numeric_limits<size_t>::max()) {throw 230;}			// if all validpick vectors are empty
-        a = rand() % min;												// select a random valid pick for these table
-        size_t table = validpicks.at(index).at(a);						// set table to the ID for these table
+        size_t min = numeric_limits<size_t>::max();						                  // set min to the mximum value of size_t;
+        size_t index = shortest_list(min);								                      // min is a refference
+        if (min == numeric_limits<size_t>::max()) {throw 230;}			            // if all validpick vectors are empty
+        a = rand() % min;												                                // select a random valid pick for these table
+        size_t table = validpicks.at(index).at(a);					                   	// set table to the ID for these table
         tasks.at(index).at(src_id) = table;
-        validpicks.at(index).resize(0);									// task has table => no validpicks left
-        size_t type_id = mTableTypes.at(table);							// set type to the type of table (mTableTypes is a map)
-        --picksleft.at(type_id);										// reduce the number of picks left
-        update_validpicks(type_id);										// update the lists of vaild picks
+        validpicks.at(index).resize(0);								                         	// task has table => no validpicks left
+        size_t type_id = mTableTypes.at(table);				                     			// set type to the type of table (mTableTypes is a map)
+        --picksleft.at(type_id);									                             	// reduce the number of picks left
+        update_validpicks(type_id);								                           		// update the lists of vaild picks
         //debugAll("taskgenerierung", tasks);
       }
 
-      for(int i=0; i<paramFinal["decoys"]; ++i) {       // add tasks for the decoys
+      for(int i=0; i<paramFinal["decoys"]; ++i) {                               // add tasks for the decoys
         size_t local = rand() % tables;
         tasks.push_back({-1,int(mAllTables.at(local)),-1,-1,-1});
       }
-      generate_objects(tasks);                            // generate objects for the decoys
-      debugAll("Resulting Task", tasks);
+      generate_objects(tasks);                                                  // generate objects for the decoys
+      std::cout<<"tasks\n"<<tasks;                                              // print tasks to console
+      //Insert checkPickCounts
+      try {
+        checkPickNeqPlace(tasks);
+        checkPickCounts(tasks, paramFinal);
+        checkPlaceCounts(tasks, paramFinal);
+      }
+      catch(std::string error) {
+        ROS_ERROR_STREAM(error);
+      }
       return toTask(tasks);
     } catch(int i) {
       throw runtime_error(printError(i));
@@ -1249,51 +1249,6 @@ using run = vector<array<int, 5>>;
     }
 
 
-    void checkPickCounts(const run& tasks, Parameters params) const {
-      std::vector<size_t> counter(tabletypes,0);
-      for(size_t i=0; i<tasks.size(); ++i) {
-        if(tasks.at(i).at(src_id) != -1) {
-          counter.at(mTableTypes.at(tasks.at(i).at(src_id)))++;
-        }
-      }
-      if(counter.at(tables0_id) != size_t(params["pick_tables0"])) {
-        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_tables0"]));
-        errormessage += " wanted, but " + to_string(counter.at(tables0_id)) + "found.\n";
-        throw errormessage;
-      }
-      if(counter.at(tables5_id) != size_t(params["pick_tables5"])) {
-        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_tables5"]));
-        errormessage += " wanted, but " + to_string(counter.at(tables5_id)) + "found.\n";
-        throw errormessage;
-      }
-      if(counter.at(tables10_id) != size_t(params["pick_tables10"])) {
-        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_tables10"]));
-        errormessage += " wanted, but " + to_string(counter.at(tables10_id)) + "found.\n";
-        throw errormessage;
-      }
-      if(counter.at(tables15_id) != size_t(params["pick_tables15"])) {
-        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_tables15"]));
-        errormessage += " wanted, but " + to_string(counter.at(tables15_id)) + "found.\n";
-        throw errormessage;
-      }
-      if(counter.at(conveyors_id) != size_t(params["pick_turntables"])) {
-        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_turntables"]));
-        errormessage += " wanted, but " + to_string(counter.at(conveyors_id)) + "found.\n";
-        throw errormessage;
-      }
-      if(counter.at(shelfs_id) != size_t(params["pick_shelfs"])) {
-        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_shelfs"]));
-        errormessage += " wanted, but " + to_string(counter.at(shelfs_id)) + "found.\n";
-        throw errormessage;
-      }
-      if(counter.at(ppts_id) != size_t(params["pick_ppts"])) {
-        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_ppts"]));
-        errormessage += " wanted, but " + to_string(counter.at(ppts_id)) + "found.\n";
-        throw errormessage;
-      }
-      std::cout<<"All table types occure with correct multiplicities.\n";
-    }
-
     void checkPickNeqPlace(const run& tasks) const {
       for(size_t i=0; i<tasks.size(); ++i) {
         if(tasks.at(i).at(dst_id) == tasks.at(i).at(src_id)) {
@@ -1305,12 +1260,99 @@ using run = vector<array<int, 5>>;
       ROS_INFO_STREAM("All tasks satisfy the rule pick != place.");
     }
 
+    void checkPickCounts(const run& tasks, Parameters params) const {
+      std::vector<size_t> counter(tabletypes,0);
+      for(size_t i=0; i<tasks.size(); ++i) {
+        if(tasks.at(i).at(dst_id) != -1) {                                      // don't count decoys
+          counter.at(mTableTypes.at(tasks.at(i).at(src_id)))++;
+        }
+      }
+      if(counter.at(tables0_id) != size_t(params["pick_tables0"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_tables0"]));
+        errormessage += " wanted, but " + to_string(counter.at(tables0_id)) + " pick_tables0 found.\n";
+        throw errormessage;
+      }
+      if(counter.at(tables5_id) != size_t(params["pick_tables5"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_tables5"]));
+        errormessage += " wanted, but " + to_string(counter.at(tables5_id)) + " pick_tables5 found.\n";
+        throw errormessage;
+      }
+      if(counter.at(tables10_id) != size_t(params["pick_tables10"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_tables10"]));
+        errormessage += " wanted, but " + to_string(counter.at(tables10_id)) + " pick_tables10 found.\n";
+        throw errormessage;
+      }
+      if(counter.at(tables15_id) != size_t(params["pick_tables15"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_tables15"]));
+        errormessage += " wanted, but " + to_string(counter.at(tables15_id)) + " pick_tables15 found.\n";
+        throw errormessage;
+      }
+      if(counter.at(conveyors_id) != size_t(params["pick_turntables"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_turntables"]));
+        errormessage += " wanted, but " + to_string(counter.at(conveyors_id)) + " pick_turntables found.\n";
+        throw errormessage;
+      }
+      if(counter.at(shelfs_id) != size_t(params["pick_shelfs"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_shelfs"]));
+        errormessage += " wanted, but " + to_string(counter.at(shelfs_id)) + " pick_shelfs found.\n";
+        throw errormessage;
+      }
+      if(counter.at(ppts_id) != size_t(params["pick_ppts"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(params["pick_ppts"]));
+        errormessage += " wanted, but " + to_string(counter.at(ppts_id)) + " pick_ppts found.\n";
+        throw errormessage;
+      }
+      ROS_INFO_STREAM("All table types occure with correct multiplicities in picks.");
+    }
+
+    void checkPlaceCounts(const run& tasks, Parameters params) const {
+      std::vector<size_t> counter(tabletypes,0);
+      size_t decoys = 0;
+      for(size_t i=0; i<tasks.size(); ++i) {
+        if(tasks.at(i).at(dst_id) == -1) {                                      // count decoys
+          ++decoys;
+        } else {
+          counter.at(mTableTypes.at(tasks.at(i).at(dst_id)))++;                 // not decoys
+        }
+      }
+      if(decoys != params["decoys"]) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(params["decoys"]));
+        errormessage += " wanted, but " + to_string(decoys) + " decoys found.\n";
+      }
+      else {
+        ROS_INFO_STREAM("Decoys occure with correct multiplicities.");
+      }
+      if(counter.at(conveyors_id) != size_t(params["place_turntables"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(params["place_turntables"]));
+        errormessage += " wanted, but " + to_string(counter.at(conveyors_id)) + " place_turntables found.\n";
+        throw errormessage;
+      }
+      if(counter.at(shelfs_id) != size_t(params["place_shelfs"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(params["place_shelfs"]));
+        errormessage += " wanted, but " + to_string(counter.at(shelfs_id)) + " place_shelfs found.\n";
+        throw errormessage;
+      }
+      if(counter.at(ppts_id) != size_t(params["place_ppts"])) {
+        std::string errormessage = "Missmatch: " + to_string(size_t(params["place_ppts"]));
+        errormessage += " wanted, but " + to_string(counter.at(ppts_id)) + " place_ppts found.\n";
+        throw errormessage;
+      }
+      size_t normalplaces_found = counter.at(tables0_id) + counter.at(tables5_id) + counter.at(tables10_id) + counter.at(tables15_id);
+      size_t normelplaces_wanted = params["objects"] - params["place_turntables"] - params["place_shelfs"] - params["place_ppts"];
+      if(normalplaces != )
+      ROS_INFO_STREAM("All table types occure wirh correct multiplicities in places.");
+    }
+
+
     bool check( const Task& task ) const {
       const run taskToRun = fromTask(task);
       try {
       debug_tasks("final tasks", taskToRun);
-      checkPickNeqPlace(taskToRun);
-      checkPickCounts(taskToRun, paramFinal);
+      //checkPickNeqPlace(taskToRun);
+      //checkPickCounts(taskToRun, paramFinal);
+      } catch(std::string error) {
+        ROS_ERROR_STREAM(error);
+        return false;
       } catch(...) {
         return false;
       }
