@@ -5,20 +5,27 @@
 #include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QHBoxLayout>
-#include <QLineEdit>
 #include <QLabel>
+#include <QLineEdit>
+#include <QListView>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QScrollArea>
 #include <QSpinBox>
 #include <QStackedWidget>
 #include <QString>
+#include <QStringList>
+#include <QStringListModel>
+#include <QTextEdit>
 #include <QTimer>
+#include <QVBoxLayout>
 
 #ifndef Q_MOC_RUN
 #include <ros/ros.h>
 #include <rviz/panel.h>
 #include <std_msgs/String.h>
 
+#include "atwork_commander_msgs/ObjectName.h"
 #include <atwork_commander/Control.hpp>
 #endif
 
@@ -64,12 +71,12 @@ public:
         message = nullptr;
     }
 
-    virtual void setControlPtr( std::shared_ptr<atwork_commander::Control> new_control_ptr )
+    virtual void setControlPtr(std::shared_ptr<atwork_commander::Control> new_control_ptr)
     {
-      if (control_ptr) {
-        return;
-      }
-      control_ptr = new_control_ptr;
+        if (control_ptr) {
+            return;
+        }
+        control_ptr = new_control_ptr;
     }
 
     virtual QWidget* getWidget() { return self; }
@@ -177,16 +184,16 @@ public:
         // timer             = nullptr;
     }
 
-    virtual void setControlPtr( std::shared_ptr<atwork_commander::Control> new_control_ptr )
+    virtual void setControlPtr(std::shared_ptr<atwork_commander::Control> new_control_ptr)
     {
-      if (control_ptr) {
-        return;
-      }
-      control_ptr = new_control_ptr;
+        if (control_ptr) {
+            return;
+        }
+        control_ptr = new_control_ptr;
 
-      for (auto e : subGroups) {
-        e->setControlPtr(new_control_ptr);
-      }
+        for (auto e : subGroups) {
+            e->setControlPtr(new_control_ptr);
+        }
     }
 
     /*!
@@ -256,33 +263,94 @@ public Q_SLOTS:
 class TaskGenVisGroup : public VisGroup {
     Q_OBJECT
 private:
+    QLabel* taskListLabel = nullptr;
     QComboBox* taskListCombo = nullptr;
-    QLineEdit* pptCavatiesLineEdit = nullptr;
+    QLabel* prepTimeLabel = nullptr;
+    QLineEdit* prepTimeLineEdit = nullptr;
+    QLabel* runTimeLabel = nullptr;
+    QLineEdit* runTimeLineEdit = nullptr;
+    QHBoxLayout* basicHBox = nullptr;
+
     QPushButton* generateButton = nullptr;
     QPushButton* loadButton = nullptr;
-    QHBoxLayout* buttonHBoxLayout = nullptr;
+    QHBoxLayout* buttonHBox = nullptr;
+
+    QLabel* arenaStartLabel = nullptr;
+    QTextEdit* arenaStartText = nullptr;
+    QVBoxLayout* arenaStartVBox = nullptr;
+    QLabel* arenaEndLabel = nullptr;
+    QTextEdit* arenaEndText = nullptr;
+    QVBoxLayout* arenaEndVBox = nullptr;
+    QHBoxLayout* arenaHBox = nullptr;
+
+    QLineEdit* pptCavatiesLineEdit = nullptr;
 
 public:
     TaskGenVisGroup(QWidget* parent = new QWidget())
         : VisGroup(parent)
     {
         // init
-        pptCavatiesLineEdit = new QLineEdit();
+        taskListLabel = new QLabel();
         taskListCombo = new QComboBox();
+        prepTimeLabel = new QLabel();
+        prepTimeLineEdit = new QLineEdit();
+        runTimeLabel = new QLabel();
+        runTimeLineEdit = new QLineEdit();
+        basicHBox = new QHBoxLayout();
+
         generateButton = new QPushButton();
         loadButton = new QPushButton();
-        buttonHBoxLayout = new QHBoxLayout();
+        buttonHBox = new QHBoxLayout();
+
+        arenaStartLabel = new QLabel();
+        arenaStartText = new QTextEdit();
+        arenaStartVBox = new QVBoxLayout();
+        arenaEndLabel = new QLabel();
+        arenaEndText = new QTextEdit();
+        arenaEndVBox = new QVBoxLayout();
+        arenaHBox = new QHBoxLayout();
+
+        pptCavatiesLineEdit = new QLineEdit();
 
         // draw
-        layout->addRow("Task Instance: ", taskListCombo);
+        taskListLabel->setText("Task Instance: ");
+        basicHBox->addWidget(taskListLabel);
+        basicHBox->addWidget(taskListCombo);
+        prepTimeLabel->setText("Prep-Time: ");
+        basicHBox->addWidget(prepTimeLabel);
+        prepTimeLineEdit->setReadOnly(true);
+        basicHBox->addWidget(prepTimeLineEdit);
+        runTimeLabel->setText("Run-Time: ");
+        basicHBox->addWidget(runTimeLabel);
+        runTimeLineEdit->setReadOnly(true);
+        basicHBox->addWidget(runTimeLineEdit);
+        layout->addRow(basicHBox);
 
         generateButton->setText("Generate Task");
-        // generateButton->setMaximumWidth(80);
+        buttonHBox->addWidget(generateButton);
         loadButton->setText("Load Task");
-        // loadButton->setMaximumWidth(80);
-        buttonHBoxLayout->addWidget(generateButton);
-        buttonHBoxLayout->addWidget(loadButton);
-        layout->addRow(buttonHBoxLayout);
+        buttonHBox->addWidget(loadButton);
+        layout->addRow(buttonHBox);
+
+        arenaStartLabel->setText("Arena Start State:");
+        arenaStartVBox->addWidget(arenaStartLabel);
+        arenaStartText->setReadOnly(true);
+        arenaStartText->setLineWrapMode(QTextEdit::NoWrap);
+        // arenaStartText->setMaximumHeight(16777215);
+        arenaStartVBox->addWidget(arenaStartText);
+        // arenaStartVBox->setSizeConstraint(QLayout::SetMaximumSize);
+        // arenaStartVBox->SetMaximumSize = QSize(16777215, 16777215);
+        arenaEndLabel->setText("Arena End State:");
+        arenaEndVBox->addWidget(arenaEndLabel);
+        arenaEndText->setReadOnly(true);
+        arenaEndText->setLineWrapMode(QTextEdit::NoWrap);
+        // arenaEndText->setMaximumHeight(16777215);
+        arenaEndVBox->addWidget(arenaEndText);
+        // arenaEndVBox->setSizeConstraint(QLayout::SetMaximumSize);
+        arenaHBox->addLayout(arenaStartVBox);
+        arenaHBox->addLayout(arenaEndVBox);
+        // arenaHBox->setSizeConstraint(QLayout::SetMaximumSize);
+        layout->addRow(arenaHBox);
 
         pptCavatiesLineEdit->setPlaceholderText(". . . . .");
         pptCavatiesLineEdit->setReadOnly(true);
@@ -294,16 +362,42 @@ public:
 
     virtual ~TaskGenVisGroup()
     {
+        delete taskListLabel;
         delete taskListCombo;
-        delete pptCavatiesLineEdit;
+        delete prepTimeLabel;
+        delete prepTimeLineEdit;
+        delete runTimeLabel;
+        delete runTimeLineEdit;
+        delete basicHBox;
         delete generateButton;
         delete loadButton;
-        delete buttonHBoxLayout;
+        delete buttonHBox;
+        delete arenaStartLabel;
+        delete arenaStartText;
+        delete arenaStartVBox;
+        delete arenaEndLabel;
+        delete arenaEndText;
+        delete arenaEndVBox;
+        delete arenaHBox;
+        delete pptCavatiesLineEdit;
+        taskListLabel = nullptr;
         taskListCombo = nullptr;
-        pptCavatiesLineEdit = nullptr;
+        prepTimeLabel = nullptr;
+        prepTimeLineEdit = nullptr;
+        runTimeLabel = nullptr;
+        runTimeLineEdit = nullptr;
+        basicHBox = nullptr;
         generateButton = nullptr;
         loadButton = nullptr;
-        buttonHBoxLayout = nullptr;
+        buttonHBox = nullptr;
+        arenaStartLabel = nullptr;
+        arenaStartText = nullptr;
+        arenaStartVBox = nullptr;
+        arenaEndLabel = nullptr;
+        arenaEndText = nullptr;
+        arenaEndVBox = nullptr;
+        arenaHBox = nullptr;
+        pptCavatiesLineEdit = nullptr;
     }
 
     /*!
@@ -350,14 +444,63 @@ public Q_SLOTS:
     //! generate on push
     virtual void generateTask()
     {
-      try {
-        control_ptr->generate(taskListCombo->currentText().toStdString());
-      } catch(const ControlError& e) {
-        ROS_ERROR_STREAM("[REFBOX-CONTROL] Error during task generation occured! " << e.what());
-        return;
-      }
-      ROS_ERROR_STREAM("debug: generated");
-      // return true;
+        atwork_commander_msgs::Task task;
+        try {
+            task = control_ptr->generate(taskListCombo->currentText().toStdString());
+            ROS_WARN_STREAM(task);
+        } catch (const ControlError& e) {
+            ROS_ERROR_STREAM("[REFBOX-CONTROL] Error during task generation occured! " << e.what());
+            return;
+        }
+
+        prepTimeLineEdit->setText(QString::number(task.prep_time.toSec()));
+        runTimeLineEdit->setText(QString::number(task.exec_time.toSec()));
+
+        QString arenaStartString("");
+        for (auto& w : task.arena_start_state) {
+            if (w.objects.size() > 0) {
+                //TODO PP-Table-Prefix as parameter
+                if (w.workstation_name == "PP01") {
+                    QString pptString("");
+                    for (auto& o : w.objects) {
+                        pptString.append(atwork_commander_msgs::objectName(o.object));
+                        pptString.append("  ");
+                    }
+                    pptCavatiesLineEdit->setText(pptString);
+                } else {
+                    arenaStartString.append(("[" + w.workstation_name + "]\n").c_str());
+                    for (auto& o : w.objects) {
+                        arenaStartString.append("    ");
+                        arenaStartString.append(atwork_commander_msgs::objectName(o.object));
+                        arenaStartString.append("\n");
+                    }
+                }
+            }
+        }
+        arenaStartText->setText(arenaStartString);
+
+        QString arenaEndString("");
+        for (auto& w : task.arena_target_state) {
+            if (w.objects.size() > 0) {
+                //TODO PP-Table-Prefix as parameter
+                if (w.workstation_name == "PP01") {
+                    QString pptString("");
+                    for (auto& o : w.objects) {
+                        pptString.append(atwork_commander_msgs::objectName(o.object));
+                        pptString.append("  ");
+                    }
+                    // pptCavatiesLineEdit->setText(pptString);
+                } else {
+                    arenaEndString.append(("[" + w.workstation_name + "]\n").c_str());
+                    for (auto& o : w.objects) {
+                        arenaEndString.append("    ");
+                        arenaEndString.append(atwork_commander_msgs::objectName(o.object));
+                        arenaEndString.append("\n");
+                    }
+                }
+            }
+        }
+        arenaEndText->setText(arenaEndString);
     }
     /*!
        * \brief Reimplementation of the Qt fucntion - updates the UI
@@ -383,7 +526,7 @@ public Q_SLOTS:
         taskListCombo->addItem(QString("BTT3"));
         taskListCombo->addItem(QString("RTT"));
         taskListCombo->addItem(QString("PPT"));
-        taskListCombo->addItem(QString("Final"));
+        taskListCombo->addItem(QString("FINAL"));
 
         if (state.isEmpty()) {
             taskListCombo->setCurrentIndex(0);
@@ -391,6 +534,12 @@ public Q_SLOTS:
             int index = taskListCombo->findText(state);
             taskListCombo->setCurrentIndex(index);
         }
+
+        prepTimeLineEdit->setText("");
+        runTimeLineEdit->setText("");
+        arenaStartText->setText("");
+        arenaEndText->setText("");
+
         pptCavatiesLineEdit->setPlaceholderText(". . . . .");
 
         // get fresh data
