@@ -15,6 +15,7 @@
 #include <random>
 #include <numeric>
 #include <type_traits>
+#include <chrono>
 
 using namespace std;
 
@@ -548,11 +549,6 @@ class TaskGeneratorImpl {
     return task;
   }
 
-  vector<array<int, 5>> fromTask(const Task& task) const {
-    // TODO: implement
-    ROS_ERROR_STREAM("[REFBOX] Converting Task to sub-task list not implemented");
-    return {};
-  }
 
 
 
@@ -870,7 +866,111 @@ using run = vector<array<int, 5>>;
    ROS_DEBUG_STREAM("PPT Objects   : " << mPptObjects);
    ROS_DEBUG_STREAM("Parameters    : " << paramFinal);
   }
+struct Converter  {
+using Workstation = atwork_commander_msgs::Workstation;
+using Object = atwork_commander_msgs::Object;
+using Objects         = vector<Object>;
+using WorkstationObjs = unordered_map<string, Objects>;
+using Workstations    = vector<Workstation>;
 
+    static bool compObjects(const Object& a, const Object& b) {
+      return a.object<b.object || ( a.object==b.object && a.target<b.target );
+    }
+  static WorkstationObjs toMap(const Workstations& wsList) {
+    WorkstationObjs objs(wsList.size());
+      for( const Workstation& ws: wsList) {
+        auto result = objs.emplace(ws.workstation_name, ws.objects);
+        if( !result.second ) {
+          ROS_ERROR_STREAM_THROTTLE_NAMED(60, "object", "[REFBOX-COM] Error in task! Workstation name exists multiple times: " << ws.workstation_name);
+          continue;
+        }
+        sort(result.first->second.begin(), result.first->second.end(), compObjects);
+      }
+      return objs;
+    }
+    static WorkstationObjs intersect(const WorkstationObjs& a, WorkstationObjs& b) {
+      WorkstationObjs intersection( a.size() );
+      for(const auto& ws: a) {
+        const auto& wsName = ws.first;
+        const auto& aObjects = ws.second;
+        const auto& bObjects = b[wsName];
+        auto result = intersection.emplace(piecewise_construct, make_tuple(ws.first), make_tuple());
+        set_intersection(aObjects.begin(), aObjects.end(),
+                         bObjects.begin(), bObjects.end(),
+                         back_insert_iterator<decltype(result.first->second)>(result.first->second),
+                         compObjects
+                        );
+      }
+      return intersection;
+    }
+
+    static WorkstationObjs diff(const WorkstationObjs& a, WorkstationObjs& b) {
+      WorkstationObjs difference( a.size() );
+      for(const auto& ws: a) {
+        const auto& wsName = ws.first;
+        const auto& aObjects = ws.second;
+        const auto& bObjects = b[wsName];
+        auto result = difference.emplace(piecewise_construct, make_tuple(ws.first), make_tuple());
+        set_difference(aObjects.begin(), aObjects.end(),
+                         bObjects.begin(), bObjects.end(),
+                         back_insert_iterator<decltype(result.first->second)>(result.first->second),
+                         compObjects
+                        );
+      }
+      return difference;
+    }
+
+    static int findObject(const WorkstationObjs& wsMap, const Object& o, const string& source) {
+      size_t i = 0;
+      for(const auto& ws: wsMap) {
+        i++;
+        if( ws.first == source ) continue;
+        if( any_of(ws.second.begin(), ws.second.end(), [&o](const Object& b){return o.object == b.object && o.target == b.target;}) )
+            return i;
+      }
+      return -1;
+    }
+
+    static int findContainer(const WorkstationObjs& wsMap, const Object& o, const string& source) {
+      size_t i = 100;
+      for(const auto& ws: wsMap)
+        for(const Object& o2: ws.second) {
+          if( o2.object == Object::CONTAINER_RED || o2.object == Object::CONTAINER_BLUE)
+            i++;
+          if( o.object == o2.object && ws.first == source)
+            return i;
+      }
+      return -1;
+    }
+};
+  vector<array<int, 5>> fromTask(const Task& task) {
+    vector<array<int,5>> run;
+    readParameters(task.type);
+    auto start  = Converter::toMap(task.arena_start_state);
+    auto target = Converter::toMap(task.arena_target_state);
+
+    auto immobile = Converter::intersect(start, target);
+    auto startObjs = Converter::diff(start, immobile);
+    auto targetObjs = Converter::diff(target, immobile);
+    size_t i = 0;
+    size_t tID = 0;
+    for(const auto& objs: startObjs) {
+      tID++;
+      for( const auto& o: objs.second ) {
+        array<int, 5> t;
+        t[0] = o.object;
+        t[1] = tID;
+        t[2] = Converter::findObject(targetObjs, o, objs.first);
+        t[4] = ++i;
+        if (o.target != atwork_commander_msgs::Object::EMPTY)
+          t[3] = Converter::findContainer(immobile, o, objs.first);
+        else
+          t[3] = -1;
+        run.push_back(t);
+      }
+    }
+    return run;
+  }
 
   void debugAll(const string info, const run &tasks) {
     cout<<info<<"\n===========================\n";
@@ -1401,12 +1501,14 @@ using run = vector<array<int, 5>>;
     }
 
 
-    bool check( const Task& task ) const {
-      const run taskToRun = fromTask(task);
+    bool check( const Task& task ) {
+      const run tasks = fromTask(task);
       try {
-      debug_tasks("final tasks", taskToRun);
-      //checkPickNeqPlace(taskToRun);
-      //checkPickCounts(taskToRun, paramFinal);
+      debug_tasks("final tasks", tasks);
+        checkPickNeqPlace(tasks);
+        checkPickCounts(tasks, paramFinal);
+        checkPlaceCounts(tasks, paramFinal);
+        checkContainers(tasks, paramFinal);
       } catch(std::string error) {
         ROS_ERROR_STREAM(error);
         return false;
@@ -1417,6 +1519,7 @@ using run = vector<array<int, 5>>;
     }
 
     Task operator()(std::string taskName) {
+      using Clock = chrono::steady_clock;
       auto taskIt = find_if( mTasks.begin(), mTasks.end(),
                                  [ taskName ]( const auto& item ){ return item.first == taskName; }
                                );
@@ -1430,6 +1533,9 @@ using run = vector<array<int, 5>>;
       Task task = generate( taskIt->first );
       task.prep_time = ros::Duration ( taskIt->second.parameters[ "prep_time" ]*60 );
       task.exec_time = ros::Duration ( taskIt->second.parameters[ "exec_time" ]*60 );
+      task.type = taskName;
+      auto creationTime = Clock::now().time_since_epoch();
+      task.id = chrono::duration_cast<chrono::duration<decltype(task.id), std::milli>>(creationTime).count();
       check( task );
       return task;
     }
