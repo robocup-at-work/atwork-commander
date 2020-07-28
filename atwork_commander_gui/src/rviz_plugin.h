@@ -444,7 +444,8 @@ public Q_SLOTS:
     //! generate on push
     virtual void generateTask()
     {
-        atwork_commander_msgs::Task task;
+        using namespace atwork_commander_msgs;
+        Task task;
         try {
             task = control_ptr->generate(taskListCombo->currentText().toStdString());
             ROS_WARN_STREAM(task);
@@ -453,20 +454,22 @@ public Q_SLOTS:
             return;
         }
 
-        prepTimeLineEdit->setText(QString::number(task.prep_time.toSec()));
-        runTimeLineEdit->setText(QString::number(task.exec_time.toSec()));
+        prepTimeLineEdit->setText(QString::number(task.prep_time.toSec()) + "s");
+        runTimeLineEdit->setText(QString::number(task.exec_time.toSec()) + "s");
 
+        QString pptCavatiesString("");
         QString arenaStartString("");
         for (auto& w : task.arena_start_state) {
             if (w.objects.size() > 0) {
                 //TODO PP-Table-Prefix as parameter
                 if (w.workstation_name == "PP01") {
-                    QString pptString("");
                     for (auto& o : w.objects) {
-                        pptString.append(atwork_commander_msgs::objectName(o.object));
-                        pptString.append("  ");
+                        if (o.object < Object::CAVITY_START || o.object >= Object::CAVITY_END) {
+                            continue;
+                        }
+                        pptCavatiesString.append(atwork_commander_msgs::objectName(o.object));
+                        pptCavatiesString.append("  ");
                     }
-                    pptCavatiesLineEdit->setText(pptString);
                 } else {
                     arenaStartString.append(("[" + w.workstation_name + "]\n").c_str());
                     for (auto& o : w.objects) {
@@ -477,6 +480,7 @@ public Q_SLOTS:
                 }
             }
         }
+        pptCavatiesLineEdit->setText(pptCavatiesString);
         arenaStartText->setText(arenaStartString);
 
         QString arenaEndString("");
@@ -484,12 +488,30 @@ public Q_SLOTS:
             if (w.objects.size() > 0) {
                 //TODO PP-Table-Prefix as parameter
                 if (w.workstation_name == "PP01") {
-                    QString pptString("");
+                    std::map<uint16_t, std::vector<uint16_t>> pptTarget;
                     for (auto& o : w.objects) {
-                        pptString.append(atwork_commander_msgs::objectName(o.object));
-                        pptString.append("  ");
+                        if (o.object >= Object::CAVITY_START && o.object < Object::CAVITY_END) {
+                            continue;
+                        }
+                        pptTarget[o.target].push_back(o.object);
+                        //ROS_WARN_STREAM(o.target << " " << o.object);
                     }
-                    // pptCavatiesLineEdit->setText(pptString);
+                    if (pptTarget.size() > 0) {
+                        QString pptTargetString("");
+                        pptTargetString.append("[PP01]\n");
+                        for (auto it = pptTarget.begin(); it != pptTarget.end(); it++) {
+                            pptTargetString.append("    [");
+                            pptTargetString.append(atwork_commander_msgs::objectName(it->first));
+                            pptTargetString.append("]\n");
+                            for (auto& c : it->second) {
+                                pptTargetString.append("    ");
+                                pptTargetString.append("    ");
+                                pptTargetString.append(atwork_commander_msgs::objectName(c));
+                                pptTargetString.append("\n");
+                            }
+                        }
+                        arenaEndString.append(pptTargetString);
+                    }
                 } else {
                     arenaEndString.append(("[" + w.workstation_name + "]\n").c_str());
                     for (auto& o : w.objects) {
