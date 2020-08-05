@@ -1,3 +1,6 @@
+#include "TaskGeneratorImpl.h"
+#include "TaskConverter.h"
+
 #include <atwork_commander_gen/TaskGenerator.h>
 
 #include <atwork_commander_msgs/Task.h>
@@ -6,291 +9,15 @@
 
 #include <ros/console.h>
 
-#include <sstream>
-#include <iostream>
-#include <algorithm>
-#include <unordered_map>
-#include <regex>
-#include <iterator>
 #include <random>
-#include <numeric>
-#include <type_traits>
+#include <sstream>
 #include <chrono>
-
-using namespace std;
-
-namespace atwork_commander {
-
-class Object;
-class Table;
-
-using ObjectPtr = Object*;
-using TablePtr = Table*;
-
-enum class Orientation : unsigned int {
-  FREE,       ///< Orientation to be chosen by the Team
-  VERTICAL,   ///< Vertical Orientation
-  HORIZONTAL  ///< Horizontal Orientation
-};
-
-enum class Type : unsigned int {
-  UNKNOWN,        ///< unknown object( invalid )
-  OBJECT,         ///< Plain Object without special properties
-  COLORED_OBJECT, ///< Colored Object
-  CAVITY,         ///< PPT Cavity
-  CONTAINER       ///< Container( currently RED or BLUE )
-};
-
-struct ObjectBase {
-  static Type extractType(const string& typeName) {
-    size_t len = typeName.length();
-    char preLast = typeName[ len - 2 ];
-    if( preLast == '_' ) {
-      char last = typeName[ len - 1 ];
-      if (  last == 'H' || last == 'V' )
-        return Type::CAVITY;
-      if (  last == 'G' || last == 'B' )
-        return Type::COLORED_OBJECT;
-    }
-    if ( regex_match( typeName, regex( "CONTAINER_.*" ) ) )
-      return Type::CONTAINER;
-    return Type::OBJECT;
-  }
-
-  string extractForm(const string& typeName) const {
-    switch ( type ) {
-      case ( Type::CAVITY):
-      case ( Type::COLORED_OBJECT): return typeName.substr( 0, typeName.length() - 2 );
-      case ( Type::CONTAINER ): return "DEFAULT";
-      default: return typeName;
-    }
-  }
-
-  string extractColor(const string& typeName) const {
-    switch ( type ) {
-      case ( Type::COLORED_OBJECT): return typeName.substr( typeName.length() - 1 );
-      case ( Type::CONTAINER ): return typeName.substr( strlen("CONTAINER_") );
-      default: return "DEFAULT";
-    }
-  }
-
-  Orientation extractOrientation(const string& typeName) const {
-    if ( type ==  Type::CAVITY)
-      switch ( typeName[ typeName.length() - 1 ] ) {
-        case ( 'H' ): return Orientation::HORIZONTAL;
-        case ( 'V' ): return Orientation::VERTICAL;
-      };
-    return Orientation::FREE;
-  }
-
-  Type type = Type::UNKNOWN;
-  string form = "";
-  string color = "";
-  Orientation orientation = Orientation::FREE;
-  ObjectBase() = default;
-  ObjectBase(const string typeName)
-    : type( extractType( typeName ) ), form( extractForm( typeName ) ),
-      color( extractColor( typeName ) ),
-      orientation( extractOrientation( typeName ) )
-  {}
-};
-
-struct ObjectType : public ObjectBase {
-  unsigned int count = 0;
-  ObjectType( const string& typeName, unsigned int count )
-    : ObjectBase( typeName ), count(count)
-  {}
-  operator bool() const { return count; }
-  ObjectType& operator--() {
-    count--;
-    return *this;
-  }
-  ObjectType operator--(int) {
-    ObjectType temp(*this);
-    count--;
-    return temp;
-  }
-};
-
-struct Object : public ObjectBase {
-  static unsigned int globalID;
-  unsigned int id=0;
-  TablePtr source = nullptr;
-  TablePtr destination = nullptr;
-  ObjectPtr container = nullptr;
-  Object() = default;
-  Object(ObjectType& type): ObjectBase(type), id(globalID++) { type--; }
-  Object(ObjectType&& type): ObjectBase(type), id(globalID++) {}
-  static void reset() { globalID = 0; }
-};
-
-unsigned int Object::globalID = 1;
-
-struct Table {
-  std::string name ="";
-  std::string type ="";
-  Table() = default;
-  Table(const std::string& name, const std::string& type)
-    : name(name), type(type) {}
-};
-
-ostream& operator<<(ostream& os, const atwork_commander::Type type) {
-  switch ( type ) {
-    case ( atwork_commander::Type::CAVITY ):         return os << "Cavity";
-    case ( atwork_commander::Type::CONTAINER ):      return os << "Container";
-    case ( atwork_commander::Type::COLORED_OBJECT ): return os << "Colored Object";
-    case ( atwork_commander::Type::OBJECT ):         return os << "Plain Object";
-    default:                                          return os << "UNKNOWN";
-  }
-}
-
-ostream& operator<<(ostream& os, const atwork_commander::Orientation o) {
-  switch ( o ) {
-    case( atwork_commander::Orientation::VERTICAL )  : return os << "V";
-    case( atwork_commander::Orientation::HORIZONTAL ): return os << "H";
-    case( atwork_commander::Orientation::FREE )      : return os << "FREE";
-    default                                           : return os << "UNKNOWN";
-  }
-}
-
-ostream& operator<<(ostream& os, const atwork_commander::ObjectBase& type) {
-  switch ( type.type ) {
-    case ( atwork_commander::Type::CAVITY ):         return os << type.form << "_" << type.orientation;
-    case ( atwork_commander::Type::CONTAINER ):      return os << "CONTAINER_"     << type.color;
-    case ( atwork_commander::Type::COLORED_OBJECT ): return os << type.form << "_" << type.color;
-    case ( atwork_commander::Type::OBJECT ):         return os << type.form;
-    default:                                           return os << "UNKNOWN OBJECT TYPE";
-  }
-}
-
-ostream& operator<<(ostream& os, const atwork_commander::ObjectType& type) {
-  return os << ((atwork_commander::ObjectBase)type) << "(" << type.count << ")";
-}
-
-
-ostream& operator<<(ostream& os, const atwork_commander::Table& t) {
-  return os << "Table " << t.name << "(" << t.type << "):";
-}
-
-ostream& operator<<(ostream& os, const atwork_commander::Object& o) {
-  os << "Object " << atwork_commander::ObjectBase(o) << "(" << o.id << "):";
-  if ( o.source )      os << " Src: " << o.source->name      << "(" << o.source->type      << ")";
-  if ( o.destination ) os << " Dst: " << o.destination->name << "(" << o.destination->type << ")";
-  if ( o.container )   os << " Cont: " << o.container->type   << "(" << o.container->id     << ")";
-  return os;
-}
-
-ostream& operator<<(ostream& os, const vector<atwork_commander::Object>& v) {
-  for (size_t i=0; i<v.size(); i++)
-    os << v[i] << (i+1!=v.size()?"\n":"");
-  return os;
-}
-
-template<typename T>
-void errorOut(ostringstream& os, const T* v) {
-  os << " ["  << *v << "]";
-}
-
-template<typename T>
-void errorOut(ostringstream& os, T* v) {
-  os << " [" << *v << "]";
-}
-
-template<typename T>
-ostream& operator<<(ostream& os, const vector<T*>& v) {
-  for (size_t i=0; i<v.size(); i++)
-    os << *v[i] << (i+1!=v.size()?" ":"");
-  return os;
-}
-
-template<typename T>
-ostream& operator<<(ostream& os, const vector<T>& v) {
-  for (size_t i=0; i<v.size(); i++)
-    os << v[i] << (i+1!=v.size()?" ":"");
-  return os;
-}
-
-template<typename K, typename V>
-ostream& operator<<(ostream& os, const unordered_multimap<K, V>& m) {
-  for (const auto& item: m)
-    os << item.first << " = " << item.second << endl;
-  return os;
-}
-
-template<typename T, size_t n>
-ostream& operator<<(ostream& os, const array<T,n>& vec)
-{
-  for(size_t i=0; i<vec.size(); i++)
-		os << vec[i] << (i==vec.size()-1?"":" ");
-  return os << endl;
-}
-
-template<typename T, size_t n>
-ostream& operator<<(ostream& os, const vector<array<T,n>>& vec)
-{
-  for(size_t i=0; i<vec.size(); i++)
-		os << vec[i];
-  return os << endl;
-}
-
-template<typename T>
-ostream& operator<<(ostream& os, const vector<vector<T>>& vec)
-{
-  for(size_t i=0; i<vec.size(); i++)
-		os << vec[i];
-  return os << endl;
-}
-
-template<typename T1, typename T2>
-ostream& operator<<(ostream& os, const map<T1, T2>& m)
-{
-  for(const typename map<T1, T2>::value_type& v: m)
-		os << v.first << ": " << v.second << endl;
-  return os;
-}
-
-
-template<>
-void errorOut(ostringstream& os, const char* v) {
-  os << " " << v;
-}
-
-template<typename T>
-void errorOut(ostringstream& os, T v) {
-  os << " " << v;
-}
-
-template<typename T>
-void errorPass(ostringstream& os, T first) {
-  errorOut(os, first);
-}
-
-template<typename T, typename... Args>
-void errorPass(ostringstream& os, T first, Args... args) {
-  errorOut(os, first);
-  errorPass(os, args...);
-}
-
-template<typename... Args>
-void errorImpl(const char* file, size_t line, const char* func, const char* msg, Args... args ) {
-  ostringstream os;
-  os << "Location: " << file << ":" << line << endl << "Function: " << func << endl << "Message: " << msg << endl;
-  errorPass(os, args...);
-  throw std::runtime_error( os.str() );
-}
-
-#define error( msg, ... )  errorImpl(__FILE__, __LINE__, __PRETTY_FUNCTION__, msg, __VA_ARGS__ );
-
-}
 
 namespace atwork_commander {
 
 /** Task Generation Implementation
  *
  * Implements the generation of Task according to supplied configurations.
- *
- *
- *
  **/
 class TaskGeneratorImpl {
 
@@ -321,38 +48,7 @@ class TaskGeneratorImpl {
     for ( const auto& item: arena.objects )
       if ( item.second && regex_match( item.first, regex("[A-Z0-9_]+") ) )
         availableObjects.emplace_back(item.first, item.second);
-      return availableObjects;
-  }
-
-
-  void sanityCheck(std::string task, const vector<ObjectType>& availableObjects) {
-    auto& params = mTasks[task].parameters;
-    if (params["objects"]>=0 && availableObjects.empty() ) {
-      ostringstream os;
-      os << task << ": Transportation Task without allowed object defined!";
-      throw runtime_error(os.str());
-    }
-    if (params["waypoints"]>=0 && mTables.size()<params["waypoints"] ) {
-      ostringstream os;
-      os << task << ": Navigation Task without enough workstations defined!";
-      throw runtime_error(os.str());
-    }
-    if ( ( params["shelf_grasping"] || params["shelf_picking"] ) && mTables.count("SH")==0 ) {
-      ostringstream os;
-      os << task << ": Transportation Task involving shelf requested in Arena without it!";
-      throw runtime_error(os.str());
-    }
-    if ( ( params["tt_grasping"] || params["tt_picking"] ) && mTables.count("TT")==0 ) {
-      ostringstream os;
-      os << task << ": Transportation Task involving Rotating Table requested in Arena without it!";
-      throw runtime_error(os.str());
-    }
-    if ( params["pp_placing"] && mTables.count("PP")==0 ) {
-      ostringstream os;
-      os << task << ": Transportation Task involving Precision Placement requested in Arena without it!";
-      throw runtime_error(os.str());
-    }
-    //TODO
+    return availableObjects;
   }
 
   void sanityCheck() {
@@ -370,30 +66,6 @@ class TaskGeneratorImpl {
         throw runtime_error(os.str());
       }
     }
-  }
-
-  vector<TablePtr> extractTablesByTypes(vector<string> types) {
-    vector<TablePtr> tables;
-    size_t numTables = accumulate(types.begin(), types.end(), 0, [this](size_t n, const string& s){ return n + mTables.count( s ); } );
-    tables.resize( numTables );
-    auto start = tables.begin();
-    for ( const string& type : types ) {
-      auto its = mTables.equal_range( type );
-      start = transform(its.first, its.second, start, []( decltype(mTables)::value_type& t ){ return &t.second; } );
-    }
-    if ( tables.empty() ) {
-      ostringstream os;
-      os << "No tables with following types exist: [" << types << "]";
-      throw runtime_error( os.str() );
-    }
-    return tables;
-  }
-
-  template<typename T>
-  static vector<T*> toPtr(typename vector<T>::iterator start, typename vector<T>::iterator end) {
-    vector<T*> ptrs( end - start );
-    transform( start, end, ptrs.begin(), [](T& t){ return &t; } );
-    return ptrs;
   }
 
   uint16_t toContainerType( const Object& o ) {
@@ -486,37 +158,6 @@ class TaskGeneratorImpl {
     return object;
   }
 
-  Task toTask(const vector<Object>& objects) {
-    ROS_DEBUG_STREAM("[REFBOX] Converting generated object list to task description");
-    Task task;
-    task.arena_start_state.resize( mTables.size() );
-    task.arena_target_state.resize( mTables.size() );
-
-    unordered_map<const Table*, size_t> index( mTables.size() );
-
-    size_t i=0;
-    for ( const auto& table : mTables ) {
-      index.emplace(&table.second, i);
-      task.arena_start_state[i].workstation_name = table.second.name;
-      task.arena_target_state[i].workstation_name = table.second.name;
-      i++;
-    }
-
-    for ( const Object& o: objects ) {
-      size_t srcID = index[ o.source ];
-      task.arena_start_state[srcID].objects.push_back(toTaskObject(o));
-
-      size_t dstID;
-      if ( o.destination )
-        dstID = index[ o.destination ];
-      else
-        dstID = srcID;
-      task.arena_target_state[dstID].objects.push_back(toTaskObject(o));
-    }
-
-    return task;
-  }
-
   Task toTask(const vector<array<int, 5>>& run) const {
     Task task;
     task.arena_start_state.resize(mTables.size());
@@ -548,160 +189,6 @@ class TaskGeneratorImpl {
     }
     return task;
   }
-
-
-
-
-  template<typename T>
-  T& uniqueSelect(typename vector<T>::iterator start, typename vector<T>::iterator& end) {
-    if ( start == end )
-      throw runtime_error("Tried to unique select from an empty sequence!");
-
-    auto rand = uniform_int_distribution<size_t>( 0, end - start - 1 );
-    auto selected = start + rand( mRand );
-    iter_swap(selected, end - 1);
-    return *--end;
-  }
-
-  static void cleanTypes(vector<ObjectType>& types) {
-    auto end = remove_if(types.begin(), types.end(), [](const ObjectType& t){ return t.count == 0; });
-    types.erase(end, types.end());
-  }
-
-  vector<Object*> generateCavities( TaskDefinition& def, vector<ObjectType>& availableCavities, vector<Object>::iterator start )
-  {
-    size_t cavitiesPerPPT = 5;
-    size_t n = mTables.count( "PP" );
-    size_t numCavitiesAvailable = accumulate(availableCavities.begin(), availableCavities.end(), 0ul, [](size_t n, ObjectType& t){ return t.count + n; });
-    if ( n*cavitiesPerPPT > numCavitiesAvailable )
-      ROS_WARN_STREAM_NAMED("generator", "[REFBOX] Not enough cavities available for " << n << " PP tables! Available: "
-                            << numCavitiesAvailable << ", Needed: " << n*cavitiesPerPPT << "!");
-    size_t cavitiesToGenerate = min(n*cavitiesPerPPT, numCavitiesAvailable);
-    shuffle( availableCavities.begin(), availableCavities.end(), mRand );
-    transform( availableCavities.begin(), availableCavities.begin() + cavitiesToGenerate, start,
-               [](ObjectType& t){ return Object(t); }
-             );
-
-    uniform_int_distribution<size_t> rand(0, n-1);
-    auto ppTables = extractTablesByTypes( { "PP" } );
-    auto cavities = toPtr<Object>(start, start + cavitiesToGenerate);
-
-    for (auto& cavityPtr : cavities) {
-      Table* table = ppTables[ rand(mRand) ];
-      cavityPtr->source = table;
-    }
-
-    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Generated Cavities:" << endl << cavities);
-    return cavities;
-  }
-  /** \todo Implement generation of all container types on the same table**/
-  vector<Object*> generateContainers( TaskDefinition& def,  vector<ObjectType>& availableObjects, vector<Object>::iterator start)
-  {
-    vector<string> allowedTableTypes( def.normalTableTypes );
-    if ( def.parameters[ "container_on_shelf" ] ) {
-      allowedTableTypes.resize( allowedTableTypes.size() + def.shTypes.size() );
-      copy( def.shTypes.cbegin(), def.shTypes.cend(), allowedTableTypes.begin());
-    }
-    if ( def.parameters[ "container_on_tt" ] ) {
-      allowedTableTypes.resize( allowedTableTypes.size() + def.ttTypes.size() );
-      copy( def.ttTypes.cbegin(), def.ttTypes.cend(), allowedTableTypes.begin());
-    }
-
-    auto tables = extractTablesByTypes( allowedTableTypes );
-
-    uniform_int_distribution<size_t> rand(0, tables.size()-1);
-    auto origStart = start;
-    for ( ObjectType& type : availableObjects )
-      if ( type.type == Type::CONTAINER )
-        for ( size_t i = 0; i < type.count; i++) {
-          Object temp(type);
-          Table* table = tables[ rand( mRand ) ];
-          temp.source = table;
-          *start++ = temp;
-        }
-    auto containers = toPtr<Object>( origStart, start);
-    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Generated Containers:" << endl << containers);
-    return containers;
-  }
-
-
-  vector<Object*> generateObjects( TaskDefinition& def, vector<ObjectType*> availableObjects,
-                                  vector<Object>::iterator start, size_t objectCount, size_t decoyCount)
-  {
-    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Generate " << objectCount << " Objects and " << decoyCount << " Decoys");
-    auto typeEnd = availableObjects.end();
-    auto it = start;
-    for ( size_t i = 0; i < objectCount + decoyCount; i++) {
-      if ( typeEnd - availableObjects.begin() == 0)
-        error("Could not generate any object", "Objects", objectCount, "Decoys", decoyCount,
-              "Generated", it-start, "Types", &availableObjects);
-      uniform_int_distribution<size_t> rand(0, typeEnd - availableObjects.begin() - 1);
-      size_t offset = rand( mRand );
-      ObjectType& type = *availableObjects[ offset ];
-      *it++ = Object(type);
-      if ( !type.count )
-        iter_swap(availableObjects.begin() + offset, --typeEnd);
-    }
-    auto objects = toPtr<Object>(start, it);
-    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Generated Objects:" << endl << objects);
-    return toPtr<Object>(start, start + objectCount);
-  }
-
-  vector<Object*> generateObjects( TaskDefinition& def, vector<ObjectType> availableObjects,
-                                  vector<Object>::iterator start, size_t objectCount=1, size_t decoyCount=0)
-  {
-    return generateObjects(def, toPtr<ObjectType>(availableObjects.begin(), availableObjects.end()), start, objectCount, decoyCount);
-  }
-
-  template<typename F>
-  vector<Object*> generateObjects( TaskDefinition& def, vector<ObjectType> availableObjects,
-                                  vector<Object>::iterator start, size_t objectCount, size_t decoyCount, F&& filter) {
-    vector<ObjectType*> ptrs = toPtr<ObjectType>(availableObjects.begin(), availableObjects.end());
-    auto end = remove_if(ptrs.begin(), ptrs.end(), filter);
-    ptrs.erase(end, ptrs.end());
-    return generateObjects(def, ptrs, start, objectCount, decoyCount);
-
-  }
-
-
-  void place( TaskDefinition& def, Object& object, vector<string> tableTypes )
-  {
-    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Place " << object << " on table of types [" << tableTypes << "]");
-    vector<TablePtr> tables = extractTablesByTypes( tableTypes );
-    if ( tables.empty() ) {
-      ostringstream os;
-      os << "Not enough tables of Types " << tableTypes << " available! Min. necessary: 1, Extracted: 0";
-      throw runtime_error( os.str() );
-    }
-    uniform_int_distribution<size_t> rand(0, tables.size() - 1 );
-    Table* table = tables[ rand( mRand ) ];
-    object.destination = table;
-  }
-
-  void place( TaskDefinition& def, Object& object, Object& container )
-  {
-    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Place " << object << " in " << container);
-    if ( container.type == Type::CAVITY && def.parameters[ "ref_cavity_orientation" ] )
-      container.orientation = Orientation::FREE;
-    object.destination = container.source;
-    object.container = &container;
-  }
-
-  void pick( TaskDefinition& def, Object& object, vector<string> tableTypes )
-  {
-
-    ROS_DEBUG_STREAM_NAMED("generator", "[REFBOX] Pick " << object << " from table of types [" << tableTypes << "]");
-    vector<TablePtr> tables = extractTablesByTypes( tableTypes );
-    if ( tables.empty() ) {
-      ostringstream os;
-      os << "Not enough tables of Types " << tableTypes << " available! Min. necessary: 1, Extracted: 0";
-      throw runtime_error( os.str() );
-    }
-    uniform_int_distribution<size_t> rand(0, tables.size() - 1 );
-    Table* table = tables[ rand( mRand ) ];
-    object.source = table;
-  }
-
 
   unsigned int contId = 1;
 
@@ -785,7 +272,7 @@ class TaskGeneratorImpl {
         std::unordered_map<size_t, size_t> mTableTypes;
 
         size_t tabletypes;
-using run = vector<array<int, 5>>;
+  using run = vector<array<int, 5>>;
 
   void readParameters(const string& taskName) {
     unsigned int id = 0;
@@ -866,83 +353,8 @@ using run = vector<array<int, 5>>;
    ROS_DEBUG_STREAM("PPT Objects   : " << mPptObjects);
    ROS_DEBUG_STREAM("Parameters    : " << paramFinal);
   }
-struct Converter  {
-using Workstation = atwork_commander_msgs::Workstation;
-using Object = atwork_commander_msgs::Object;
-using Objects         = vector<Object>;
-using WorkstationObjs = unordered_map<string, Objects>;
-using Workstations    = vector<Workstation>;
 
-    static bool compObjects(const Object& a, const Object& b) {
-      return a.object<b.object || ( a.object==b.object && a.target<b.target );
-    }
-  static WorkstationObjs toMap(const Workstations& wsList) {
-    WorkstationObjs objs(wsList.size());
-      for( const Workstation& ws: wsList) {
-        auto result = objs.emplace(ws.workstation_name, ws.objects);
-        if( !result.second ) {
-          ROS_ERROR_STREAM_THROTTLE_NAMED(60, "object", "[REFBOX-COM] Error in task! Workstation name exists multiple times: " << ws.workstation_name);
-          continue;
-        }
-        sort(result.first->second.begin(), result.first->second.end(), compObjects);
-      }
-      return objs;
-    }
-    static WorkstationObjs intersect(const WorkstationObjs& a, WorkstationObjs& b) {
-      WorkstationObjs intersection( a.size() );
-      for(const auto& ws: a) {
-        const auto& wsName = ws.first;
-        const auto& aObjects = ws.second;
-        const auto& bObjects = b[wsName];
-        auto result = intersection.emplace(piecewise_construct, make_tuple(ws.first), make_tuple());
-        set_intersection(aObjects.begin(), aObjects.end(),
-                         bObjects.begin(), bObjects.end(),
-                         back_insert_iterator<decltype(result.first->second)>(result.first->second),
-                         compObjects
-                        );
-      }
-      return intersection;
-    }
 
-    static WorkstationObjs diff(const WorkstationObjs& a, WorkstationObjs& b) {
-      WorkstationObjs difference( a.size() );
-      for(const auto& ws: a) {
-        const auto& wsName = ws.first;
-        const auto& aObjects = ws.second;
-        const auto& bObjects = b[wsName];
-        auto result = difference.emplace(piecewise_construct, make_tuple(ws.first), make_tuple());
-        set_difference(aObjects.begin(), aObjects.end(),
-                         bObjects.begin(), bObjects.end(),
-                         back_insert_iterator<decltype(result.first->second)>(result.first->second),
-                         compObjects
-                        );
-      }
-      return difference;
-    }
-
-    static int findObject(const WorkstationObjs& wsMap, const Object& o, const string& source) {
-      size_t i = 0;
-      for(const auto& ws: wsMap) {
-        i++;
-        if( ws.first == source ) continue;
-        if( any_of(ws.second.begin(), ws.second.end(), [&o](const Object& b){return o.object == b.object && o.target == b.target;}) )
-            return i;
-      }
-      return -1;
-    }
-
-    static int findContainer(const WorkstationObjs& wsMap, const Object& o, const string& source) {
-      size_t i = 100;
-      for(const auto& ws: wsMap)
-        for(const Object& o2: ws.second) {
-          if( o2.object == Object::CONTAINER_RED || o2.object == Object::CONTAINER_BLUE)
-            i++;
-          if( o.object == o2.object && ws.first == source)
-            return i;
-      }
-      return -1;
-    }
-};
   vector<array<int, 5>> fromTask(const Task& task) {
     vector<array<int,5>> run;
     readParameters(task.type);
@@ -1233,12 +645,6 @@ using Workstations    = vector<Workstation>;
       variation(specialplace, shelfTurntables ,placeShelfTurntable, placePpt);
       variation(placeShelfTurntable, paramFinal["place_shelfs"], placeShelf, placeTurntable);
 
-      /*
-      std::cout<<"placeShelf \n"<<placeShelf<<endl;
-      std::cout<<"placeTurntable \n"<<placeTurntable<<endl;
-      std::cout<<"placePpt \n"<<placePpt<<endl;
-      std::cout<<"normalplace \n"<<normalplace<<endl;
-      */
 
       // write the Ppts as destinations to the tasks
       for(size_t i=0; i<placePpt.size(); ++i) {
@@ -1424,7 +830,7 @@ using Workstations    = vector<Workstation>;
           counter.at(mTableTypes.at(tasks.at(i).at(dst_id)))++;                 // not decoys
         }
       }
-      if(decoys != params["decoys"]) {
+      if(decoys != (size_t)params["decoys"]) {
         std::string errormessage = "Missmatch: " + to_string(size_t(params["decoys"]));
         errormessage += " wanted, but " + to_string(decoys) + " decoys found.\n";
         throw errormessage;
@@ -1466,12 +872,12 @@ using Workstations    = vector<Workstation>;
           ++redcontainer;
         }
       }
-      if(bluecontainer != paramFinal["B_Container"]) {
+      if(bluecontainer != (size_t)paramFinal["B_Container"]) {
         std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["B_Container"]));
         errormessage += " wated, but " + to_string(bluecontainer) + " blue containers found.\n";
         throw errormessage;
       }
-      if(redcontainer != paramFinal["R_Container"]) {
+      if(redcontainer != (size_t)paramFinal["R_Container"]) {
         std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["R_Container"]));
         errormessage += " wated, but " + to_string(redcontainer) + " red containers found.\n";
         throw errormessage;
@@ -1549,7 +955,6 @@ TaskGenerator::~TaskGenerator() { delete mImpl; }
 
 Task TaskGenerator::operator()(string taskName)   { return mImpl->operator()(taskName); }
 
-/** \todo Implement! **/
 bool TaskGenerator::check(const Task& task) const { return mImpl?mImpl->check(task):false; }
 
 }
