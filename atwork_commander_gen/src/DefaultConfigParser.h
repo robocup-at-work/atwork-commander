@@ -3,8 +3,6 @@
 #include <atwork_commander_gen/ConfigParserInterface.h>
 
 
-/** Definition of all available Tasks with the appropriate configuration parameters **/
-using TaskDefinitions = std::unordered_map<std::string, TaskDefinition>;
 
 class DefaultConfigParser : public ConfigParserInterface {
   private:
