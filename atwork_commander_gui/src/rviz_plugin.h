@@ -582,24 +582,253 @@ public Q_SLOTS:
 
         pptCavatiesLineEdit->setPlaceholderText(". . . . .");
 
-        // get fresh data
-        //     if (state.isEmpty() && worlds.size()){
-        //         worldInstanceCombo->setCurrentIndex(0);
-        //     } else {
-        //         int index = worldInstanceCombo->findText(state);
-        //         worldInstanceCombo->setCurrentIndex(index);
-        //     }
+        // reconnect
+        wire();
+    }
+};
+
+/************************************************************************/
+/*!
+   * \brief Qt widget displaying task generator information
+   *
+   */
+class RobotVisGroup : public VisGroup {
+    Q_OBJECT
+private:
+    QPushButton* playPauseButton = nullptr;
+    QHBoxLayout* buttonHBox = nullptr;
+    QPushButton* forwardButton = nullptr;
+    QPushButton* stopButton = nullptr;
+
+public:
+    RobotVisGroup(QWidget* parent = new QWidget())
+        : VisGroup(parent)
+    {
+        // init
+        playPauseButton = new QPushButton();
+        buttonHBox = new QHBoxLayout();
+        forwardButton = new QPushButton();
+        stopButton = new QPushButton();
+
+        // draw
+        playPauseButton->setText("Play / Pause");
+        layout->addRow(playPauseButton);
+
+        forwardButton->setText("Forward");
+        buttonHBox->addWidget(forwardButton);
+        stopButton->setText("Stop");
+        buttonHBox->addWidget(stopButton);
+        layout->addRow(buttonHBox);
+
+        // update
+        this->update();
+    }
+
+    virtual ~RobotVisGroup()
+    {
+        delete playPauseButton;
+        delete buttonHBox;
+        delete forwardButton;
+        delete stopButton;
+        playPauseButton = nullptr;
+        buttonHBox = nullptr;
+        forwardButton = nullptr;
+        stopButton = nullptr;
+    }
+
+    /*!
+           * \brief wire connects and disconnect ALL existing Signal-Slots Connections
+           *
+           * A simple wire() call establishes all connections, a wire(false) call
+           * disables all connections. This is usefull, so that when updating the UI
+           * there wont be a number of writeFunctions called, "updating" the values,
+           * that have just been read from the worldmodel.
+           */
+    virtual void wire(bool make_connections = true)
+    {
+        if (make_connections) {
+            connect(playPauseButton, SIGNAL(clicked()), this, SLOT(update()));
+            connect(forwardButton, SIGNAL(clicked()), this, SLOT(update()));
+            connect(stopButton, SIGNAL(clicked()), this, SLOT(update()));
+        } else {
+            disconnect(playPauseButton, SIGNAL(clicked()), this, SLOT(update()));
+            disconnect(forwardButton, SIGNAL(clicked()), this, SLOT(update()));
+            disconnect(stopButton, SIGNAL(clicked()), this, SLOT(update()));
+        }
+    }
+    /*!
+           * \brief Disable update of the Widget if hasFocus returns true
+           *
+           * Any subGroup can disable being updated by returning true.
+           * ie when we are on a page that allows the user to create new instances and
+           * updating would make the userinput disappear.
+           */
+    virtual bool hasFocus() override
+    {
+        // we would like to know if the user is currently inputting data
+        //      ideally this method would return true when the user currently
+        //      has a widget selected (via mouse or keyboard)
+        // TODO: qt's widget->hasFocus() method does not behave as needed,
+        //      returning false even if the user currently has a widget selected
+
+        // this VisNode does not have user input
+        return false;
+    }
+
+public Q_SLOTS:
+    /*!
+           * \brief Reimplementation of the Qt fucntion - updates the UI
+           *
+           * Get the up to date informationi from the worldmodel and display it in the
+           * UI
+           */
+    virtual void
+    update() override
+    {
+        // wire
+        wire(false);
+
+        // // clear current data
+        // taskListCombo->clear();
+        // pptCavatiesLineEdit->clear();
         //
+        // //TODO get list of tasks instances
+        // taskListCombo->addItem(QString("BMT"));
+        // taskListCombo->addItem(QString("BTT1"));
+        // taskListCombo->addItem(QString("BTT2"));
+        // taskListCombo->addItem(QString("BTT3"));
+        // taskListCombo->addItem(QString("RTT"));
+        // taskListCombo->addItem(QString("PPT"));
+        // taskListCombo->addItem(QString("FINAL"));
         //
-        //     // no defaults, omit if no world selected
-        //     if (worldInstanceCombo->currentIndex() >= 0){
-        //         std::string path = "/World/";
-        //         path += worldInstanceCombo->currentText().toUtf8().constData();
-        //         vecStr mapName = wmc.getStrings(path+"/MapName");
-        //         if(mapName.size()){
-        //             mapNameLineEdit->setPlaceholderText(mapName.at(0).c_str());
-        //         }
-        //     }
+        // if (state.isEmpty()) {
+        //     taskListCombo->setCurrentIndex(0);
+        // } else {
+        //     int index = taskListCombo->findText(state);
+        //     taskListCombo->setCurrentIndex(index);
+        // }
+        //
+        // prepTimeLineEdit->setText("");
+        // runTimeLineEdit->setText("");
+        // arenaStartText->setText("");
+        // arenaEndText->setText("");
+        //
+        // pptCavatiesLineEdit->setPlaceholderText(". . . . .");
+
+        // reconnect
+        wire();
+    }
+};
+
+/************************************************************************/
+/*!
+   * \brief Qt widget displaying task generator information
+   *
+   */
+class ArenaVisGroup : public VisGroup {
+    Q_OBJECT
+private:
+    // QPushButton* playPauseButton = nullptr;
+
+public:
+    ArenaVisGroup(QWidget* parent = new QWidget())
+        : VisGroup(parent)
+    {
+        // init
+        // playPauseButton = new QPushButton();
+
+        // draw
+        // playPauseButton->setText("Play / Pause");
+        // layout->addRow(playPauseButton);
+
+        // update
+        this->update();
+    }
+
+    virtual ~ArenaVisGroup()
+    {
+        // delete playPauseButton;
+        // playPauseButton = nullptr;
+    }
+
+    /*!
+           * \brief wire connects and disconnect ALL existing Signal-Slots Connections
+           *
+           * A simple wire() call establishes all connections, a wire(false) call
+           * disables all connections. This is usefull, so that when updating the UI
+           * there wont be a number of writeFunctions called, "updating" the values,
+           * that have just been read from the worldmodel.
+           */
+    virtual void wire(bool make_connections = true)
+    {
+        if (make_connections) {
+            // connect(playPauseButton, SIGNAL(activated(int)), this, SLOT(update()));
+            // connect(forwardButton, SIGNAL(clicked()), this, SLOT(update()));
+            // connect(stopButton, SIGNAL(clicked()), this, SLOT(update()));
+        } else {
+            // disconnect(playPauseButton, SIGNAL(activated(int)), this, SLOT(update()));
+            // disconnect(forwardButton, SIGNAL(clicked()), this, SLOT(update()));
+            // disconnect(stopButton, SIGNAL(clicked()), this, SLOT(update()));
+        }
+    }
+    /*!
+           * \brief Disable update of the Widget if hasFocus returns true
+           *
+           * Any subGroup can disable being updated by returning true.
+           * ie when we are on a page that allows the user to create new instances and
+           * updating would make the userinput disappear.
+           */
+    virtual bool hasFocus() override
+    {
+        // we would like to know if the user is currently inputting data
+        //      ideally this method would return true when the user currently
+        //      has a widget selected (via mouse or keyboard)
+        // TODO: qt's widget->hasFocus() method does not behave as needed,
+        //      returning false even if the user currently has a widget selected
+
+        // this VisNode does not have user input
+        return false;
+    }
+
+public Q_SLOTS:
+    /*!
+           * \brief Reimplementation of the Qt fucntion - updates the UI
+           *
+           * Get the up to date informationi from the worldmodel and display it in the
+           * UI
+           */
+    virtual void
+    update() override
+    {
+        // wire
+        wire(false);
+
+        // // clear current data
+        // taskListCombo->clear();
+        // pptCavatiesLineEdit->clear();
+        //
+        // //TODO get list of tasks instances
+        // taskListCombo->addItem(QString("BMT"));
+        // taskListCombo->addItem(QString("BTT1"));
+        // taskListCombo->addItem(QString("BTT2"));
+        // taskListCombo->addItem(QString("BTT3"));
+        // taskListCombo->addItem(QString("RTT"));
+        // taskListCombo->addItem(QString("PPT"));
+        // taskListCombo->addItem(QString("FINAL"));
+        //
+        // if (state.isEmpty()) {
+        //     taskListCombo->setCurrentIndex(0);
+        // } else {
+        //     int index = taskListCombo->findText(state);
+        //     taskListCombo->setCurrentIndex(index);
+        // }
+        //
+        // prepTimeLineEdit->setText("");
+        // runTimeLineEdit->setText("");
+        // arenaStartText->setText("");
+        // arenaEndText->setText("");
+        //
+        // pptCavatiesLineEdit->setPlaceholderText(". . . . .");
 
         // reconnect
         wire();
@@ -619,6 +848,8 @@ class RefboxUI : public rviz::Panel {
 private:
     MainVisGroup mainVG;
     TaskGenVisGroup taskGenVG;
+    RobotVisGroup robotGenVG;
+    ArenaVisGroup arenaGenVG;
 
     ros::NodeHandle nh;
 
