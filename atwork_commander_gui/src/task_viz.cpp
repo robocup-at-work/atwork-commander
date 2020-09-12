@@ -25,12 +25,25 @@
 
 #include "task_viz.h"
 
-atwork_commander::TaskVisualization::TaskVisualization()
+/*atwork_commander::TaskVisualization::TaskVisualization(std::string s)
 {
-
-}
+  ros::NodeHandle nh;
+  
+  mTaskSub = nh.subscribe("task",1, &TaskVisualization::analyzeTask, this);
+  ROS_INFO("passt");
+  std::cout << "test" << std::endl;
+}*/
 
 atwork_commander::TaskVisualization::~TaskVisualization()
 {
 
+}
+//Funktion, die auf neue Nachrichten von der Refbox reagiert
+void atwork_commander::TaskVisualization::analyzeTask(const atwork_commander_msgs::Task::ConstPtr& msg)
+{
+  for (auto& workstation : msg->arena_start_state)
+  {
+    ROS_INFO_STREAM(workstation.workstation_name);
+  }
+  
 }

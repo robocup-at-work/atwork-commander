@@ -26,6 +26,8 @@
 #ifndef TASKVISUALIZATION_H
 #define TASKVISUALIZATION_H
 
+#include <ros/ros.h>
+#include "atwork_commander_msgs/Task.h"
 /**
  * @todo write docs
  */
@@ -33,16 +35,29 @@ namespace atwork_commander
 {
 class TaskVisualization
 {
+  // member
 public:
-    /**
-     * Default constructor
-     */
-    TaskVisualization();
+  ros::Subscriber mTaskSub;
+  
+  // functions
+  void analyzeTask(const atwork_commander_msgs::Task::ConstPtr& msg);
+public:
+  /**
+   * Default constructor
+   */
+  TaskVisualization(std::string s) {
+      ros::NodeHandle nh;
+  
+  mTaskSub = nh.subscribe("task",1, &TaskVisualization::analyzeTask, this);
+  ROS_INFO("passt");
+  std::cout << "test" << std::endl;
+    
+  }
 
-    /**
-     * Destructor
-     */
-    ~TaskVisualization();
+  /**
+   * Destructor
+   */
+  ~TaskVisualization();
 };
 }
 
