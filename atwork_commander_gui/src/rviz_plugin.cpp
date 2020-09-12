@@ -14,15 +14,17 @@ RefboxUI::RefboxUI(QWidget* parent)
     control_ptr = std::make_shared<atwork_commander::Control>();
 
     std::string refboxName = "atwork_commander";
-    if( ros::param::get("~refbox", refboxName) )
-      control_ptr->refbox(refboxName);
+    if (ros::param::get("~refbox", refboxName))
+        control_ptr->refbox(refboxName);
     else
-      ROS_WARN_STREAM_NAMED("control", "[REFBOX-CONTROL] No Refbox name specified using \"" << control_ptr->refbox() << "\"!");
+        ROS_WARN_STREAM_NAMED("control", "[REFBOX-CONTROL] No Refbox name specified using \"" << control_ptr->refbox() << "\"!");
 
     // control_ptr->stateUpdateCallback(&stateUpdate); //TODO
 
     //! qt
     mainVG.registerSubclass(&taskGenVG, "Task Generator");
+    mainVG.registerSubclass(&robotGenVG, "Robot Control");
+    mainVG.registerSubclass(&arenaGenVG, "Arena State");
     setLayout(mainVG.getLayout());
 
     mainVG.setControlPtr(control_ptr);
