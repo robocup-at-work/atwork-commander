@@ -441,6 +441,71 @@ public:
 
 public Q_SLOTS:
 
+    QString printArenaStateList(std::vector<atwork_commander_msgs::Workstation> ws_list, bool print_empty_container = true)
+    {
+        using namespace atwork_commander_msgs;
+
+        QString arenaString("");
+        const QString indent("    ");
+        //workstation (ws), container (c; EMPTY, blue, red, tiles), object (o)
+        std::map<std::string, std::map<uint16_t, std::vector<uint16_t>>> target_map;
+
+        std::function<void(int, std::string)> add_line = [&arenaString, &indent](int indents, std::string text) {
+            for (int i = 0; i < indents; i++) {
+                arenaString.append(indent);
+            }
+            arenaString.append(QString::fromStdString(text));
+            arenaString.append("\n");
+        };
+
+        auto is_object = [](uint16_t object) -> bool { return ((object >= Object::ATWORK_START && object < Object::ATWORK_END) || (object >= Object::ROCKIN_START && object < Object::ROCKIN_END)); };
+        auto is_container = [](uint16_t container) -> bool { return (container >= Object::CONTAINER_START && container < Object::CONTAINER_END); };
+
+        for (auto& ws : ws_list) {
+            for (auto& o : ws.objects) {
+                if (is_object(o.object)) {
+                    target_map[ws.workstation_name][o.target].push_back(o.object);
+                }
+                if (is_container(o.object) && print_empty_container) {
+                    target_map[ws.workstation_name][o.target].push_back(o.object);
+                }
+            }
+        }
+
+        for (auto ws_it = target_map.begin(); ws_it != target_map.end(); ws_it++) {
+            if (ws_it->second.size() == 0) {
+                continue;
+            }
+            add_line(0, "[" + ws_it->first + "]");
+
+            auto ws = ws_it->second;
+            if (ws.find(Object::EMPTY) != ws.end()) {
+                auto c = ws[Object::EMPTY];
+                for (auto& o : c) {
+                    if (is_container(o)) { //special for print_empty_container
+                        if (ws.find(o) == ws.end()) {
+                            add_line(1, std::string("[") + atwork_commander_msgs::objectName(o) + "]");
+                        }
+                        continue;
+                    }
+                    add_line(1, atwork_commander_msgs::objectName(o));
+                }
+            }
+
+            for (auto c_it = ws.begin(); c_it != ws.end(); c_it++) {
+                if (c_it->first == Object::EMPTY) {
+                    continue;
+                }
+                add_line(1, std::string("[") + atwork_commander_msgs::objectName(c_it->first) + "]");
+                for (auto& o : c_it->second) {
+                    add_line(2, atwork_commander_msgs::objectName(o));
+                }
+            }
+        }
+
+        return arenaString;
+    }
+
     //! generate on push
     virtual void generateTask()
     {
@@ -458,79 +523,32 @@ public Q_SLOTS:
         runTimeLineEdit->setText(QString::number(task.exec_time.toSec()) + "s");
 
         QString pptCavatiesString("");
-        QString arenaStartString("");
+        QString ppt_indent("  ");
         for (auto& w : task.arena_start_state) {
-            if (w.objects.size() > 0) {
-                //TODO PP-Table-Prefix as parameter
-                if (w.workstation_name == "PP01") {
-                    for (auto& o : w.objects) {
-                        if (o.object < Object::CAVITY_START || o.object >= Object::CAVITY_END) {
-                            continue;
-                        }
-                        pptCavatiesString.append(atwork_commander_msgs::objectName(o.object));
-                        pptCavatiesString.append("  ");
+            //TODO PP-Table-Prefix as parameter
+            if (w.workstation_name == "PP01" && w.objects.size() > 0) {
+                for (auto& o : w.objects) {
+                    if (o.object < Object::CAVITY_START || o.object >= Object::CAVITY_END) {
+                        continue;
                     }
-                } else {
-                    arenaStartString.append(("[" + w.workstation_name + "]\n").c_str());
-                    for (auto& o : w.objects) {
-                        arenaStartString.append("    ");
-                        arenaStartString.append(atwork_commander_msgs::objectName(o.object));
-                        arenaStartString.append("\n");
-                    }
+                    pptCavatiesString.append(atwork_commander_msgs::objectName(o.object));
+                    pptCavatiesString.append(ppt_indent);
                 }
             }
         }
         pptCavatiesLineEdit->setText(pptCavatiesString);
-        arenaStartText->setText(arenaStartString);
-
-        QString arenaEndString("");
-        for (auto& w : task.arena_target_state) {
-            if (w.objects.size() > 0) {
-                //TODO PP-Table-Prefix as parameter
-                if (w.workstation_name == "PP01") {
-                    std::map<uint16_t, std::vector<uint16_t>> pptTarget;
-                    for (auto& o : w.objects) {
-                        if (o.object >= Object::CAVITY_START && o.object < Object::CAVITY_END) {
-                            continue;
-                        }
-                        pptTarget[o.target].push_back(o.object);
-                        //ROS_WARN_STREAM(o.target << " " << o.object);
-                    }
-                    if (pptTarget.size() > 0) {
-                        QString pptTargetString("");
-                        pptTargetString.append("[PP01]\n");
-                        for (auto it = pptTarget.begin(); it != pptTarget.end(); it++) {
-                            pptTargetString.append("    [");
-                            pptTargetString.append(atwork_commander_msgs::objectName(it->first));
-                            pptTargetString.append("]\n");
-                            for (auto& c : it->second) {
-                                pptTargetString.append("    ");
-                                pptTargetString.append("    ");
-                                pptTargetString.append(atwork_commander_msgs::objectName(c));
-                                pptTargetString.append("\n");
-                            }
-                        }
-                        arenaEndString.append(pptTargetString);
-                    }
-                } else {
-                    arenaEndString.append(("[" + w.workstation_name + "]\n").c_str());
-                    for (auto& o : w.objects) {
-                        arenaEndString.append("    ");
-                        arenaEndString.append(atwork_commander_msgs::objectName(o.object));
-                        arenaEndString.append("\n");
-                    }
-                }
-            }
-        }
-        arenaEndText->setText(arenaEndString);
+        arenaStartText->setText(printArenaStateList(task.arena_start_state));
+        arenaEndText->setText(printArenaStateList(task.arena_target_state, false));
     }
+
     /*!
        * \brief Reimplementation of the Qt fucntion - updates the UI
        *
        * Get the up to date informationi from the worldmodel and display it in the
        * UI
        */
-    virtual void update() override
+    virtual void
+    update() override
     {
         QString state = taskListCombo->currentText();
 
