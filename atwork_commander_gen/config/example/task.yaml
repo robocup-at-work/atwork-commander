@@ -1,0 +1,16 @@
+example:
+      seed                  : 1234,
+      prep_time             : 3,
+      exec_time             : 8,
+      waypoints             : 0,
+      objects               : 5,
+      decoys                : 3,
+      pp_placing            : 1,
+      ref_cavity_orientation: 1,
+      container_placing     : 2,
+      container_in_shelf    : 0,
+      container_on_rt       : 0,
+      tt_grasping           : 1,
+      tt_placing            : 1,
+      shelfes_grasping      : 2,
+      shelfes_placing       : 2

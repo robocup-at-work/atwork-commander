@@ -1,5 +1,5 @@
-#include <atwork_commander_gen/PluginInterface.h>
-#include "DefaultConfigParser.h"
+#include <atwork_commander_gen/GeneratorPluginInterface.h>
+#include <atwork_commander_gen/DefaultConfigParser.h>
 
 #include <atwork_commander_msgs/Task.h>
 #include <atwork_commander_msgs/Object.h>
@@ -253,6 +253,7 @@ ostream& operator<<(ostream& os, const unordered_multimap<K, V>& m) {
 
 namespace atwork_commander {
 namespace task_generator {
+namespace simple {
 
 /** Task Generation Implementation
  *
@@ -261,7 +262,7 @@ namespace task_generator {
  * 
  *
  **/
-class SimpleTaskGenerator: public PluginInterface {
+class Generator: public GeneratorPluginInterface {
 
   static auto extractCavities(const ArenaDescription& arena) {
     vector<ObjectType> cavities;
@@ -269,10 +270,11 @@ class SimpleTaskGenerator: public PluginInterface {
           cavities.emplace_back(item, 1);
     return cavities;
   }
-  DefaultConfigParser mConfig;
   default_random_engine mRand;
+  DefaultConfigParser mConfig;
+  TaskDefinitions& mTasks = const_cast<TaskDefinitions&>(mConfig.tasks());
   unordered_multimap<string, Table> mTables;
-  const vector<ObjectType> mAvailableCavities;
+  vector<ObjectType> mAvailableCavities;
 
   auto extractObjectTypes(const string& task) {
     vector<ObjectType> availableObjects;
@@ -624,7 +626,8 @@ class SimpleTaskGenerator: public PluginInterface {
     object.source = table;
   }
 
-  Task generate( const string& taskName){
+  Task generateImpl( const string& taskName){
+
           auto&  def            = mTasks[ taskName ];
           auto&  params         = def.parameters;
     const auto&  normalTables   = def.normalTableTypes;
@@ -753,16 +756,17 @@ class SimpleTaskGenerator: public PluginInterface {
   public:
     virtual void onInit(const std::string& arenaConfig, const std::string& taskConfig)
     {
-      mConfig.reload(arenaConfig, taskConfig);
-      mTasks = mConfig.tasks()
-      auto arena = mConfig.arena();
-      mAvailableCavities( extractCavities( arena ) )
-      for (const auto& table: arena.workstations)
-        mTables.emplace(table.second, Table(table.first, table.second));
-
-
-
-      sanityCheck();
+      try {
+        mConfig.reload(arenaConfig, taskConfig);
+        mAvailableCavities = extractCavities( mConfig.arena() );
+        for (const auto& table: mConfig.arena().workstations)
+          mTables.emplace(table.second, Table(table.first, table.second));
+        sanityCheck();
+      }
+      catch(const exception& e) {
+        ROS_FATAL_STREAM_NAMED("generator", "[REFBOX-GEN] Error during initialization of plugin: " << e.what());
+        throw e;
+      }
     }
 
     /** \todo Implement **/
@@ -778,7 +782,7 @@ class SimpleTaskGenerator: public PluginInterface {
       }
     }
 
-    virtual Task generate(std::string taskName) {
+    virtual Task generate(const std::string& taskName) {
       auto taskIt = find_if( mTasks.begin(), mTasks.end(),
                                  [ taskName ]( const auto& item ){ return item.first == taskName; }
                                );
@@ -789,16 +793,19 @@ class SimpleTaskGenerator: public PluginInterface {
           os << item.first << " ";
         throw runtime_error( os.str() );
       }
-      Task task = generate( taskIt->first );
+      Task task = generateImpl( taskIt->first );
       task.prep_time = ros::Duration ( taskIt->second.parameters[ "prep_time" ]*60 );
       task.exec_time = ros::Duration ( taskIt->second.parameters[ "exec_time" ]*60 );
       check( task );
       return task;
     }
 
+    virtual ConfigParserInterface& config() { return mConfig; }
+
 };
 
-PLUGINLIB_EXPORT_CLASS(SimpleTaskGenerator, PluginInterface);
+}
 }
 }
 
+PLUGINLIB_EXPORT_CLASS(atwork_commander::task_generator::simple::Generator, atwork_commander::task_generator::GeneratorPluginInterface);

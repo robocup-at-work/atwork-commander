@@ -1,5 +1,7 @@
 #pragma once
 
+#include <atwork_commander_gen/ConfigParserInterface.h>
+
 #include <atwork_commander_msgs/Task.h>
 
 #include <string>
@@ -8,14 +10,14 @@
 namespace atwork_commander {
 
 namespace task_generator {
-  class PluginInterface;
+  class GeneratorPluginInterface;
 }
 
 class TaskGenerator {
   private:
-    using Interface = task_generator::PluginInterface;
-    using InterfacePtr = std::shared_ptr<Interface>;
-    InterfacePtr mImpl;
+    using GeneratorPlugin = task_generator::GeneratorPluginInterface;
+    using GeneratorPluginPtr = std::shared_ptr<GeneratorPlugin>;
+    GeneratorPluginPtr mImpl;
 
   public:
     using Task = atwork_commander_msgs::Task;
@@ -37,6 +39,8 @@ class TaskGenerator {
      *  \throw None
      **/
     bool check(const Task& task) const;
+
+    ConfigParserInterface& config();
 };
 
 }

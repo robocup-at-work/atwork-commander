@@ -1,4 +1,4 @@
-#include "ConfigParser.h"
+#include <atwork_commander_gen/DefaultConfigParser.h>
 
 #include <ros/ros.h>
 
@@ -20,7 +20,7 @@ namespace task_generator {
 
 static bool readStrings(StringList& data, XmlRpc::XmlRpcValue& val) {
   if ( val.getType() != XmlRpc::XmlRpcValue::TypeArray ) {
-    ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Invalid Parameter type encountered! Expected Array!");
+    ROS_WARN_STREAM_NAMED("parser", "[REFBOX] Invalid Parameter type encountered! Expected Array!");
     return false;
   }
 
@@ -34,7 +34,7 @@ static bool readStrings(StringList& data, XmlRpc::XmlRpcValue& val) {
       case( XmlRpc::XmlRpcValue::TypeDouble ) : *it++ = std::to_string( static_cast<double>     ( val[i] ) ); break;
       case( XmlRpc::XmlRpcValue::TypeBoolean ): *it++ = std::to_string( static_cast<bool>       ( val[i] ) ); break;
       default:
-        ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Invalid Parameter type encountered for parameter in array!" <<
+        ROS_WARN_STREAM_NAMED("parser", "[REFBOX] Invalid Parameter type encountered for parameter in array!" <<
                                                        " Allowed are String, Int, Bool, Double" );
         return false;
     };
@@ -54,7 +54,7 @@ static bool readStruct(ParameterType& params, XmlRpc::XmlRpcValue& val) {
       case( XmlRpc::XmlRpcValue::TypeInt )    : params[entry.first]=static_cast<int>( entry.second ); break;
       case( XmlRpc::XmlRpcValue::TypeBoolean ): params[entry.first]=static_cast<bool>( entry.second ); break;
       default:
-        ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Invalid Parameter type encountered for struct parameter!" <<
+        ROS_WARN_STREAM_NAMED("parser", "[REFBOX] Invalid Parameter type encountered for struct parameter!" <<
                                                        " Allowed are Int and Bool");
         result = false;
     };
@@ -68,31 +68,31 @@ static TaskDefinition readTask(const std::string& name, XmlRpc::XmlRpcValue& def
   for (auto& entry : def) {
     if ( entry.first == "normal_table_types" ) {
       if ( !readStrings(task.normalTableTypes, entry.second) )
-        ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Error reading table types of normale tables for task "
+        ROS_WARN_STREAM_NAMED("parser", "[REFBOX] Error reading table types of normale tables for task "
                                                << name << "! Keeping default: " << task.normalTableTypes << "!");
       continue;
     }
     if ( entry.first == "tt_types" ) {
       if ( !readStrings(task.ttTypes, entry.second) )
-        ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Error reading table types of turntables for task "
+        ROS_WARN_STREAM_NAMED("parser", "[REFBOX] Error reading table types of turntables for task "
                                                << name << "! Keeping default: " << task.ttTypes << "!");
       continue;
     }
     if ( entry.first == "pp_types" ) {
       if ( !readStrings(task.ppTypes, entry.second) )
-        ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Error reading table types of precision placement for task " <<
+        ROS_WARN_STREAM_NAMED("parser", "[REFBOX] Error reading table types of precision placement for task " <<
                                                name <<  "! Keeping default: " << task.ppTypes << "!");
       continue;
     }
     if ( entry.first == "sh_types" ) {
       if ( !readStrings(task.shTypes, entry.second) )
-        ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Error reading table types of shelfs for task " << name <<
+        ROS_WARN_STREAM_NAMED("parser", "[REFBOX] Error reading table types of shelfs for task " << name <<
                                                "! Keeping default: " << task.shTypes << "!");
       continue;
     }
     if ( entry.first == "cavities" ) {
       if ( !readStrings(task.cavities, entry.second) )
-        ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Error reading available cavities for task " << name <<
+        ROS_WARN_STREAM_NAMED("parser", "[REFBOX] Error reading available cavities for task " << name <<
                                                "! Keeping default: " << task.cavities << "!");
       continue;
     }
@@ -101,7 +101,7 @@ static TaskDefinition readTask(const std::string& name, XmlRpc::XmlRpcValue& def
         std::ostringstream os;
         for ( const auto& v: task.objects )
           os << "\t" << v.first << ": " << v.second << std::endl;
-        ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Error reading available objects for task " << name <<
+        ROS_WARN_STREAM_NAMED("parser", "[REFBOX] Error reading available objects for task " << name <<
                                                "! State after partial update: " << std::endl << os.str());
 
       }
@@ -114,11 +114,11 @@ static TaskDefinition readTask(const std::string& name, XmlRpc::XmlRpcValue& def
         case( XmlRpc::XmlRpcValue::TypeInt )    : it->second = static_cast<int>( entry.second ); break;
         case( XmlRpc::XmlRpcValue::TypeBoolean ): it->second = static_cast<bool>( entry.second ); break;
         default:
-          ROS_ERROR_STREAM_NAMED("state_tracker", "[REFBOX] Invalid Parameter type encountered for parameter " <<
+          ROS_ERROR_STREAM_NAMED("parser", "[REFBOX] Invalid Parameter type encountered for parameter " <<
                                                   name << "/" << entry.first << "! Only int and bool is allowed!");
       };
     } else {
-      ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Unknown parameter " << entry.first << " in definition of task " << name << "! Ignoring!");
+      ROS_WARN_STREAM_NAMED("parser", "[REFBOX] Unknown parameter " << entry.first << " in definition of task " << name << "! Ignoring!");
     }
   }
 
@@ -128,13 +128,13 @@ static TaskDefinition readTask(const std::string& name, XmlRpc::XmlRpcValue& def
 static TaskDefinitions readTaskList(const string& taskConfig) {
   TaskDefinitions tasks;
   ros::NodeHandle nh;
-  ROS_INFO_STREAM_NAMED("state_tracker", "[REFBOX] Try to read task definitions from '" << taskConfig << "'");
+  ROS_INFO_STREAM_NAMED("parser", "[REFBOX] Try to read task definitions from '" << taskConfig << "'");
 
   XmlRpc::XmlRpcValue my_list;
   nh.getParam(taskConfig, my_list);
 
   if (my_list.getType() != XmlRpc::XmlRpcValue::TypeStruct) {
-      ROS_ERROR_NAMED("state_tracker", "[REFBOX] Couldn't read Tasklist. Aspect 'XmlRpc::XmlRpcValue::TypeStruct' under '%s'.", taskConfig.c_str());
+      ROS_ERROR_NAMED("parser", "[REFBOX] Couldn't read Tasklist. Aspect 'XmlRpc::XmlRpcValue::TypeStruct' under '%s'.", taskConfig.c_str());
       ROS_ASSERT(false);
   }
 
@@ -142,7 +142,7 @@ static TaskDefinitions readTaskList(const string& taskConfig) {
       std::string name = static_cast<std::string>(task_p.first);
 
       if (task_p.second.getType() != XmlRpc::XmlRpcValue::TypeStruct) {
-          ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] " << taskConfig << "/" << name << " is not a task definition");
+          ROS_WARN_STREAM_NAMED("parser", "[REFBOX] " << taskConfig << "/" << name << " is not a task definition");
           continue;
       }
 
@@ -150,8 +150,8 @@ static TaskDefinitions readTaskList(const string& taskConfig) {
   }
 
   ROS_ASSERT(tasks.size() > 0);
-  ROS_INFO_STREAM_NAMED("state_tracker", "[REFBOX] Read " << tasks.size() << " tasks from paramet er server");
-  ROS_DEBUG_STREAM_NAMED("state_tracker", "[REFBOX] Defined Tasks: " << tasks);
+  ROS_INFO_STREAM_NAMED("parser", "[REFBOX] Read " << tasks.size() << " tasks from paramet er server");
+  ROS_DEBUG_STREAM_NAMED("parser", "[REFBOX] Defined Tasks: " << tasks);
   return tasks;
 }
 
@@ -159,13 +159,13 @@ static ArenaDescription readArenaDefinition(const string& arenaConfig) {
   ArenaDescription arena;
   ros::NodeHandle nh;
   string ws_param = arenaConfig + "/workstations";
-  ROS_INFO_STREAM_NAMED("state_tracker", "[REFBOX] ry to read workstations from '" << ws_param << "'") ;
+  ROS_INFO_STREAM_NAMED("parser", "[REFBOX] ry to read workstations from '" << ws_param << "'") ;
 
   string wp_param = arenaConfig + "/waypoints";
-  ROS_INFO_STREAM_NAMED("state_tracker", "[REFBOX] ry to read waypoints from '" << wp_param << "'") ;
+  ROS_INFO_STREAM_NAMED("parser", "[REFBOX] ry to read waypoints from '" << wp_param << "'") ;
 
   string obj_param = arenaConfig + "/objects";
-  ROS_INFO_STREAM_NAMED("state_tracker", "[REFBOX] ry to read available objects from '" << obj_param << "'") ;
+  ROS_INFO_STREAM_NAMED("parser", "[REFBOX] ry to read available objects from '" << obj_param << "'") ;
 
   map<string, string> temp_ws;
   nh.getParam(ws_param, temp_ws);
@@ -187,16 +187,16 @@ static ArenaDescription readArenaDefinition(const string& arenaConfig) {
 
   ROS_ASSERT(arena.workstations.size() > 1);
 
-  ROS_INFO_STREAM_NAMED("state_tracker", "[REFBOX] Read " << arena.workstations.size() << " workstations from parameter server");
+  ROS_INFO_STREAM_NAMED("parser", "[REFBOX] Read " << arena.workstations.size() << " workstations from parameter server");
 
 
   std::string ppc_param = ros::this_node::getNamespace() + "/arena/cavities";
-  ROS_INFO_STREAM_NAMED("state_tracker", "[REFBOX] try to read PP cavities from '" << ppc_param << "'");
+  ROS_INFO_STREAM_NAMED("parser", "[REFBOX] try to read PP cavities from '" << ppc_param << "'");
 
   nh.getParam(ppc_param, arena.cavities);
 
-  ROS_INFO_STREAM_NAMED("state_tracker", "[REFBOX] read " << arena.cavities.size() << " PP cavities from parameter server");
-  ROS_DEBUG_STREAM_NAMED("state_tracker", "[REFBOX] Read Arena Definition:" << std::endl << arena);
+  ROS_INFO_STREAM_NAMED("parser", "[REFBOX] read " << arena.cavities.size() << " PP cavities from parameter server");
+  ROS_DEBUG_STREAM_NAMED("parser", "[REFBOX] Read Arena Definition:" << std::endl << arena);
   return arena;
 }
 
@@ -212,20 +212,7 @@ static void filterObjects(TaskDefinitions& tasks, const ArenaDescription& arena)
 }
 
 
-ConfigParser::ConfigParser(const string& taskConfig, const string& arenaConfig) 
-  : mTaskConfig(taskConfig), mArenaConfig(arenaConfig),
-    mTasks(readTaskList(mTaskConfig)), mArena(readArenaDefinition(mArenaConfig))
-{
-  filterObjects(mTasks, mArena);
-}
-
-void ConfigParser::reload(string taskConfig, string arenaConfig) {
-  if(taskConfig == "")
-    taskConfig = mTaskConfig;
-  if(arenaConfig == "")
-    arenaConfig = mArenaConfig;
-  mTasks = readTaskList(mTaskConfig);
-  mArena = readArenaDefinition(mArenaConfig);
+void DefaultConfigParser::update() {
   filterObjects(mTasks, mArena);
 }
 

@@ -7,7 +7,6 @@
 #include <vector>
 
 namespace atwork_commander {
-namespace task_generator {
 
 using StringList = std::vector<std::string>;              ///< List of character strings
 using ParameterType = std::unordered_map<std::string, int>;  ///< List of parameter key-value pairs
@@ -67,20 +66,14 @@ struct TaskDefinition {
 /** Definition of all available Tasks with the appropriate configuration parameters **/
 using TaskDefinitions = std::unordered_map<std::string, TaskDefinition>;
 
-class ConfigInterface {
+class ConfigParserInterface {
   private:
     std::string mTaskConfig;
     std::string mArenaConfig;
   protected:
     virtual void update() = 0;
   public:
-    ConfigInterface(const std::string& taskConfig, const std::string& arenaConfig)
-      : mTaskConfig(taskConfig),
-        mArenaConfig(arenaConfig)
-    {
-      reload();
-    }
-    void reload(std::string taskConfig="", std::string arenaConfig="") {
+    void reload(std::string taskConfig, std::string arenaConfig) {
       if(!taskConfig.empty())
         taskConfig = mTaskConfig;
       if(!arenaConfig.empty())
@@ -91,9 +84,10 @@ class ConfigInterface {
     }
     const std::string& taskConfig() const { return mTaskConfig; }
     const std::string& arenaConfig() const { return mArenaConfig; }
+    virtual const TaskDefinitions& tasks() const = 0;
+    virtual const ArenaDescription& arena() const = 0;
 };
 
-}
 }
 
 /** \brief Output operator for ArenaDescriptions
@@ -101,18 +95,18 @@ class ConfigInterface {
  *  \param arena the ArenaDescription to output
  *  \return the modified Output Stream
  **/
-std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::ArenaDescription& arena);
+std::ostream& operator<<(std::ostream& os, const atwork_commander::ArenaDescription& arena);
 
 /** \brief Output operator for single Task Definitions
  *  \param os Output Stream to output the Task Definition
  *  \param arena the ArenaDescription to output
  *  \return the modified Output Stream
  **/
-std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::TaskDefinition& def);
+std::ostream& operator<<(std::ostream& os, const atwork_commander::TaskDefinition& def);
 
 /** \brief Output operator for all Task Definitions
  *  \param os Output Stream to output ArenaDescription
  *  \param arena the ArenaDescription to output
  *  \return the modified Output Stream
  **/
-std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::TaskDefinitions& defs);
+std::ostream& operator<<(std::ostream& os, const atwork_commander::TaskDefinitions& defs);
