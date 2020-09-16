@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+<launch>
+  <group ns="atwork_commander_gen/example">
+    <arg name="generator_plugin" default="SimpleGen"/> 
+
+    <param name="plugin" value="$(arg generator_plugin)"/> 
+    <rosparam file="$(find atwork_commander_gen)/config/example/task.yaml" ns="tasks"/>
+    <rosparam file="$(find atwork_commander_gen)/config/example/arena.yaml"/>
+
+    <node name="example_generator" type="ExampleGenerator" pkg="atwork_commander_gen" output="screen"/>
+
+  </group>
+</launch>
