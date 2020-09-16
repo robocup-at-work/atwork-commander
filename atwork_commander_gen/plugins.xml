@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<library path="lib/libatwork_commander_gen_plugins">
+  <class name="SimpleGen" type="atwork_commander::task_generator::simple::Generator" base_class_type="atwork_commander::task_generator::GeneratorPluginInterface">
+    <description>
+      Simple task generator not rule-book compatible!
+    </description>
+  </class>
+</library>
