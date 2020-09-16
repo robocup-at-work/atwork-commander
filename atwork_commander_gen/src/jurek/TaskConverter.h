@@ -6,8 +6,13 @@
 
 #include <ros/console.h>
 
-namespace atwork_commander {
+#include <unordered_map>
 
+namespace atwork_commander {
+namespace task_generator {
+namespace jurek {
+
+using namespace std;
 struct Converter  {
   using Workstation = atwork_commander_msgs::Workstation;
   using Object = atwork_commander_msgs::Object;
@@ -87,4 +92,6 @@ struct Converter  {
     }
 };
 
+}
+}
 }

@@ -24,13 +24,13 @@ int main(int argc, char** argv) {
 
   try {
     TaskGenerator gen("arena", "tasks", "plugin");
-    cout << "Arena Description:" << endl << gen.config().arena() << endl;
-    cout << "Task Definitions:" << endl << gen.config().tasks() << endl;
+    cout << gen.config().arena() << endl;
+    cout << gen.config().tasks() << endl;
     auto task = gen(string("example"));
-    cout << "Tasks:" << endl << task << endl;
+    cout << "Example tasks:" << endl << task << endl;
   }
   catch(const exception& e) {
-    cerr << "Exception occured: \n" << e.what() << endl;
+    cerr << "Exception occured: " << e.what() << endl;
     return -1;
   }
 

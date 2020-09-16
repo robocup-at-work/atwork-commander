@@ -135,6 +135,7 @@ target_link_libraries(${PROJECT_NAME}_plugin_support ${catkin_LIBRARIES})
 
 add_library(${PROJECT_NAME}_plugins
   src/simple/Generator.cpp
+  src/jurek/Generator.cpp
 )
 target_link_libraries(${PROJECT_NAME}_plugins ${PROJECT_NAME}_plugin_support ${catkin_LIBRARIES})
 

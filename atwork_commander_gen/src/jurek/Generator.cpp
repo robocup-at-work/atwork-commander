@@ -1,25 +1,24 @@
-#include "TaskGeneratorImpl.h"
+#include "../Generator.h"
 #include "TaskConverter.h"
 
-#include <atwork_commander_gen/TaskGenerator.h>
-#include <atwork_commander_gen/GeneratorPluginInterface.h>
+#include <atwork_commander_gen/DefaultConfigParser.h>
 
-#include <pluginlib/class_loader.h>
-
+#include <pluginlib/class_list_macros.h>
 #include <ros/ros.h>
 
-<<<<<<< HEAD
 #include <random>
 #include <sstream>
 #include <chrono>
 
 namespace atwork_commander {
+namespace task_generator {
+namespace jurek {
 
 /** Task Generation Implementation
  *
  * Implements the generation of Task according to supplied configurations.
  **/
-class TaskGeneratorImpl {
+class Generator : public GeneratorPluginInterface {
 
   static auto extractCavities(const ArenaDescription& arena) {
     vector<ObjectType> cavities;
@@ -29,10 +28,11 @@ class TaskGeneratorImpl {
   }
 
   default_random_engine mRand;
-  TaskDefinitions mTasks;
+  DefaultConfigParser mConfig;
+  TaskDefinitions& mTasks = const_cast<TaskDefinitions&>(mConfig.tasks());
   unordered_multimap<string, Table> mTables;
-  const vector<ObjectType> mAvailableCavities;
-  const vector<ObjectType> mAvailableObjects;
+  vector<ObjectType> mAvailableCavities;
+  vector<ObjectType> mAvailableObjects;
   vector<std::array<size_t, 3>> container_ids;
 
   auto extractObjectTypes(const string& task) {
@@ -582,7 +582,7 @@ class TaskGeneratorImpl {
     }
   }
 
-  Task generate( const string& taskName){
+  Task generateImpl( const string& taskName){
     readParameters(taskName);
     try {
       // initialize tasks
@@ -731,15 +731,10 @@ class TaskGeneratorImpl {
       generate_objects(tasks);                                                  // generate objects for the decoys
       std::cout<<"tasks\n"<<tasks;                                              // print tasks to console
       //Insert checkPickCounts
-      try {
-        checkPickNeqPlace(tasks);
-        checkPickCounts(tasks, paramFinal);
-        checkPlaceCounts(tasks, paramFinal);
-        checkContainers(tasks, paramFinal);
-      }
-      catch(std::string error) {
-        ROS_ERROR_STREAM(error);
-      }
+      checkPickNeqPlace(tasks);
+      checkPickCounts(tasks, paramFinal);
+      checkPlaceCounts(tasks, paramFinal);
+      checkContainers(tasks, paramFinal);
       return toTask(tasks);
     } catch(int i) {
       throw runtime_error(printError(i));
@@ -750,20 +745,6 @@ class TaskGeneratorImpl {
   }
 
   public:
-    TaskGeneratorImpl(const ArenaDescription& arena, const TaskDefinitions& tasks)
-      : mTasks(tasks), mAvailableCavities( extractCavities( arena ) ),
-        mAvailableObjects( extractObjectTypes( arena) )
-    {
-
-      for (const auto& table: arena.workstations)
-        mTables.emplace(table.second, Table(table.first, table.second));
-
-
-
-      sanityCheck();
-    }
-
-
     void checkPickNeqPlace(const run& tasks) const {
       for(size_t i=0; i<tasks.size(); ++i) {
         if(tasks.at(i).at(dst_id) == tasks.at(i).at(src_id) && tasks.at(i).at(cont_id) == -1) { // if place in container pick = place is valid
@@ -906,15 +887,31 @@ class TaskGeneratorImpl {
       ROS_INFO_STREAM("All container types occure with correct multiplicities.");
     }
 
+    virtual void onInit(const std::string& arenaConfig, const std::string& taskConfig)
+    {
+      try {
+        mConfig.reload(arenaConfig, taskConfig);
+        mAvailableCavities = extractCavities( mConfig.arena() );
+        mAvailableObjects = extractObjectTypes( mConfig.arena() );
+        for (const auto& table: mConfig.arena().workstations)
+          mTables.emplace(table.second, Table(table.first, table.second));
+        sanityCheck();
+      }
+      catch(const exception& e) {
+        ROS_ERROR_STREAM_NAMED("generator", "[REFBOX-GEN] Error during initialization of plugin: " << e.what());
+        throw e;
+      }
+    }
 
-    bool check( const Task& task ) {
-      const run tasks = fromTask(task);
+
+    virtual bool check( const Task& task ) const {
+      const run tasks = const_cast<Generator*>(this)->fromTask(task);
       try {
       debug_tasks("final tasks", tasks);
         checkPickNeqPlace(tasks);
         checkPickCounts(tasks, paramFinal);
         checkPlaceCounts(tasks, paramFinal);
-        checkContainers(tasks, paramFinal);
+        const_cast<Generator*>(this)->checkContainers(tasks, paramFinal);
       } catch(std::string error) {
         ROS_ERROR_STREAM(error);
         return false;
@@ -924,11 +921,11 @@ class TaskGeneratorImpl {
       return true;
     }
 
-    Task operator()(std::string taskName) {
+    virtual Task generate(const std::string& taskName) {
       using Clock = chrono::steady_clock;
       auto taskIt = find_if( mTasks.begin(), mTasks.end(),
-                                 [ taskName ]( const auto& item ){ return item.first == taskName; }
-                               );
+                             [ taskName ]( const auto& item ){ return item.first == taskName; }
+                           );
       if ( taskIt == mTasks.end() ) {
         ostringstream os;
         os << "No Task " << taskName << " configured. Valid tasks are: ";
@@ -936,7 +933,7 @@ class TaskGeneratorImpl {
           os << item.first << " ";
         throw runtime_error( os.str() );
       }
-      Task task = generate( taskIt->first );
+      Task task = generateImpl( taskIt->first );
       task.prep_time = ros::Duration ( taskIt->second.parameters[ "prep_time" ]*60 );
       task.exec_time = ros::Duration ( taskIt->second.parameters[ "exec_time" ]*60 );
       task.type = taskName;
@@ -946,34 +943,11 @@ class TaskGeneratorImpl {
       return task;
     }
 
+    virtual ConfigParserInterface& config() { return mConfig; }
 };
 
-TaskGenerator::TaskGenerator(const ArenaDescription& arena, const TaskDefinitions& tasks)
-  : mImpl(new TaskGeneratorImpl(arena, tasks)) {}
-
-TaskGenerator::~TaskGenerator() { delete mImpl; }
-
-Task TaskGenerator::operator()(string taskName)   { return mImpl->operator()(taskName); }
-=======
-#include <stdexcept>
-
-using namespace std;
-
-namespace atwork_commander {
-
-TaskGenerator::TaskGenerator(const std::string& arenaConfig, const std::string& taskConfig, const std::string& pluginConfig){
-  pluginlib::ClassLoader<TaskGenerator::GeneratorPlugin> loader("atwork_commander_gen", "atwork_commander::task_generator::GeneratorPluginInterface");
-  string generatorName;
-  if(!ros::param::get(pluginConfig, generatorName))
-    throw runtime_error(string("TaskGenerator Plugin Configuration '")+pluginConfig+"' invalid");
-  mImpl.reset(loader.createUnmanagedInstance(generatorName.c_str()));
-  mImpl->onInit(arenaConfig, taskConfig);
+}
+}
 }
 
-TaskGenerator::Task TaskGenerator::operator()(const string& taskName)   { return mImpl?mImpl->generate(taskName):Task(); }
->>>>>>> master
-
-bool TaskGenerator::check(const Task& task) const { return mImpl?mImpl->check(task):false; }
-ConfigParserInterface& TaskGenerator::config() { if(!mImpl) throw runtime_error("No Plugin loaded"); return mImpl->config(); }
-
-}
+PLUGINLIB_EXPORT_CLASS(atwork_commander::task_generator::jurek::Generator, atwork_commander::task_generator::GeneratorPluginInterface);

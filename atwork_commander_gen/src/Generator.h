@@ -1,16 +1,18 @@
 #pragma once
 
+#include <atwork_commander_gen/GeneratorPluginInterface.h>
 
 #include <iostream>
 #include <unordered_map>
 #include <regex>
 
-using namespace std;
-
 namespace atwork_commander {
+namespace task_generator {
 
-class Object;
-class Table;
+using Task = GeneratorPluginInterface::Task;
+
+struct Object;
+struct Table;
 
 using ObjectPtr = Object*;
 using TablePtr = Table*;
@@ -30,7 +32,7 @@ enum class Type : unsigned int {
 };
 
 struct ObjectBase {
-  static Type extractType(const string& typeName) {
+  static Type extractType(const std::string& typeName) {
     size_t len = typeName.length();
     char preLast = typeName[ len - 2 ];
     if( preLast == '_' ) {
@@ -40,12 +42,12 @@ struct ObjectBase {
       if (  last == 'G' || last == 'B' )
         return Type::COLORED_OBJECT;
     }
-    if ( regex_match( typeName, regex( "CONTAINER_.*" ) ) )
+    if ( std::regex_match( typeName, std::regex( "CONTAINER_.*" ) ) )
       return Type::CONTAINER;
     return Type::OBJECT;
   }
 
-  string extractForm(const string& typeName) const {
+  std::string extractForm(const std::string& typeName) const {
     switch ( type ) {
       case ( Type::CAVITY):
       case ( Type::COLORED_OBJECT): return typeName.substr( 0, typeName.length() - 2 );
@@ -54,7 +56,7 @@ struct ObjectBase {
     }
   }
 
-  string extractColor(const string& typeName) const {
+  std::string extractColor(const std::string& typeName) const {
     switch ( type ) {
       case ( Type::COLORED_OBJECT): return typeName.substr( typeName.length() - 1 );
       case ( Type::CONTAINER ): return typeName.substr( strlen("CONTAINER_") );
@@ -62,7 +64,7 @@ struct ObjectBase {
     }
   }
 
-  Orientation extractOrientation(const string& typeName) const {
+  Orientation extractOrientation(const std::string& typeName) const {
     if ( type ==  Type::CAVITY)
       switch ( typeName[ typeName.length() - 1 ] ) {
         case ( 'H' ): return Orientation::HORIZONTAL;
@@ -72,11 +74,11 @@ struct ObjectBase {
   }
 
   Type type = Type::UNKNOWN;
-  string form = "";
-  string color = "";
+  std::string form = "";
+  std::string color = "";
   Orientation orientation = Orientation::FREE;
   ObjectBase() = default;
-  ObjectBase(const string typeName)
+  ObjectBase(const std::string typeName)
     : type( extractType( typeName ) ), form( extractForm( typeName ) ),
       color( extractColor( typeName ) ),
       orientation( extractOrientation( typeName ) )
@@ -85,7 +87,7 @@ struct ObjectBase {
 
 struct ObjectType : public ObjectBase {
   unsigned int count = 0;
-  ObjectType( const string& typeName, unsigned int count )
+  ObjectType( const std::string& typeName, unsigned int count )
     : ObjectBase( typeName ), count(count)
   {}
   operator bool() const { return count; }
@@ -123,101 +125,103 @@ struct Table {
 };
 
 }
+}
 
-ostream& operator<<(ostream& os, const atwork_commander::Type type) {
+std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::Type type) {
   switch ( type ) {
-    case ( atwork_commander::Type::CAVITY ):         return os << "Cavity";
-    case ( atwork_commander::Type::CONTAINER ):      return os << "Container";
-    case ( atwork_commander::Type::COLORED_OBJECT ): return os << "Colored Object";
-    case ( atwork_commander::Type::OBJECT ):         return os << "Plain Object";
+    case ( atwork_commander::task_generator::Type::CAVITY ):         return os << "Cavity";
+    case ( atwork_commander::task_generator::Type::CONTAINER ):      return os << "Container";
+    case ( atwork_commander::task_generator::Type::COLORED_OBJECT ): return os << "Colored Object";
+    case ( atwork_commander::task_generator::Type::OBJECT ):         return os << "Plain Object";
     default:                                          return os << "UNKNOWN";
   }
 }
 
-ostream& operator<<(ostream& os, const atwork_commander::Orientation o) {
+std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::Orientation o) {
   switch ( o ) {
-    case( atwork_commander::Orientation::VERTICAL )  : return os << "V";
-    case( atwork_commander::Orientation::HORIZONTAL ): return os << "H";
-    case( atwork_commander::Orientation::FREE )      : return os << "FREE";
+    case( atwork_commander::task_generator::Orientation::VERTICAL )  : return os << "V";
+    case( atwork_commander::task_generator::Orientation::HORIZONTAL ): return os << "H";
+    case( atwork_commander::task_generator::Orientation::FREE )      : return os << "FREE";
     default                                           : return os << "UNKNOWN";
   }
 }
 
-ostream& operator<<(ostream& os, const atwork_commander::ObjectBase& type) {
+std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::ObjectBase& type) {
   switch ( type.type ) {
-    case ( atwork_commander::Type::CAVITY ):         return os << type.form << "_" << type.orientation;
-    case ( atwork_commander::Type::CONTAINER ):      return os << "CONTAINER_"     << type.color;
-    case ( atwork_commander::Type::COLORED_OBJECT ): return os << type.form << "_" << type.color;
-    case ( atwork_commander::Type::OBJECT ):         return os << type.form;
+    case ( atwork_commander::task_generator::Type::CAVITY ):         return os << type.form << "_" << type.orientation;
+    case ( atwork_commander::task_generator::Type::CONTAINER ):      return os << "CONTAINER_"     << type.color;
+    case ( atwork_commander::task_generator::Type::COLORED_OBJECT ): return os << type.form << "_" << type.color;
+    case ( atwork_commander::task_generator::Type::OBJECT ):         return os << type.form;
     default:                                           return os << "UNKNOWN OBJECT TYPE";
   }
 }
 
-ostream& operator<<(ostream& os, const atwork_commander::ObjectType& type) {
-  return os << ((atwork_commander::ObjectBase)type) << "(" << type.count << ")";
+std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::ObjectType& type) {
+  return os << ((atwork_commander::task_generator::ObjectBase)type) << "(" << type.count << ")";
 }
 
 
-ostream& operator<<(ostream& os, const atwork_commander::Table& t) {
+std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::Table& t) {
   return os << "Table " << t.name << "(" << t.type << "):";
 }
 
-ostream& operator<<(ostream& os, const atwork_commander::Object& o) {
-  os << "Object " << atwork_commander::ObjectBase(o) << "(" << o.id << "):";
+std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::Object& o) {
+  os << "Object " << atwork_commander::task_generator::ObjectBase(o) << "(" << o.id << "):";
   if ( o.source )      os << " Src: " << o.source->name      << "(" << o.source->type      << ")";
   if ( o.destination ) os << " Dst: " << o.destination->name << "(" << o.destination->type << ")";
   if ( o.container )   os << " Cont: " << o.container->type   << "(" << o.container->id     << ")";
   return os;
 }
 
-ostream& operator<<(ostream& os, const vector<atwork_commander::Object>& v) {
+std::ostream& operator<<(std::ostream& os, const std::vector<atwork_commander::task_generator::Object>& v) {
   for (size_t i=0; i<v.size(); i++)
     os << v[i] << (i+1!=v.size()?"\n":"");
   return os;
 }
 
 template<typename T>
-ostream& operator<<(ostream& os, const vector<T>& v) {
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& v) {
   for (size_t i=0; i<v.size(); i++)
     os << v[i] << (i+1!=v.size()?" ":"");
   return os;
 }
 
 template<typename K, typename V>
-ostream& operator<<(ostream& os, const unordered_multimap<K, V>& m) {
+std::ostream& operator<<(std::ostream& os, const std::unordered_multimap<K, V>& m) {
   for (const auto& item: m)
-    os << item.first << " = " << item.second << endl;
+    os << item.first << " = " << item.second << std::endl;
   return os;
 }
 
 template<typename T, size_t n>
-ostream& operator<<(ostream& os, const array<T,n>& vec)
+std::ostream& operator<<(std::ostream& os, const std::array<T,n>& vec)
 {
   for(size_t i=0; i<vec.size(); i++)
 		os << vec[i] << (i==vec.size()-1?"":" ");
-  return os << endl;
+  return os << std::endl;
 }
 
 template<typename T, size_t n>
-ostream& operator<<(ostream& os, const vector<array<T,n>>& vec)
+std::ostream& operator<<(std::ostream& os, const std::vector<std::array<T,n>>& vec)
 {
   for(size_t i=0; i<vec.size(); i++)
 		os << vec[i];
-  return os << endl;
+  return os << std::endl;
 }
 
 template<typename T>
-ostream& operator<<(ostream& os, const vector<vector<T>>& vec)
+std::ostream& operator<<(std::ostream& os, const std::vector<std::vector<T>>& vec)
 {
   for(size_t i=0; i<vec.size(); i++)
 		os << vec[i];
-  return os << endl;
+  return os << std::endl;
 }
 
 template<typename T1, typename T2>
-ostream& operator<<(ostream& os, const map<T1, T2>& m)
+std::ostream& operator<<(std::ostream& os, const std::map<T1, T2>& m)
 {
-  for(const typename map<T1, T2>::value_type& v: m)
-		os << v.first << ": " << v.second << endl;
+  for(const typename std::map<T1, T2>::value_type& v: m)
+		os << v.first << ": " << v.second << std::endl;
   return os;
 }
+
