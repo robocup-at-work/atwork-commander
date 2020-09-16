@@ -279,7 +279,7 @@ int main(int argc, char** argv)
     ros::NodeHandle nh;
 
     const std::string& ns = ros::this_node::getNamespace();
-    atwork_commander::TaskGenerator taskGen( ns + "/arena", ns + "/tasks", ns + "/taskGenerator");
+    atwork_commander::TaskGenerator taskGen( ns + "/arena", ns + "/tasks", ns + "/generator");
     atwork_commander::StateTracker st(nh, taskGen);
     ROS_INFO_NAMED("state_tracker", "[REFBOX] initialized");
 
