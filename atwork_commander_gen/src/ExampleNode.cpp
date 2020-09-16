@@ -20,21 +20,18 @@ static void activateDebug() {
 
 int main(int argc, char** argv) {
   ros::init(argc, argv, "example_task_generator");
-  ros::NodeHandle nh("~");
   activateDebug();
 
   try {
     TaskGenerator gen("arena", "tasks", "plugin");
     ROS_INFO_STREAM("[EXAMPLE-GEN] Arena Description:" << endl << gen.config().arena() );
     ROS_INFO_STREAM("[EXAMPLE-GEN] Task Definitions:" << endl << gen.config().tasks() );
-    auto task = gen(string("example"));
-    ROS_DEBUG_STREAM("[EXAMPLE-GEN] Tasks:\n" << task);
+    ROS_INFO_STREAM("[EXAMPLE-GEN] Tasks:\n" << gen(string("example")));
   }
-  catch(exception& e) {
+  catch(const exception& e) {
     ROS_ERROR_STREAM_NAMED("example", "[REFBOX-GEN] Exception occured: \n" << e.what());
+    return -1;
   }
 
-  while(ros::ok())
-    ros::spin();
   return 0;
 }

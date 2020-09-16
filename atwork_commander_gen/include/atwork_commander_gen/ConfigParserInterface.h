@@ -73,12 +73,18 @@ class ConfigParserInterface {
   protected:
     virtual void update() = 0;
   public:
-    void reload(std::string taskConfig, std::string arenaConfig) {
-      if(!taskConfig.empty())
-        taskConfig = mTaskConfig;
-      if(!arenaConfig.empty())
-        arenaConfig = mArenaConfig;
-      update();
+    void reload(const std::string& arenaConfig, const std::string& taskConfig) {
+      std::string oldTaskConfig = mTaskConfig;
+      std::string oldArenaConfig = mArenaConfig;
+      mTaskConfig = taskConfig;
+      mArenaConfig = arenaConfig;
+      try {
+        update();
+      } catch(std::exception& e) {
+        mTaskConfig = oldTaskConfig;
+        mArenaConfig = oldArenaConfig;
+        throw e;
+      }
       mTaskConfig = taskConfig;
       mArenaConfig = arenaConfig;
     }

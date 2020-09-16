@@ -159,13 +159,13 @@ static ArenaDescription readArenaDefinition(const string& arenaConfig) {
   ArenaDescription arena;
   ros::NodeHandle nh;
   string ws_param = arenaConfig + "/workstations";
-  ROS_INFO_STREAM_NAMED("parser", "[REFBOX] ry to read workstations from '" << ws_param << "'") ;
+  ROS_INFO_STREAM_NAMED("parser", "[REFBOX] try to read workstations from '" << ws_param << "'") ;
 
   string wp_param = arenaConfig + "/waypoints";
-  ROS_INFO_STREAM_NAMED("parser", "[REFBOX] ry to read waypoints from '" << wp_param << "'") ;
+  ROS_INFO_STREAM_NAMED("parser", "[REFBOX] try to read waypoints from '" << wp_param << "'") ;
 
   string obj_param = arenaConfig + "/objects";
-  ROS_INFO_STREAM_NAMED("parser", "[REFBOX] ry to read available objects from '" << obj_param << "'") ;
+  ROS_INFO_STREAM_NAMED("parser", "[REFBOX] try to read available objects from '" << obj_param << "'") ;
 
   map<string, string> temp_ws;
   nh.getParam(ws_param, temp_ws);
@@ -213,7 +213,11 @@ static void filterObjects(TaskDefinitions& tasks, const ArenaDescription& arena)
 
 
 void DefaultConfigParser::update() {
-  filterObjects(mTasks, mArena);
+  auto arenaDescription = readArenaDefinition(arenaConfig());
+  auto taskList = readTaskList(taskConfig());
+  filterObjects(taskList, arenaDescription);
+  mArena = arenaDescription;
+  mTasks = taskList;
 }
 
 }

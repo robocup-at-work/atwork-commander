@@ -17,6 +17,7 @@ TaskGenerator::TaskGenerator(const std::string& arenaConfig, const std::string& 
   if(!ros::param::get(pluginConfig, generatorName))
     throw runtime_error(string("TaskGenerator Plugin Configuration '")+pluginConfig+"' invalid");
   mImpl.reset(loader.createUnmanagedInstance(generatorName.c_str()));
+  mImpl->onInit(arenaConfig, taskConfig);
 }
 
 TaskGenerator::Task TaskGenerator::operator()(const string& taskName)   { return mImpl?mImpl->generate(taskName):Task(); }
