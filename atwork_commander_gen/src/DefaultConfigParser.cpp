@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <vector>
+#include <stdexcept>
 
 using namespace std;
 
@@ -135,7 +136,7 @@ static TaskDefinitions readTaskList(const string& taskConfig) {
 
   if (my_list.getType() != XmlRpc::XmlRpcValue::TypeStruct) {
       ROS_ERROR_NAMED("parser", "[REFBOX] Couldn't read Tasklist. Aspect 'XmlRpc::XmlRpcValue::TypeStruct' under '%s'.", taskConfig.c_str());
-      ROS_ASSERT(false);
+      throw runtime_error(string("No struct under ") +taskConfig +"! bailing out!");
   }
 
   for (auto& task_p : my_list) {

@@ -24,12 +24,13 @@ int main(int argc, char** argv) {
 
   try {
     TaskGenerator gen("arena", "tasks", "plugin");
-    ROS_INFO_STREAM("[EXAMPLE-GEN] Arena Description:" << endl << gen.config().arena() );
-    ROS_INFO_STREAM("[EXAMPLE-GEN] Task Definitions:" << endl << gen.config().tasks() );
-    ROS_INFO_STREAM("[EXAMPLE-GEN] Tasks:\n" << gen(string("example")));
+    cout << "Arena Description:" << endl << gen.config().arena() << endl;
+    cout << "Task Definitions:" << endl << gen.config().tasks() << endl;
+    auto task = gen(string("example"));
+    cout << "Tasks:" << endl << task << endl;
   }
   catch(const exception& e) {
-    ROS_ERROR_STREAM_NAMED("example", "[REFBOX-GEN] Exception occured: \n" << e.what());
+    cerr << "Exception occured: \n" << e.what() << endl;
     return -1;
   }
 
