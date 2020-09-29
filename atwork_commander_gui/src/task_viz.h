@@ -33,7 +33,7 @@
  */
 namespace atwork_commander
 {
-class TaskVisualization
+class TaskVirtualization
 {
   // member
 public:
@@ -45,12 +45,12 @@ public:
   /**
    * Default constructor
    */
-  TaskVisualization();
+  TaskVirtualization();
 
   /**
    * Destructor
    */
-  ~TaskVisualization();
+  ~TaskVirtualization();
 };
 }
 

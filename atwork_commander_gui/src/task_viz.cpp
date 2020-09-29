@@ -27,20 +27,20 @@
 namespace atwork_commander
 {
 
-TaskVisualization::TaskVisualization()
+TaskVirtualization::TaskVirtualization()
 {
   ros::NodeHandle nh;
   
-  mTaskSub = nh.subscribe("task",1, &TaskVisualization::analyzeTask, this);
+  mTaskSub = nh.subscribe("task",1, &TaskVirtualization::analyzeTask, this);
   
 }
 
-TaskVisualization::~TaskVisualization()
+TaskVirtualization::~TaskVirtualization()
 {
 
 }
 //Funktion, die auf neue Nachrichten von der Refbox reagiert
-void TaskVisualization::analyzeTask(const atwork_commander_msgs::Task::ConstPtr& msg)
+void TaskVirtualization::analyzeTask(const atwork_commander_msgs::Task::ConstPtr& msg)
 {
   for (auto& workstation : msg->arena_start_state)
   {
