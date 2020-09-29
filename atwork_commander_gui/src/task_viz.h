@@ -45,14 +45,7 @@ public:
   /**
    * Default constructor
    */
-  TaskVisualization(std::string s) {
-      ros::NodeHandle nh;
-  
-  mTaskSub = nh.subscribe("task",1, &TaskVisualization::analyzeTask, this);
-  ROS_INFO("passt");
-  std::cout << "test" << std::endl;
-    
-  }
+  TaskVisualization();
 
   /**
    * Destructor
