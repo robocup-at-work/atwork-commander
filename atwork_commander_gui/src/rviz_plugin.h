@@ -441,6 +441,7 @@ public:
 
 public Q_SLOTS:
 
+    //TODO param set_all_targets_to_empty
     QString printArenaStateList(std::vector<atwork_commander_msgs::Workstation> ws_list, bool print_empty_container = true)
     {
         using namespace atwork_commander_msgs;
@@ -550,14 +551,13 @@ public Q_SLOTS:
     virtual void
     update() override
     {
-        QString state = taskListCombo->currentText();
-
         // wire
         wire(false);
 
-        // clear current data
+        // task list
+        QString state = taskListCombo->currentText();
+
         taskListCombo->clear();
-        pptCavatiesLineEdit->clear();
 
         //TODO get list of tasks instances
         taskListCombo->addItem(QString("BMT"));
@@ -575,12 +575,13 @@ public Q_SLOTS:
             taskListCombo->setCurrentIndex(index);
         }
 
+        //task
+        //TODO get current task -> control_ptr->state()
         prepTimeLineEdit->setText("");
         runTimeLineEdit->setText("");
         arenaStartText->setText("");
         arenaEndText->setText("");
-
-        pptCavatiesLineEdit->setPlaceholderText(". . . . .");
+        pptCavatiesLineEdit->clear();
 
         // reconnect
         wire();
@@ -595,7 +596,7 @@ public Q_SLOTS:
 class RobotVisGroup : public VisGroup {
     Q_OBJECT
 private:
-    QPushButton* playPauseButton = nullptr;
+    QPushButton* playPauseButton = nullptr; //TODO -> unique_ptr ?
     QHBoxLayout* buttonHBox = nullptr;
     QPushButton* forwardButton = nullptr;
     QPushButton* stopButton = nullptr;
@@ -729,17 +730,34 @@ class ArenaVisGroup : public VisGroup {
     Q_OBJECT
 private:
     // QPushButton* playPauseButton = nullptr;
+    std::unique_ptr<QLabel> known_cavities_label;
+    std::unique_ptr<QLabel> rtt_label;
+    std::unique_ptr<QLabel> ppt_label;
+    std::unique_ptr<QLabel> known_objects_label;
 
 public:
     ArenaVisGroup(QWidget* parent = new QWidget())
         : VisGroup(parent)
     {
+        //TODO
         // init
         // playPauseButton = new QPushButton();
+        known_cavities_label.reset(new QLabel);
+        rtt_label.reset(new QLabel);
+        ppt_label.reset(new QLabel);
+        known_objects_label.reset(new QLabel);
 
         // draw
         // playPauseButton->setText("Play / Pause");
         // layout->addRow(playPauseButton);
+        rtt_label->setText("Number of round table(s): 0");
+        layout->addRow(rtt_label.get());
+        ppt_label->setText("Number of PP table(s): 1");
+        layout->addRow(ppt_label.get());
+        known_cavities_label->setText("Known cavaties: F20_20_H, F20_20_V, R20_H, M20_H, M20_100_H, S40_40_H");
+        layout->addRow(known_cavities_label.get());
+        known_objects_label->setText("Known objects: 2x F20_20_B, R20, 3x S40_40_G, M20, BB");
+        layout->addRow(known_objects_label.get());
 
         // update
         this->update();
