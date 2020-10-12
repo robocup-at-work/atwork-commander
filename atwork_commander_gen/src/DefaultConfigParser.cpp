@@ -25,8 +25,8 @@ static bool readStrings(StringList& data, XmlRpc::XmlRpcValue& val) {
     return false;
   }
 
-  std::vector<std::string> strings( val.size() );
-  auto it = strings.begin();
+  data.resize( val.size() );
+  auto it = data.begin();
 
   for (int i=0;i<val.size();i++)
     switch(val[i].getType()) {
