@@ -4,4 +4,4 @@ BMT:
   objects: 5
   ref_position: true
   tables: 2
-  normal_table_types: [ "10" ]
+  allowed_tables: [ "WS01", "WS02" ]

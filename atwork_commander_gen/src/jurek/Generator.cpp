@@ -276,8 +276,22 @@ class Generator : public GeneratorPluginInterface {
 
   void readParameters(const string& taskName) {
     unsigned int id = 0;
+    mTables0.clear();
+    mTables5.clear();
+    mTables10.clear();
+    mTables15.clear();
+    mConveyors.clear();
+    mPpts.clear();
+    mShelfs.clear();
+    paramFinal.clear();
+    mObjects.clear();
+    mPptObjects.clear();
+    const auto& allowedTables = mTasks[taskName].allowedTables;
     for( const pair<string, Table>& e : mTables ) {
       const Table& t = e.second;
+      if( ! allowedTables.empty() &&  
+          ! count( allowedTables.begin(), allowedTables.end(), t.name ) )
+        continue;
       if( t.type == "00" ) { mTables0.push_back(++id); mJTables.push_back(id); continue; }
       if( t.type == "05" ) { mTables5.push_back(++id); mJTables.push_back(id); continue; }
       if( t.type == "10" ) { mTables10.push_back(++id); mJTables.push_back(id); continue; }
@@ -288,14 +302,15 @@ class Generator : public GeneratorPluginInterface {
       ROS_ERROR_STREAM("Unknown table type" << t);
       }
 
-    ROS_DEBUG_STREAM("Normal Tables : " << mJTables);
-    ROS_DEBUG_STREAM("0cm Tables    : " << mTables0);
-    ROS_DEBUG_STREAM("5cm Tables    : " << mTables5);
-    ROS_DEBUG_STREAM("10cm Tables   : " << mTables10);
-    ROS_DEBUG_STREAM("15cm Tables   : " << mTables15);
-    ROS_DEBUG_STREAM("Conveyors     : " << mConveyors);
-    ROS_DEBUG_STREAM("PPTs          : " << mPpts);
-    ROS_DEBUG_STREAM("Shelfs        : " << mShelfs);
+    ROS_DEBUG_STREAM("Allowed Tables : " << allowedTables);
+    ROS_DEBUG_STREAM("Normal Tables  : " << mJTables);
+    ROS_DEBUG_STREAM("0cm Tables     : " << mTables0);
+    ROS_DEBUG_STREAM("5cm Tables     : " << mTables5);
+    ROS_DEBUG_STREAM("10cm Tables    : " << mTables10);
+    ROS_DEBUG_STREAM("15cm Tables    : " << mTables15);
+    ROS_DEBUG_STREAM("Conveyors      : " << mConveyors);
+    ROS_DEBUG_STREAM("PPTs           : " << mPpts);
+    ROS_DEBUG_STREAM("Shelfs         : " << mShelfs);
 
     TaskDefinition& taskParams = mTasks[taskName];
 

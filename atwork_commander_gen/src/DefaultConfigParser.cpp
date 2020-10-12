@@ -67,10 +67,18 @@ static TaskDefinition readTask(const std::string& name, XmlRpc::XmlRpcValue& def
   TaskDefinition task;
 
   for (auto& entry : def) {
+    ROS_INFO_STREAM_NAMED("parser", "[REFBOX] Reading parameter: " << entry.first << " of task: " << name);
     if ( entry.first == "normal_table_types" ) {
       if ( !readStrings(task.normalTableTypes, entry.second) )
         ROS_WARN_STREAM_NAMED("parser", "[REFBOX] Error reading table types of normale tables for task "
                                                << name << "! Keeping default: " << task.normalTableTypes << "!");
+      continue;
+    }
+    if ( entry.first == "allowed_tables" ) {
+      if ( !readStrings(task.allowedTables, entry.second) )
+        ROS_WARN_STREAM_NAMED("parser", "[REFBOX] Error reading list of explicitly allwoed tables for task "
+                                               << name << "! Keeping default: " << task.allowedTables << "!");
+      ROS_INFO_STREAM_NAMED("parser", "[REFBOX] Read allowed tables: " << task.allowedTables);
       continue;
     }
     if ( entry.first == "tt_types" ) {
