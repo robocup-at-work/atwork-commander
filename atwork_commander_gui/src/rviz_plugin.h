@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QScrollArea>
+#include <QSizePolicy>
 #include <QSpinBox>
 #include <QStackedWidget>
 #include <QString>
@@ -263,142 +264,109 @@ public Q_SLOTS:
 class TaskGenVisGroup : public VisGroup {
     Q_OBJECT
 private:
-    QLabel* taskListLabel = nullptr;
-    QComboBox* taskListCombo = nullptr;
-    QLabel* prepTimeLabel = nullptr;
-    QLineEdit* prepTimeLineEdit = nullptr;
-    QLabel* runTimeLabel = nullptr;
-    QLineEdit* runTimeLineEdit = nullptr;
-    QHBoxLayout* basicHBox = nullptr;
+    std::unique_ptr<QLabel> taskListLabel;
+    std::unique_ptr<QComboBox> taskListCombo;
+    std::unique_ptr<QLabel> prepTimeLabel;
+    std::unique_ptr<QLineEdit> prepTimeLineEdit;
+    std::unique_ptr<QLabel> runTimeLabel;
+    std::unique_ptr<QLineEdit> runTimeLineEdit;
+    std::unique_ptr<QHBoxLayout> basicHBox;
 
-    QPushButton* generateButton = nullptr;
-    QPushButton* loadButton = nullptr;
-    QHBoxLayout* buttonHBox = nullptr;
+    std::unique_ptr<QPushButton> generateButton;
+    std::unique_ptr<QPushButton> loadButton;
+    std::unique_ptr<QHBoxLayout> buttonHBox;
 
-    QLabel* arenaStartLabel = nullptr;
-    QTextEdit* arenaStartText = nullptr;
-    QVBoxLayout* arenaStartVBox = nullptr;
-    QLabel* arenaEndLabel = nullptr;
-    QTextEdit* arenaEndText = nullptr;
-    QVBoxLayout* arenaEndVBox = nullptr;
-    QHBoxLayout* arenaHBox = nullptr;
+    std::unique_ptr<QLabel> arenaStartLabel;
+    std::unique_ptr<QTextEdit> arenaStartText;
+    std::unique_ptr<QVBoxLayout> arenaStartVBox;
+    std::unique_ptr<QLabel> arenaEndLabel;
+    std::unique_ptr<QTextEdit> arenaEndText;
+    std::unique_ptr<QVBoxLayout> arenaEndVBox;
+    std::unique_ptr<QHBoxLayout> arenaHBox;
 
-    QLineEdit* pptCavatiesLineEdit = nullptr;
+    std::unique_ptr<QLineEdit> pptCavatiesLineEdit;
 
 public:
     TaskGenVisGroup(QWidget* parent = new QWidget())
         : VisGroup(parent)
     {
         // init
-        taskListLabel = new QLabel();
-        taskListCombo = new QComboBox();
-        prepTimeLabel = new QLabel();
-        prepTimeLineEdit = new QLineEdit();
-        runTimeLabel = new QLabel();
-        runTimeLineEdit = new QLineEdit();
-        basicHBox = new QHBoxLayout();
+        taskListLabel.reset(new QLabel);
+        taskListCombo.reset(new QComboBox);
+        prepTimeLabel.reset(new QLabel);
+        prepTimeLineEdit.reset(new QLineEdit);
+        runTimeLabel.reset(new QLabel);
+        runTimeLineEdit.reset(new QLineEdit);
+        basicHBox.reset(new QHBoxLayout);
 
-        generateButton = new QPushButton();
-        loadButton = new QPushButton();
-        buttonHBox = new QHBoxLayout();
+        generateButton.reset(new QPushButton);
+        loadButton.reset(new QPushButton);
+        buttonHBox.reset(new QHBoxLayout);
 
-        arenaStartLabel = new QLabel();
-        arenaStartText = new QTextEdit();
-        arenaStartVBox = new QVBoxLayout();
-        arenaEndLabel = new QLabel();
-        arenaEndText = new QTextEdit();
-        arenaEndVBox = new QVBoxLayout();
-        arenaHBox = new QHBoxLayout();
+        arenaStartLabel.reset(new QLabel);
+        arenaStartText.reset(new QTextEdit);
+        arenaStartVBox.reset(new QVBoxLayout);
+        arenaEndLabel.reset(new QLabel);
+        arenaEndText.reset(new QTextEdit);
+        arenaEndVBox.reset(new QVBoxLayout);
+        arenaHBox.reset(new QHBoxLayout);
 
-        pptCavatiesLineEdit = new QLineEdit();
+        pptCavatiesLineEdit.reset(new QLineEdit);
 
         // draw
         taskListLabel->setText("Task Instance: ");
-        basicHBox->addWidget(taskListLabel);
-        basicHBox->addWidget(taskListCombo);
+        basicHBox->addWidget(taskListLabel.get());
+        basicHBox->addWidget(taskListCombo.get());
         prepTimeLabel->setText("Prep-Time: ");
-        basicHBox->addWidget(prepTimeLabel);
+        basicHBox->addWidget(prepTimeLabel.get());
         prepTimeLineEdit->setReadOnly(true);
-        basicHBox->addWidget(prepTimeLineEdit);
+        basicHBox->addWidget(prepTimeLineEdit.get());
         runTimeLabel->setText("Run-Time: ");
-        basicHBox->addWidget(runTimeLabel);
+        basicHBox->addWidget(runTimeLabel.get());
         runTimeLineEdit->setReadOnly(true);
-        basicHBox->addWidget(runTimeLineEdit);
-        layout->addRow(basicHBox);
+        basicHBox->addWidget(runTimeLineEdit.get());
+        layout->addRow(basicHBox.get());
 
         generateButton->setText("Generate Task");
-        buttonHBox->addWidget(generateButton);
+        buttonHBox->addWidget(generateButton.get());
         loadButton->setText("Load Task");
-        buttonHBox->addWidget(loadButton);
-        layout->addRow(buttonHBox);
+        buttonHBox->addWidget(loadButton.get());
+        layout->addRow(buttonHBox.get());
 
         arenaStartLabel->setText("Arena Start State:");
-        arenaStartVBox->addWidget(arenaStartLabel);
+        arenaStartVBox->addWidget(arenaStartLabel.get());
+        arenaStartText->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         arenaStartText->setReadOnly(true);
         arenaStartText->setLineWrapMode(QTextEdit::NoWrap);
         // arenaStartText->setMaximumHeight(16777215);
-        arenaStartVBox->addWidget(arenaStartText);
+        arenaStartVBox->addWidget(arenaStartText.get());
+        // arenaStartVBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         // arenaStartVBox->setSizeConstraint(QLayout::SetMaximumSize);
         // arenaStartVBox->SetMaximumSize = QSize(16777215, 16777215);
         arenaEndLabel->setText("Arena End State:");
-        arenaEndVBox->addWidget(arenaEndLabel);
+        arenaEndVBox->addWidget(arenaEndLabel.get());
+        arenaEndText->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         arenaEndText->setReadOnly(true);
         arenaEndText->setLineWrapMode(QTextEdit::NoWrap);
         // arenaEndText->setMaximumHeight(16777215);
-        arenaEndVBox->addWidget(arenaEndText);
+        arenaEndVBox->addWidget(arenaEndText.get());
+        // arenaEndVBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         // arenaEndVBox->setSizeConstraint(QLayout::SetMaximumSize);
-        arenaHBox->addLayout(arenaStartVBox);
-        arenaHBox->addLayout(arenaEndVBox);
+        arenaHBox->addLayout(arenaStartVBox.get());
+        arenaHBox->addLayout(arenaEndVBox.get());
+        // arenaHBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         // arenaHBox->setSizeConstraint(QLayout::SetMaximumSize);
-        layout->addRow(arenaHBox);
+        layout->addRow(arenaHBox.get());
 
-        pptCavatiesLineEdit->setPlaceholderText(". . . . .");
+        //pptCavatiesLineEdit->setPlaceholderText(". . . . .");
         pptCavatiesLineEdit->setReadOnly(true);
-        layout->addRow("PPT Cavaties:", pptCavatiesLineEdit);
+        layout->addRow("PPT Cavaties:", pptCavatiesLineEdit.get());
 
         // update
         this->update();
     }
 
-    virtual ~TaskGenVisGroup()
-    {
-        delete taskListLabel;
-        delete taskListCombo;
-        delete prepTimeLabel;
-        delete prepTimeLineEdit;
-        delete runTimeLabel;
-        delete runTimeLineEdit;
-        delete basicHBox;
-        delete generateButton;
-        delete loadButton;
-        delete buttonHBox;
-        delete arenaStartLabel;
-        delete arenaStartText;
-        delete arenaStartVBox;
-        delete arenaEndLabel;
-        delete arenaEndText;
-        delete arenaEndVBox;
-        delete arenaHBox;
-        delete pptCavatiesLineEdit;
-        taskListLabel = nullptr;
-        taskListCombo = nullptr;
-        prepTimeLabel = nullptr;
-        prepTimeLineEdit = nullptr;
-        runTimeLabel = nullptr;
-        runTimeLineEdit = nullptr;
-        basicHBox = nullptr;
-        generateButton = nullptr;
-        loadButton = nullptr;
-        buttonHBox = nullptr;
-        arenaStartLabel = nullptr;
-        arenaStartText = nullptr;
-        arenaStartVBox = nullptr;
-        arenaEndLabel = nullptr;
-        arenaEndText = nullptr;
-        arenaEndVBox = nullptr;
-        arenaHBox = nullptr;
-        pptCavatiesLineEdit = nullptr;
-    }
+    virtual ~TaskGenVisGroup() {}
 
     /*!
        * \brief wire connects and disconnect ALL existing Signal-Slots Connections
@@ -411,13 +379,13 @@ public:
     virtual void wire(bool make_connections = true)
     {
         if (make_connections) {
-            connect(taskListCombo, SIGNAL(activated(int)), this, SLOT(update()));
-            connect(generateButton, SIGNAL(clicked()), this, SLOT(generateTask()));
-            connect(loadButton, SIGNAL(clicked()), this, SLOT(update()));
+            connect(taskListCombo.get(), SIGNAL(activated(int)), this, SLOT(update()));
+            connect(generateButton.get(), SIGNAL(clicked()), this, SLOT(generateTask()));
+            connect(loadButton.get(), SIGNAL(clicked()), this, SLOT(update()));
         } else {
-            disconnect(taskListCombo, SIGNAL(activated(int)), this, SLOT(update()));
-            disconnect(generateButton, SIGNAL(clicked()), this, SLOT(generateTask()));
-            disconnect(loadButton, SIGNAL(clicked()), this, SLOT(update()));
+            disconnect(taskListCombo.get(), SIGNAL(activated(int)), this, SLOT(update()));
+            disconnect(generateButton.get(), SIGNAL(clicked()), this, SLOT(generateTask()));
+            disconnect(loadButton.get(), SIGNAL(clicked()), this, SLOT(update()));
         }
     }
     /*!
@@ -590,52 +558,42 @@ public Q_SLOTS:
 
 /************************************************************************/
 /*!
-   * \brief Qt widget displaying task generator information
+   * \brief Qt widget displaying robot information and control buttons
    *
    */
 class RobotVisGroup : public VisGroup {
     Q_OBJECT
 private:
-    QPushButton* playPauseButton = nullptr; //TODO -> unique_ptr ?
-    QHBoxLayout* buttonHBox = nullptr;
-    QPushButton* forwardButton = nullptr;
-    QPushButton* stopButton = nullptr;
+    std::unique_ptr<QPushButton> playPauseButton;
+    std::unique_ptr<QHBoxLayout> buttonHBox;
+    std::unique_ptr<QPushButton> forwardButton;
+    std::unique_ptr<QPushButton> stopButton;
 
 public:
     RobotVisGroup(QWidget* parent = new QWidget())
         : VisGroup(parent)
     {
         // init
-        playPauseButton = new QPushButton();
-        buttonHBox = new QHBoxLayout();
-        forwardButton = new QPushButton();
-        stopButton = new QPushButton();
+        playPauseButton.reset(new QPushButton);
+        buttonHBox.reset(new QHBoxLayout);
+        forwardButton.reset(new QPushButton);
+        stopButton.reset(new QPushButton);
 
         // draw
         playPauseButton->setText("Play / Pause");
-        layout->addRow(playPauseButton);
+        layout->addRow(playPauseButton.get());
 
         forwardButton->setText("Forward");
-        buttonHBox->addWidget(forwardButton);
+        buttonHBox->addWidget(forwardButton.get());
         stopButton->setText("Stop");
-        buttonHBox->addWidget(stopButton);
-        layout->addRow(buttonHBox);
+        buttonHBox->addWidget(stopButton.get());
+        layout->addRow(buttonHBox.get());
 
         // update
         this->update();
     }
 
-    virtual ~RobotVisGroup()
-    {
-        delete playPauseButton;
-        delete buttonHBox;
-        delete forwardButton;
-        delete stopButton;
-        playPauseButton = nullptr;
-        buttonHBox = nullptr;
-        forwardButton = nullptr;
-        stopButton = nullptr;
-    }
+    virtual ~RobotVisGroup() {}
 
     /*!
            * \brief wire connects and disconnect ALL existing Signal-Slots Connections
@@ -648,13 +606,13 @@ public:
     virtual void wire(bool make_connections = true)
     {
         if (make_connections) {
-            connect(playPauseButton, SIGNAL(clicked()), this, SLOT(update()));
-            connect(forwardButton, SIGNAL(clicked()), this, SLOT(update()));
-            connect(stopButton, SIGNAL(clicked()), this, SLOT(update()));
+            connect(playPauseButton.get(), SIGNAL(clicked()), this, SLOT(update()));
+            connect(forwardButton.get(), SIGNAL(clicked()), this, SLOT(update()));
+            connect(stopButton.get(), SIGNAL(clicked()), this, SLOT(update()));
         } else {
-            disconnect(playPauseButton, SIGNAL(clicked()), this, SLOT(update()));
-            disconnect(forwardButton, SIGNAL(clicked()), this, SLOT(update()));
-            disconnect(stopButton, SIGNAL(clicked()), this, SLOT(update()));
+            disconnect(playPauseButton.get(), SIGNAL(clicked()), this, SLOT(update()));
+            disconnect(forwardButton.get(), SIGNAL(clicked()), this, SLOT(update()));
+            disconnect(stopButton.get(), SIGNAL(clicked()), this, SLOT(update()));
         }
     }
     /*!
@@ -689,33 +647,6 @@ public Q_SLOTS:
         // wire
         wire(false);
 
-        // // clear current data
-        // taskListCombo->clear();
-        // pptCavatiesLineEdit->clear();
-        //
-        // //TODO get list of tasks instances
-        // taskListCombo->addItem(QString("BMT"));
-        // taskListCombo->addItem(QString("BTT1"));
-        // taskListCombo->addItem(QString("BTT2"));
-        // taskListCombo->addItem(QString("BTT3"));
-        // taskListCombo->addItem(QString("RTT"));
-        // taskListCombo->addItem(QString("PPT"));
-        // taskListCombo->addItem(QString("FINAL"));
-        //
-        // if (state.isEmpty()) {
-        //     taskListCombo->setCurrentIndex(0);
-        // } else {
-        //     int index = taskListCombo->findText(state);
-        //     taskListCombo->setCurrentIndex(index);
-        // }
-        //
-        // prepTimeLineEdit->setText("");
-        // runTimeLineEdit->setText("");
-        // arenaStartText->setText("");
-        // arenaEndText->setText("");
-        //
-        // pptCavatiesLineEdit->setPlaceholderText(". . . . .");
-
         // reconnect
         wire();
     }
@@ -729,7 +660,6 @@ public Q_SLOTS:
 class ArenaVisGroup : public VisGroup {
     Q_OBJECT
 private:
-    // QPushButton* playPauseButton = nullptr;
     std::unique_ptr<QLabel> known_cavities_label;
     std::unique_ptr<QLabel> rtt_label;
     std::unique_ptr<QLabel> ppt_label;
@@ -739,35 +669,23 @@ public:
     ArenaVisGroup(QWidget* parent = new QWidget())
         : VisGroup(parent)
     {
-        //TODO
         // init
-        // playPauseButton = new QPushButton();
         known_cavities_label.reset(new QLabel);
         rtt_label.reset(new QLabel);
         ppt_label.reset(new QLabel);
         known_objects_label.reset(new QLabel);
 
-        // draw
-        // playPauseButton->setText("Play / Pause");
-        // layout->addRow(playPauseButton);
-        rtt_label->setText("Number of round table(s): 0");
+        // draw layout and fill static elements
         layout->addRow(rtt_label.get());
-        ppt_label->setText("Number of PP table(s): 1");
         layout->addRow(ppt_label.get());
-        known_cavities_label->setText("Known cavaties: F20_20_H, F20_20_V, R20_H, M20_H, M20_100_H, S40_40_H");
         layout->addRow(known_cavities_label.get());
-        known_objects_label->setText("Known objects: 2x F20_20_B, R20, 3x S40_40_G, M20, BB");
         layout->addRow(known_objects_label.get());
 
         // update
         this->update();
     }
 
-    virtual ~ArenaVisGroup()
-    {
-        // delete playPauseButton;
-        // playPauseButton = nullptr;
-    }
+    virtual ~ArenaVisGroup() {}
 
     /*!
            * \brief wire connects and disconnect ALL existing Signal-Slots Connections
@@ -821,32 +739,10 @@ public Q_SLOTS:
         // wire
         wire(false);
 
-        // // clear current data
-        // taskListCombo->clear();
-        // pptCavatiesLineEdit->clear();
-        //
-        // //TODO get list of tasks instances
-        // taskListCombo->addItem(QString("BMT"));
-        // taskListCombo->addItem(QString("BTT1"));
-        // taskListCombo->addItem(QString("BTT2"));
-        // taskListCombo->addItem(QString("BTT3"));
-        // taskListCombo->addItem(QString("RTT"));
-        // taskListCombo->addItem(QString("PPT"));
-        // taskListCombo->addItem(QString("FINAL"));
-        //
-        // if (state.isEmpty()) {
-        //     taskListCombo->setCurrentIndex(0);
-        // } else {
-        //     int index = taskListCombo->findText(state);
-        //     taskListCombo->setCurrentIndex(index);
-        // }
-        //
-        // prepTimeLineEdit->setText("");
-        // runTimeLineEdit->setText("");
-        // arenaStartText->setText("");
-        // arenaEndText->setText("");
-        //
-        // pptCavatiesLineEdit->setPlaceholderText(". . . . .");
+        rtt_label->setText("Number of round table(s): 0");
+        ppt_label->setText("Number of PP table(s): 1");
+        known_cavities_label->setText("Known cavaties: F20_20_H, F20_20_V, R20_H, M20_H, M20_100_H, S40_40_H");
+        known_objects_label->setText("Known objects: 2x F20_20_B, R20, 3x S40_40_G, M20, BB");
 
         // reconnect
         wire();
