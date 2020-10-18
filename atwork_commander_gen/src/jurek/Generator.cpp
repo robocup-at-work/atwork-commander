@@ -34,6 +34,7 @@ class Generator : public GeneratorPluginInterface {
   vector<ObjectType> mAvailableCavities;
   vector<ObjectType> mAvailableObjects;
   vector<std::array<size_t, 3>> container_ids;
+  vector<const Table*> mTablesInverse;
 
   auto extractObjectTypes(const string& task) {
     vector<ObjectType> availableObjects;
@@ -160,12 +161,11 @@ class Generator : public GeneratorPluginInterface {
 
   Task toTask(const vector<array<int, 5>>& run) const {
     Task task;
-    task.arena_start_state.resize(mTables.size());
-    task.arena_target_state.resize(mTables.size());
-    unsigned int i=0;
-    for( const pair<string, Table>& e : mTables ) {
-      task.arena_start_state[i].workstation_name = e.second.name;
-      task.arena_target_state[i++].workstation_name = e.second.name;
+    task.arena_start_state.resize(mTablesInverse.size());
+    task.arena_target_state.resize(mTablesInverse.size());
+    for( unsigned int i=1; i < mTablesInverse.size(); i++ ) {
+      task.arena_start_state[i].workstation_name = mTablesInverse[i]->name;
+      task.arena_target_state[i].workstation_name = mTablesInverse[i]->name;
     }
     for( const array<size_t, 3>& cont : container_ids) {
       atwork_commander_msgs::Object o;
@@ -281,26 +281,32 @@ class Generator : public GeneratorPluginInterface {
     mTables10.clear();
     mTables15.clear();
     mConveyors.clear();
+    mJTables.clear();
     mPpts.clear();
     mShelfs.clear();
     paramFinal.clear();
     mObjects.clear();
     mPptObjects.clear();
+    mTablesInverse.clear();
     const auto& allowedTables = mTasks[taskName].allowedTables;
+    mTablesInverse.push_back(nullptr);
     for( const pair<string, Table>& e : mTables ) {
       const Table& t = e.second;
-      if( ! allowedTables.empty() &&  
+
+      if( ! allowedTables.empty() &&
           ! count( allowedTables.begin(), allowedTables.end(), t.name ) )
         continue;
-      if( t.type == "00" ) { mTables0.push_back(++id); mJTables.push_back(id); continue; }
-      if( t.type == "05" ) { mTables5.push_back(++id); mJTables.push_back(id); continue; }
-      if( t.type == "10" ) { mTables10.push_back(++id); mJTables.push_back(id); continue; }
-      if( t.type == "15" ) { mTables15.push_back(++id); mJTables.push_back(id); continue; }
-      if( t.type == "TT" || t.type == "CB") { mConveyors.push_back(++id); continue; }
-      if( t.type == "PP" ) { mPpts.push_back(++id); continue; }
-      if( t.type == "SH" ) { mShelfs.push_back(++id); continue; }
+
+      if( t.type == "00" )                  { mTables0.push_back(++id);  mJTables.push_back(id); mTablesInverse.push_back(&e.second); continue; }
+      if( t.type == "05" )                  { mTables5.push_back(++id);  mJTables.push_back(id); mTablesInverse.push_back(&e.second); continue; }
+      if( t.type == "10" )                  { mTables10.push_back(++id); mJTables.push_back(id); mTablesInverse.push_back(&e.second); continue; }
+      if( t.type == "15" )                  { mTables15.push_back(++id); mJTables.push_back(id); mTablesInverse.push_back(&e.second); continue; }
+      if( t.type == "TT" || t.type == "CB") { mConveyors.push_back(++id);                        mTablesInverse.push_back(&e.second); continue; }
+      if( t.type == "PP" )                  { mPpts.push_back(++id);                             mTablesInverse.push_back(&e.second); continue; }
+      if( t.type == "SH" )                  { mShelfs.push_back(++id);                           mTablesInverse.push_back(&e.second); continue; }
+
       ROS_ERROR_STREAM("Unknown table type" << t);
-      }
+    }
 
     ROS_DEBUG_STREAM("Allowed Tables : " << allowedTables);
     ROS_DEBUG_STREAM("Normal Tables  : " << mJTables);
@@ -342,17 +348,17 @@ class Generator : public GeneratorPluginInterface {
    paramFinal.emplace("place_turntables", mTasks[taskName].parameters["tt_placing"]);
    unsigned int tableObjects = mTasks[taskName].parameters["objects"]-mTasks[taskName].parameters["shelfes_grasping"] - mTasks[taskName].parameters["tt_grasping"];
    unsigned int allocated = mTasks[taskName].parameters["shelfes_grasping"] + mTasks[taskName].parameters["tt_grasping"];
-   if( count(nTables.begin(), nTables.end(), "00")) {
+   if( count(nTables.begin(), nTables.end(), "00") && ! mTables0.empty() ){
     unsigned int num = tableObjects / mTasks[taskName].normalTableTypes.size();
     allocated+=num;
     paramFinal.emplace("pick_tables0", num);
    }
-   if( count(nTables.begin(), nTables.end(), "05")) {
+   if( count(nTables.begin(), nTables.end(), "05") && ! mTables5.empty() ) {
     unsigned int num = tableObjects / mTasks[taskName].normalTableTypes.size();
     allocated+=num;
     paramFinal.emplace("pick_tables5", num);
    }
-   if( count(nTables.begin(), nTables.end(), "15")) {
+   if( count(nTables.begin(), nTables.end(), "15") && ! mTables15.empty() ) {
     unsigned int num = tableObjects / mTasks[taskName].normalTableTypes.size();
     allocated+=num;
     paramFinal.emplace("pick_tables15", num);
@@ -813,7 +819,7 @@ class Generator : public GeneratorPluginInterface {
         errormessage += " wanted, but " + to_string(counter.at(ppts_id)) + " pick_ppts found.\n";
         throw errormessage;
       }
-      ROS_INFO_STREAM("All table types occure with correct multiplicities in picks.");
+      ROS_DEBUG_STREAM("All table types occure with correct multiplicities in picks.");
     }
 
     void checkPlaceCounts(const run& tasks, Parameters params) const {
@@ -856,7 +862,7 @@ class Generator : public GeneratorPluginInterface {
         errormessage += " wanted, but " + to_string(normalplaces_found) + " normalplaces found.\n";
         throw errormessage;
       }
-      ROS_INFO_STREAM("All table types occure with correct multiplicities in places.");
+      ROS_DEBUG_STREAM("All table types occure with correct multiplicities in places.");
     }
 
     void checkContainers(const run& tasks, Parameters params) {
@@ -899,7 +905,7 @@ class Generator : public GeneratorPluginInterface {
           }
         }
       }
-      ROS_INFO_STREAM("All container types occure with correct multiplicities.");
+      ROS_DEBUG_STREAM("All container types occure with correct multiplicities.");
     }
 
     virtual void onInit(const std::string& arenaConfig, const std::string& taskConfig)
