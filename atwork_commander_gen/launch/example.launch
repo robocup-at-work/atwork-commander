@@ -2,11 +2,14 @@
 
 <launch>
   <group ns="atwork_commander_gen/example">
-    <arg name="plugin" default="SimpleGen"/> 
+    <arg name="generator" default="SimpleGen"/> 
+    <arg name="arena" default="arena"/> 
+    <arg name="task" default="task"/> 
 
-    <param name="plugin" value="$(arg plugin)"/> 
-    <rosparam file="$(find atwork_commander_gen)/config/example/task.yaml" ns="tasks"/>
-    <rosparam file="$(find atwork_commander_gen)/config/example/arena.yaml"/>
+    <param name="plugin" value="$(arg generator)"/> 
+    <param name="taskName" value="$(arg task)"/> 
+    <rosparam file="$(find atwork_commander_gen)/config/example/$(arg task).yaml" ns="tasks"/>
+    <rosparam file="$(find atwork_commander_gen)/config/example/$(arg arena).yaml"/>
 
     <node name="example_generator" type="ExampleGenerator" pkg="atwork_commander_gen" output="screen"/>
 

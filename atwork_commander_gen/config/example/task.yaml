@@ -1,4 +1,4 @@
-example:
+task:
       prep_time             : 3
       exec_time             : 8
       waypoints             : 0
