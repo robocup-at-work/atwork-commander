@@ -750,12 +750,6 @@ class Generator : public GeneratorPluginInterface {
         tasks.push_back({-1,int(mAllTables.at(local)),-1,-1,-1});
       }
       generate_objects(tasks);                                                  // generate objects for the decoys
-      std::cout<<"tasks\n"<<tasks;                                              // print tasks to console
-      //Insert checkPickCounts
-      checkPickNeqPlace(tasks);
-      checkPickCounts(tasks, paramFinal);
-      checkPlaceCounts(tasks, paramFinal);
-      checkContainers(tasks, paramFinal);
       return toTask(tasks);
     } catch(int i) {
       throw runtime_error(printError(i));
@@ -774,7 +768,7 @@ class Generator : public GeneratorPluginInterface {
           throw errormessage;
         }
       }
-      ROS_INFO_STREAM("All tasks satisfy the rule pick != place.");
+      ROS_DEBUG_STREAM_NAMED("generator.check", "All tasks satisfy the rule pick != place.");
     }
 
     void checkPickCounts(const run& tasks, Parameters params) const {
@@ -819,7 +813,7 @@ class Generator : public GeneratorPluginInterface {
         errormessage += " wanted, but " + to_string(counter.at(ppts_id)) + " pick_ppts found.\n";
         throw errormessage;
       }
-      ROS_DEBUG_STREAM("All table types occure with correct multiplicities in picks.");
+      ROS_DEBUG_STREAM_NAMED("generator.check", "All table types occure with correct multiplicities in picks.");
     }
 
     void checkPlaceCounts(const run& tasks, Parameters params) const {
@@ -838,7 +832,7 @@ class Generator : public GeneratorPluginInterface {
         throw errormessage;
       }
       else {
-        ROS_INFO_STREAM("Decoys occure with correct multiplicities.");
+        ROS_DEBUG_STREAM_NAMED("generator.check", "Decoys occure with correct multiplicities.");
       }
       if(counter.at(conveyors_id) != size_t(params["place_turntables"])) {
         std::string errormessage = "Missmatch: " + to_string(size_t(params["place_turntables"]));
@@ -862,7 +856,7 @@ class Generator : public GeneratorPluginInterface {
         errormessage += " wanted, but " + to_string(normalplaces_found) + " normalplaces found.\n";
         throw errormessage;
       }
-      ROS_DEBUG_STREAM("All table types occure with correct multiplicities in places.");
+      ROS_DEBUG_STREAM_NAMED("generator.check", "All table types occure with correct multiplicities in places.");
     }
 
     void checkContainers(const run& tasks, Parameters params) {
@@ -905,7 +899,7 @@ class Generator : public GeneratorPluginInterface {
           }
         }
       }
-      ROS_DEBUG_STREAM("All container types occure with correct multiplicities.");
+      ROS_DEBUG_STREAM_NAMED("generator", "All container types occure with correct multiplicities.");
     }
 
     virtual void onInit(const std::string& arenaConfig, const std::string& taskConfig)
@@ -960,7 +954,6 @@ class Generator : public GeneratorPluginInterface {
       task.type = taskName;
       auto creationTime = Clock::now().time_since_epoch();
       task.id = chrono::duration_cast<chrono::duration<decltype(task.id), std::milli>>(creationTime).count();
-      check( task );
       return task;
     }
 
