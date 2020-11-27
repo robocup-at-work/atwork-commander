@@ -290,8 +290,14 @@ class Generator : public GeneratorPluginInterface {
     mTablesInverse.clear();
     const auto& allowedTables = mTasks[taskName].allowedTables;
     mTablesInverse.push_back("");
+    const auto& nTables = mTasks[taskName].normalTableTypes;
+
     for( const pair<string, Table>& e : mTables ) {
       const Table& t = e.second;
+
+      if( ( t.type != "TT" || t.type != "CB" || t.type == "PP" || t.type == "SH" ) &&
+          count(nTables.begin(), nTables.end(), t.type) == 0 )
+        continue;
 
       if( ! allowedTables.empty() &&
           ! count( allowedTables.begin(), allowedTables.end(), t.name ) )
@@ -336,7 +342,6 @@ class Generator : public GeneratorPluginInterface {
     }
       if( found ) mPptObjects.push_back(toTaskObject(ObjectType(o)).object);
    }
-   const auto& nTables = mTasks[taskName].normalTableTypes;
    paramFinal.emplace("pick_shelfs", mTasks[taskName].parameters["shelfes_grasping"]);
    paramFinal.emplace("place_shelfs", mTasks[taskName].parameters["shelfes_placing"]);
    paramFinal.emplace("objects", mTasks[taskName].parameters["objects"]);
@@ -402,6 +407,19 @@ class Generator : public GeneratorPluginInterface {
         run.push_back(t);
       }
     }
+    for(const auto& objs: immobile) {
+      tID++;
+      for( const auto& o: objs.second ) {
+        array<int, 5> t;
+        t[0] = o.object;
+        t[1] = tID;
+        t[2] = -1;
+        t[3] = -1;
+        t[4] = ++i;
+        run.push_back(t);
+      }
+    }
+
     return run;
   }
 
