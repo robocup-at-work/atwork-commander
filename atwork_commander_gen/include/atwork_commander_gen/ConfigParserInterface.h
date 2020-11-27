@@ -24,6 +24,7 @@ struct TaskDefinition {
   ParameterType objects;                                       ///< max. requested Object count
   StringList    cavities;                                      ///< requested deactivated Cavity types
   StringList    normalTableTypes { "00", "05", "10", "15" };   ///< types of normal tables
+  StringList    allowedTables;                                 ///< Explicit list of allowed tables, ignored if empty
   StringList    ttTypes { "TT" };                              ///< type name of TurnTable
   StringList    ppTypes { "PP" };                              ///< type name of PrecisionPlacement
   StringList    shTypes { "SH" };                              ///< type name of Shelf
@@ -65,6 +66,35 @@ struct TaskDefinition {
 
 /** Definition of all available Tasks with the appropriate configuration parameters **/
 using TaskDefinitions = std::unordered_map<std::string, TaskDefinition>;
+
+class ConfigParserInterface {
+  private:
+    std::string mTaskConfig;
+    std::string mArenaConfig;
+  protected:
+    virtual void update() = 0;
+  public:
+    void reload(const std::string& arenaConfig, const std::string& taskConfig) {
+      std::string oldTaskConfig = mTaskConfig;
+      std::string oldArenaConfig = mArenaConfig;
+      mTaskConfig = taskConfig;
+      mArenaConfig = arenaConfig;
+      try {
+        update();
+      } catch(std::exception& e) {
+        mTaskConfig = oldTaskConfig;
+        mArenaConfig = oldArenaConfig;
+        throw e;
+      }
+      mTaskConfig = taskConfig;
+      mArenaConfig = arenaConfig;
+    }
+    const std::string& taskConfig() const { return mTaskConfig; }
+    const std::string& arenaConfig() const { return mArenaConfig; }
+    virtual const TaskDefinitions& tasks() const = 0;
+    virtual const ArenaDescription& arena() const = 0;
+};
+
 }
 
 /** \brief Output operator for ArenaDescriptions

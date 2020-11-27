@@ -10,6 +10,7 @@ add_compile_options(-std=c++14 -g)
 find_package(catkin REQUIRED COMPONENTS
               atwork_commander_msgs
               roscpp
+              pluginlib
              )
 
 ## System dependencies are found with CMake's conventions
@@ -120,11 +121,23 @@ include_directories(
 )
 
 ## Declare a C++ library
- add_library(${PROJECT_NAME}
+add_library(${PROJECT_NAME}
   src/TaskGenerator.cpp
   src/Definitions.cpp
 )
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+
+
+add_library(${PROJECT_NAME}_plugin_support
+  src/DefaultConfigParser.cpp
+)
+target_link_libraries(${PROJECT_NAME}_plugin_support ${catkin_LIBRARIES})
+
+add_library(${PROJECT_NAME}_plugins
+  src/simple/Generator.cpp
+  src/jurek/Generator.cpp
+)
+target_link_libraries(${PROJECT_NAME}_plugins ${PROJECT_NAME}_plugin_support ${catkin_LIBRARIES})
 
 add_executable(ExampleGenerator src/ExampleNode.cpp)
 target_link_libraries(ExampleGenerator ${PROJECT_NAME} ${catkin_LIBRARIES})

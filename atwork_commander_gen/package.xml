@@ -54,7 +54,6 @@
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
-    <!-- Other tools can request additional information be placed here -->
-
+    <atwork_commander_gen plugin="${prefix}/plugins.xml" />
   </export>
 </package>

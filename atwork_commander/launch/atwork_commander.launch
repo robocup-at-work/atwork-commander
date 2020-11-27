@@ -6,12 +6,14 @@
     <arg name="output" default="$(eval 'log' if arg('gui') else 'screen')" />
     <arg name="coms" default="[ 'atwork_commander::com_plugin::ros::TaskArenaCentric',
                                  'atwork_commander::com_plugin::ros::TaskObjectCentric' ]" />
+    <arg name="generator" default="SimpleGen"/>
     <arg name="multimaster" default="true" />
     <arg name="publish_frequency" default="1.0"/>
 
 
     <group ns="atwork_commander">
         <!-- load config -->
+        <param name="generator" value="$(arg generator)"/>
         <rosparam file="$(find atwork_commander_gen)/config/BNT.yaml"    ns="tasks"/>
         <rosparam file="$(find atwork_commander_gen)/config/BMT.yaml"    ns="tasks"/>
         <rosparam file="$(find atwork_commander_gen)/config/BTT1.yaml"   ns="tasks"/>

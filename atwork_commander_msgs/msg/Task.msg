@@ -7,3 +7,6 @@ Workstation[] arena_target_state
 
 duration prep_time
 duration exec_time
+
+string type
+uint64 id

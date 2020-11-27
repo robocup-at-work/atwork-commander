@@ -46,13 +46,11 @@ class StateTracker {
     }
 
     ros::NodeHandle m_nh;
-
-    TaskDefinitions m_task_map;
     double m_robot_timeout = 1.0;
     double m_publish_frequency = 1.0;
-    ArenaDescription m_arena;
-    std::shared_ptr<TaskGenerator> m_task_gen;
+    TaskGenerator& m_task_gen;
     State m_state;
+    bool m_checked = false;
     bool m_debug = false;
 
     ros::Publisher m_send_task_pub;
@@ -67,8 +65,9 @@ class StateTracker {
     ros::Timer m_task_timer;
 
 public:
-    StateTracker(ros::NodeHandle nh)
-        : m_nh(nh)
+    StateTracker(ros::NodeHandle nh, TaskGenerator& taskGen)
+        : m_nh(nh),
+          m_task_gen(taskGen)
     {
         ros::param::get("~debug", m_debug);
         if( m_debug && ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
@@ -77,25 +76,6 @@ public:
         }
 
         m_state.state = State::IDLE;
-
-        readTaskList();
-        readArenaDefinition();
-        // TODO move to task generator
-        for ( auto& item : m_task_map ) {
-          auto& objects = item.second.objects;
-          for ( const auto& obj : m_arena.objects ) {
-            auto it = objects.find(obj.first);
-            if (it == objects.end())
-              objects.insert(obj);
-          }
-        }
-
-        try {
-          m_task_gen = std::make_shared<TaskGenerator>(m_arena, m_task_map);
-        } catch( const std::exception& e) {
-          ROS_ERROR_STREAM_NAMED("state_tracker", "Invalid Configuration specified to Task Generator:" << std::endl << e.what());
-          abort();
-        }
 
         if ( !ros::param::get("~robot_timeout", m_robot_timeout) )
           ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Robot Timeout unset (private parameter: \"robot_timeout\") using default value 1.0s");
@@ -126,13 +106,13 @@ private:
     void stateUpdate() {
       switch( m_state.state ) {
         case ( State::IDLE ):
-          if ( !m_state.robots.empty() && m_task_gen->check(m_state.task) ) {
+          if ( !m_state.robots.empty() && m_checked ) {
             ROS_DEBUG_STREAM_NAMED("state_tracker", "[REFBOX] Robots registered and task generated! I am READY :-)");
             m_state.state = State::READY;
           }
           break;
         case ( State::READY ):
-          if ( m_state.robots.empty() || ! m_task_gen->check(m_state.task) ) {
+          if ( m_state.robots.empty() || ! m_checked ) {
             ROS_DEBUG_STREAM_NAMED("state_tracker", "[REFBOX] Lost all robots or generated task! Going back to IDLE!");
             m_state.state = State::IDLE;
             break;
@@ -186,187 +166,7 @@ private:
       if ( inState( { State::EXECUTION } ) )
         m_send_task_pub.publish( m_state.task );
     }
-
-   bool readStrings(StringList& data, XmlRpc::XmlRpcValue& val) const {
-      if ( val.getType() != XmlRpc::XmlRpcValue::TypeArray ) {
-        ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Invalid Parameter type encountered! Expected Array!");
-        return false;
-      }
-
-      std::vector<std::string> strings( val.size() );
-      auto it = strings.begin();
-
-      for (int i=0;i<val.size();i++)
-        switch(val[i].getType()) {
-          case( XmlRpc::XmlRpcValue::TypeString ) : *it++ =                 static_cast<std::string>( val[i] )  ; break;
-          case( XmlRpc::XmlRpcValue::TypeInt )    : *it++ = std::to_string( static_cast<int>        ( val[i] ) ); break;
-          case( XmlRpc::XmlRpcValue::TypeDouble ) : *it++ = std::to_string( static_cast<double>     ( val[i] ) ); break;
-          case( XmlRpc::XmlRpcValue::TypeBoolean ): *it++ = std::to_string( static_cast<bool>       ( val[i] ) ); break;
-          default:
-            ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Invalid Parameter type encountered for parameter in array!" <<
-                                                           " Allowed are String, Int, Bool, Double" );
-            return false;
-        };
-
-      return true;
-   }
-
-   bool readStruct(ParameterType& params, XmlRpc::XmlRpcValue& val) const {
-      if ( val.getType() != XmlRpc::XmlRpcValue::TypeStruct ) {
-        ROS_WARN_STREAM_NAMED("state_tracked", "[REFBOX] Invalid Parameter type encountered for parameter!" <<
-                                                       " Expected Struct!");
-        return false;
-      }
-      bool result = true;
-      for (auto& entry: val) {
-        switch(entry.second.getType()) {
-          case( XmlRpc::XmlRpcValue::TypeInt )    : params[entry.first]=static_cast<int>( entry.second ); break;
-          case( XmlRpc::XmlRpcValue::TypeBoolean ): params[entry.first]=static_cast<bool>( entry.second ); break;
-          default:
-            ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Invalid Parameter type encountered for struct parameter!" <<
-                                                           " Allowed are Int and Bool");
-            result = false;
-        };
-      }
-      return result;
-   }
-
-   TaskDefinition readTask(const std::string& name, XmlRpc::XmlRpcValue& def ) const {
-
-      TaskDefinition task;
-
-      for (auto& entry : def) {
-        if ( entry.first == "normal_table_types" ) {
-          if ( !readStrings(task.normalTableTypes, entry.second) )
-            ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Error reading table types of normale tables for task "
-                                                   << name << "! Keeping default: " << task.normalTableTypes << "!");
-          continue;
-        }
-        if ( entry.first == "tt_types" ) {
-          if ( !readStrings(task.ttTypes, entry.second) )
-            ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Error reading table types of turntables for task "
-                                                   << name << "! Keeping default: " << task.ttTypes << "!");
-          continue;
-        }
-        if ( entry.first == "pp_types" ) {
-          if ( !readStrings(task.ppTypes, entry.second) )
-            ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Error reading table types of precision placement for task " <<
-                                                   name <<  "! Keeping default: " << task.ppTypes << "!");
-          continue;
-        }
-        if ( entry.first == "sh_types" ) {
-          if ( !readStrings(task.shTypes, entry.second) )
-            ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Error reading table types of shelfs for task " << name <<
-                                                   "! Keeping default: " << task.shTypes << "!");
-          continue;
-        }
-        if ( entry.first == "cavities" ) {
-          if ( !readStrings(task.cavities, entry.second) )
-            ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Error reading available cavities for task " << name <<
-                                                   "! Keeping default: " << task.cavities << "!");
-          continue;
-        }
-        if ( entry.first == "object_types" ) {
-          if ( !readStruct(task.objects, entry.second) ) {
-            std::ostringstream os;
-            for ( const auto& v: task.objects )
-              os << "\t" << v.first << ": " << v.second << std::endl;
-            ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Error reading available objects for task " << name <<
-                                                   "! State after partial update: " << std::endl << os.str());
-
-          }
-          continue;
-        }
-
-        auto it = task.parameters.find(entry.first);
-        if ( it != task.parameters.end()) {
-          switch(entry.second.getType()) {
-            case( XmlRpc::XmlRpcValue::TypeInt )    : it->second = static_cast<int>( entry.second ); break;
-            case( XmlRpc::XmlRpcValue::TypeBoolean ): it->second = static_cast<bool>( entry.second ); break;
-            default:
-              ROS_ERROR_STREAM_NAMED("state_tracker", "[REFBOX] Invalid Parameter type encountered for parameter " <<
-                                                      name << "/" << entry.first << "! Only int and bool is allowed!");
-          };
-        } else {
-          ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Unknown parameter " << entry.first << " in definition of task " << name << "! Ignoring!");
-        }
-      }
-
-      return task;
-   }
-
-    void readTaskList()
-    {
-        std::string task_param = ros::this_node::getNamespace() + "/tasks";
-        ROS_INFO_STREAM_NAMED("state_tracker", "[REFBOX] Try to read task definitions from '" << task_param << "'");
-
-        XmlRpc::XmlRpcValue my_list;
-        m_nh.getParam(task_param, my_list);
-
-        if (my_list.getType() != XmlRpc::XmlRpcValue::TypeStruct) {
-            ROS_ERROR_NAMED("state_tracker", "[REFBOX] Couldn't read Tasklist. Aspect 'XmlRpc::XmlRpcValue::TypeStruct' under '%s'.", task_param.c_str());
-            ROS_ASSERT(false);
-        }
-
-        for (auto& task_p : my_list) {
-            std::string name = static_cast<std::string>(task_p.first);
-
-            if (task_p.second.getType() != XmlRpc::XmlRpcValue::TypeStruct) {
-                ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] " << task_param << "/" << name << " is not a task definition");
-                continue;
-            }
-
-            m_task_map[name] = readTask(name, task_p.second);
-        }
-
-        ROS_ASSERT(m_task_map.size() > 0);
-        ROS_INFO_STREAM_NAMED("state_tracker", "[REFBOX] Read " << m_task_map.size() << " tasks from paramet er server");
-        ROS_DEBUG_STREAM_NAMED("state_tracker", "[REFBOX] Defined Tasks: " << m_task_map);
-    }
-
-    void readArenaDefinition()
-    {
-        std::string ws_param = ros::this_node::getNamespace() + "/arena/workstations";
-        ROS_INFO_STREAM_NAMED("state_tracker", "[REFBOX] ry to read workstations from '" << ws_param << "'") ;
-
-        std::string wp_param = ros::this_node::getNamespace() + "/arena/waypoints";
-        ROS_INFO_STREAM_NAMED("state_tracker", "[REFBOX] ry to read waypoints from '" << wp_param << "'") ;
-
-        std::string obj_param = ros::this_node::getNamespace() + "/arena/objects";
-        ROS_INFO_STREAM_NAMED("state_tracker", "[REFBOX] ry to read available objects from '" << obj_param << "'") ;
-
-        std::map<std::string, std::string> temp_ws;
-        m_nh.getParam(ws_param, temp_ws);
-        for (auto& ws : temp_ws) {
-            m_arena.workstations[ws.first] = ws.second;
-        }
-
-        std::map<std::string, std::string> temp_wp;
-        m_nh.getParam(wp_param, temp_wp);
-        for (auto& wp : temp_wp) {
-            m_arena.waypoints[wp.first] = wp.second;
-        }
-
-        std::map<std::string, int> temp_obj;
-        m_nh.getParam(obj_param, temp_obj);
-        for (auto& obj : temp_obj) {
-            m_arena.objects[obj.first] = obj.second;
-        }
-
-        ROS_ASSERT(m_arena.workstations.size() > 1);
-
-        ROS_INFO_STREAM_NAMED("state_tracker", "[REFBOX] Read " << m_arena.workstations.size() << " workstations from parameter server");
-
-
-        std::string ppc_param = ros::this_node::getNamespace() + "/arena/cavities";
-        ROS_INFO_STREAM_NAMED("state_tracker", "[REFBOX] try to read PP cavities from '" << ppc_param << "'");
-
-        m_nh.getParam(ppc_param, m_arena.cavities);
-
-        ROS_INFO_STREAM_NAMED("state_tracker", "[REFBOX] read " << m_arena.cavities.size() << " PP cavities from parameter server");
-        ROS_DEBUG_STREAM_NAMED("state_tracker", "[REFBOX] Read Arena Definition:" << std::endl << m_arena);
-    }
-
+    
     void receiveRobotStateClb(const atwork_commander_msgs::RobotState::ConstPtr& msg)
     {
       //TODO Find robot and update
@@ -418,8 +218,10 @@ private:
       }
 
       try {
-        res.task = m_task_gen->operator()(req.task_name);
+        res.task = m_task_gen(req.task_name);
+        m_task_gen.check(res.task);
         m_state.task = res.task;
+        m_checked = true;
         ROS_DEBUG_STREAM_NAMED("external", "[REFBOX] New Task generated:" << std::endl << res.task);
         stateUpdate();
       } catch( const std::exception& e) {
@@ -440,8 +242,9 @@ private:
       }
 
       try {
-        m_task_gen->check(req.task);
+        m_task_gen.check(req.task);
         m_state.task = req.task;
+        m_checked = true;
         ROS_DEBUG_STREAM_NAMED("external", "[REFBOX] Task loaded: " << std::endl << req.task);
         stateUpdate();
       } catch( const std::exception& e) {
@@ -480,7 +283,9 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "atwork_commander");
     ros::NodeHandle nh;
 
-    atwork_commander::StateTracker st(nh);
+    const std::string& ns = ros::this_node::getNamespace();
+    atwork_commander::TaskGenerator taskGen( ns + "/arena", ns + "/tasks", ns + "/generator");
+    atwork_commander::StateTracker st(nh, taskGen);
     ROS_INFO_NAMED("state_tracker", "[REFBOX] initialized");
 
     ros::spin();
