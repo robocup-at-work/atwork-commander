@@ -6,4 +6,9 @@
       Simple task generator not rule-book compatible!
     </description>
   </class>
+  <class name="JurekGen" type="atwork_commander::task_generator::jurek::Generator" base_class_type="atwork_commander::task_generator::GeneratorPluginInterface">
+    <description>
+      Rule-Book compatible mathematical task generator by Jurek Rostalsky!
+    </description>
+  </class>
 </library>
