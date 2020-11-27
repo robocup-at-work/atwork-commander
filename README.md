@@ -95,5 +95,5 @@ Enable dynamic task generation according to specified task types of the
 ## TODOs
 
 - GUI is currently mockup only
-- COM only contains multi-master ROS communication plugin
+- COM only contains two multi-master ROS communication plugins
 - GEN is not fully RuleBook compatible
