@@ -34,7 +34,7 @@ class Generator : public GeneratorPluginInterface {
   vector<ObjectType> mAvailableCavities;
   vector<ObjectType> mAvailableObjects;
   vector<std::array<size_t, 3>> container_ids;
-  vector<const Table*> mTablesInverse;
+  vector<string> mTablesInverse;
 
   auto extractObjectTypes(const string& task) {
     vector<ObjectType> availableObjects;
@@ -161,11 +161,11 @@ class Generator : public GeneratorPluginInterface {
 
   Task toTask(const vector<array<int, 5>>& run) const {
     Task task;
-    task.arena_start_state.resize(mTablesInverse.size());
-    task.arena_target_state.resize(mTablesInverse.size());
+    task.arena_start_state.resize(mTablesInverse.size()-1);
+    task.arena_target_state.resize(mTablesInverse.size()-1);
     for( unsigned int i=1; i < mTablesInverse.size(); i++ ) {
-      task.arena_start_state[i].workstation_name = mTablesInverse[i]->name;
-      task.arena_target_state[i].workstation_name = mTablesInverse[i]->name;
+      task.arena_start_state[i-1].workstation_name = mTablesInverse[i];
+      task.arena_target_state[i-1].workstation_name = mTablesInverse[i];
     }
     for( const array<size_t, 3>& cont : container_ids) {
       atwork_commander_msgs::Object o;
@@ -289,7 +289,7 @@ class Generator : public GeneratorPluginInterface {
     mPptObjects.clear();
     mTablesInverse.clear();
     const auto& allowedTables = mTasks[taskName].allowedTables;
-    mTablesInverse.push_back(nullptr);
+    mTablesInverse.push_back("");
     for( const pair<string, Table>& e : mTables ) {
       const Table& t = e.second;
 
@@ -297,13 +297,13 @@ class Generator : public GeneratorPluginInterface {
           ! count( allowedTables.begin(), allowedTables.end(), t.name ) )
         continue;
 
-      if( t.type == "00" )                  { mTables0.push_back(++id);  mJTables.push_back(id); mTablesInverse.push_back(&e.second); continue; }
-      if( t.type == "05" )                  { mTables5.push_back(++id);  mJTables.push_back(id); mTablesInverse.push_back(&e.second); continue; }
-      if( t.type == "10" )                  { mTables10.push_back(++id); mJTables.push_back(id); mTablesInverse.push_back(&e.second); continue; }
-      if( t.type == "15" )                  { mTables15.push_back(++id); mJTables.push_back(id); mTablesInverse.push_back(&e.second); continue; }
-      if( t.type == "TT" || t.type == "CB") { mConveyors.push_back(++id);                        mTablesInverse.push_back(&e.second); continue; }
-      if( t.type == "PP" )                  { mPpts.push_back(++id);                             mTablesInverse.push_back(&e.second); continue; }
-      if( t.type == "SH" )                  { mShelfs.push_back(++id);                           mTablesInverse.push_back(&e.second); continue; }
+      if( t.type == "00" )                  { mTables0.push_back(++id);  mJTables.push_back(id); mTablesInverse.push_back(t.name); continue; }
+      if( t.type == "05" )                  { mTables5.push_back(++id);  mJTables.push_back(id); mTablesInverse.push_back(t.name); continue; }
+      if( t.type == "10" )                  { mTables10.push_back(++id); mJTables.push_back(id); mTablesInverse.push_back(t.name); continue; }
+      if( t.type == "15" )                  { mTables15.push_back(++id); mJTables.push_back(id); mTablesInverse.push_back(t.name); continue; }
+      if( t.type == "TT" || t.type == "CB") { mConveyors.push_back(++id);                        mTablesInverse.push_back(t.name); continue; }
+      if( t.type == "PP" )                  { mPpts.push_back(++id);                             mTablesInverse.push_back(t.name); continue; }
+      if( t.type == "SH" )                  { mShelfs.push_back(++id);                           mTablesInverse.push_back(t.name); continue; }
 
       ROS_ERROR_STREAM("Unknown table type" << t);
     }
