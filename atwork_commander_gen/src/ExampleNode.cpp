@@ -36,13 +36,16 @@ int main(int argc, char** argv) {
       ROS_INFO_STREAM("Tasks Config: " << endl << gen.config().tasks());
       auto task = gen(taskName);
       ROS_INFO_STREAM("Example task:" << endl << task);
-
+      gen.check(task);
+      ROS_INFO_STREAM("Example task correct");
       ros::shutdown();
     }
   );
 
   while(ros::ok())
     ros::spin();
+
+  run.join();
 
   return result;
 }
