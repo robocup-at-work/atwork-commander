@@ -6,7 +6,7 @@
     <arg name="output" default="$(eval 'log' if arg('gui') else 'screen')" />
     <arg name="coms" default="[ 'atwork_commander::com_plugin::ros::TaskArenaCentric',
                                  'atwork_commander::com_plugin::ros::TaskObjectCentric' ]" />
-    <arg name="generator" default="SimpleGen"/>
+    <arg name="generator" default="JurekGen"/>
     <arg name="multimaster" default="true" />
     <arg name="publish_frequency" default="1.0"/>
 
