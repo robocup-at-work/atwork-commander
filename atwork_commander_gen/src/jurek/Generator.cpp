@@ -295,7 +295,8 @@ class Generator : public GeneratorPluginInterface {
     for( const pair<string, Table>& e : mTables ) {
       const Table& t = e.second;
 
-      if( ( t.type != "TT" || t.type != "CB" || t.type == "PP" || t.type == "SH" ) &&
+//    Configure Tables Types
+      if( ( t.type == "00" || t.type == "05" || t.type == "10" || t.type == "15" ) &&
           count(nTables.begin(), nTables.end(), t.type) == 0 )
         continue;
 
