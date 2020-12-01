@@ -68,15 +68,13 @@ struct Converter  {
       return difference;
     }
 
-    static int findObject(const WorkstationObjs& wsMap, const Object& o, const string& source) {
-      size_t i = 0;
+    static string findObject(const WorkstationObjs& wsMap, const Object& o, const string& source) {
       for(const auto& ws: wsMap) {
-        i++;
         if( ws.first == source ) continue;
         if( any_of(ws.second.begin(), ws.second.end(), [&o](const Object& b){return o.object == b.object && o.target == b.target;}) )
-            return i;
+            return ws.first;
       }
-      return -1;
+      return "";
     }
 
     static int findContainer(const WorkstationObjs& wsMap, const Object& o, const string& source) {

@@ -9,6 +9,8 @@
 #include <random>
 #include <sstream>
 #include <chrono>
+#include <numeric>
+#include <algorithm>
 
 namespace atwork_commander {
 namespace task_generator {
@@ -394,12 +396,12 @@ class Generator : public GeneratorPluginInterface {
     size_t i = 0;
     size_t tID = 0;
     for(const auto& objs: startObjs) {
-      tID++;
+      tID = find(mTablesInverse.begin(), mTablesInverse.end(), objs.first) - mTablesInverse.begin();
       for( const auto& o: objs.second ) {
         array<int, 5> t;
         t[0] = o.object;
         t[1] = tID;
-        t[2] = Converter::findObject(targetObjs, o, objs.first);
+        t[2] = find(mTablesInverse.begin(), mTablesInverse.end(), Converter::findObject(targetObjs, o, objs.first)) - mTablesInverse.begin();
         t[4] = ++i;
         if (o.target != atwork_commander_msgs::Object::EMPTY)
           t[3] = Converter::findContainer(immobile, o, objs.first);
@@ -409,7 +411,7 @@ class Generator : public GeneratorPluginInterface {
       }
     }
     for(const auto& objs: immobile) {
-      tID++;
+      tID = find(mTablesInverse.begin(), mTablesInverse.end(), objs.first) - mTablesInverse.begin();
       for( const auto& o: objs.second ) {
         array<int, 5> t;
         t[0] = o.object;
@@ -653,7 +655,7 @@ class Generator : public GeneratorPluginInterface {
       }
       else if(tables == 0 && paramFinal["B_Container"] + paramFinal["R_Container"] > 0) {throw 225;}					   // No tables No container place in air
       if (ppts == 0 && paramFinal["place_ppts"] > 0) {throw 226;}										                             // No cavity plattforms
-      if (conveyors == 0 && (paramFinal["pick_turntables"] > 0 || paramFinal["place_turntbales"] > 0)) {throw 227;}	// No conveyors
+      if (conveyors == 0 && (paramFinal["pick_turntables"] > 0 || paramFinal["place_turntables"] > 0)) {throw 227;}	// No conveyors
       if (table0 == 0 && paramFinal["pick_tables0"] > 0) {throw 231;}													// No tables0
       if (table5 == 0 && paramFinal["pick_tables5"] > 0) {throw 232;}													// No tables5
       if (table10 == 0 && paramFinal["pick_tables10"] > 0) {throw 233;}												// No tables10
@@ -764,10 +766,18 @@ class Generator : public GeneratorPluginInterface {
         //debugAll("taskgenerierung", tasks);
       }
 
-      for(int i=0; i<paramFinal["decoys"]; ++i) {                               // add tasks for the decoys
-        size_t local = rand() % tables;
-        tasks.push_back({-1,int(mAllTables.at(local)),-1,-1,-1});
-      }
+      size_t all = paramFinal["pick_shelfs"] + paramFinal["pick_turntables"] + paramFinal["pick_tables0"] + paramFinal["pick_tables5"] + paramFinal["pick_tables10"] + paramFinal["pick_tables15"];
+      vector<pair<size_t, vector<unsigned int>>> decoyFracs = {
+       make_pair((size_t)round(paramFinal["decoys"]*(float)paramFinal["pick_shelfs"]/all), mShelfs),
+       make_pair((size_t)round(paramFinal["decoys"]*(float)paramFinal["pick_turntables"]/all), mConveyors),
+      };
+      size_t decoysToDo = paramFinal["decoys"];
+      decoyFracs.push_back(make_pair(max(0l, (ssize_t)decoysToDo - (ssize_t)accumulate(decoyFracs.begin(), decoyFracs.end(), 0, [](size_t sum, decltype(decoyFracs)::value_type& a){return sum+a.first;})), mJTables));
+
+      for(const auto& entry: decoyFracs)
+        for(int i=0; i<entry.first; i++)
+          tasks.push_back({-1, (int)entry.second.at(rand() % entry.second.size()),-1,-1,-1});
+
       generate_objects(tasks);                                                  // generate objects for the decoys
       return toTask(tasks);
     } catch(int i) {
