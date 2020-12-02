@@ -47,8 +47,10 @@ class StateTracker {
 
     ros::NodeHandle m_nh;
     double m_robot_timeout = 1.0;
+    double m_publish_frequency = 1.0;
     TaskGenerator& m_task_gen;
     State m_state;
+    bool m_checked = false;
     bool m_debug = false;
 
     ros::Publisher m_send_task_pub;
@@ -77,8 +79,7 @@ public:
 
         if ( !ros::param::get("~robot_timeout", m_robot_timeout) )
           ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Robot Timeout unset (private parameter: \"robot_timeout\") using default value 1.0s");
-        double publish_frequency = 1.0;
-        if ( !ros::param::get("~publish_frequency", publish_frequency) )
+        if ( !ros::param::get("~publish_frequency", m_publish_frequency) )
           ROS_WARN_STREAM_NAMED("state_tracker", "[REFBOX] Publication Frequency unset (private parameter: \"publish_frequency\") using default value 1.0 Hz");
         m_robot_state_sub = m_nh.subscribe("internal/robot_state", 1, &StateTracker::receiveRobotStateClb, this);
 
@@ -90,7 +91,7 @@ public:
         m_load_task_service = m_nh.advertiseService("internal/load_task", &StateTracker::loadTask, this);
         m_state_update_service = m_nh.advertiseService("internal/state_update", &StateTracker::externalStateUpdate, this);
 
-        m_publish_timer = nh.createTimer( ros::Duration( publish_frequency ), &StateTracker::publishUpdate, this );
+        m_publish_timer = nh.createTimer( ros::Duration( m_publish_frequency ), &StateTracker::publishUpdate, this );
 
     }
 
@@ -105,13 +106,13 @@ private:
     void stateUpdate() {
       switch( m_state.state ) {
         case ( State::IDLE ):
-          if ( !m_state.robots.empty() && m_task_gen.check(m_state.task) ) {
+          if ( !m_state.robots.empty() && m_checked ) {
             ROS_DEBUG_STREAM_NAMED("state_tracker", "[REFBOX] Robots registered and task generated! I am READY :-)");
             m_state.state = State::READY;
           }
           break;
         case ( State::READY ):
-          if ( m_state.robots.empty() || ! m_task_gen.check(m_state.task) ) {
+          if ( m_state.robots.empty() || ! m_checked ) {
             ROS_DEBUG_STREAM_NAMED("state_tracker", "[REFBOX] Lost all robots or generated task! Going back to IDLE!");
             m_state.state = State::IDLE;
             break;
@@ -180,10 +181,11 @@ private:
     bool startTask(atwork_commander_msgs::StartTask::Request& req, atwork_commander_msgs::StartTask::Response& res) {
       if ( notInState( { State::READY } ) ) {
         std::ostringstream os;
-        if ( m_state.state == State::IDLE )
-          os << "Got start request while refbox not ready! Ignoring!";
-        else
-          os << "Got start request with ongoing task! Ignoring!";
+        switch(m_state.state) {
+          case(State::IDLE ):    os << "Got start request while refbox not ready! Ignoring!"; break;
+          case(State::FAILURE ): os << "Got start request while refbox failed! Please restart!";break;
+          default:               os << "Got start request with ongoing task! Ignoring!";
+        }
         ROS_ERROR_STREAM_NAMED("external", "[REFBOX] " << os.str());
         res.error = os.str();
         return true;
@@ -217,7 +219,9 @@ private:
 
       try {
         res.task = m_task_gen(req.task_name);
+        m_task_gen.check(res.task);
         m_state.task = res.task;
+        m_checked = true;
         ROS_DEBUG_STREAM_NAMED("external", "[REFBOX] New Task generated:" << std::endl << res.task);
         stateUpdate();
       } catch( const std::exception& e) {
@@ -240,6 +244,7 @@ private:
       try {
         m_task_gen.check(req.task);
         m_state.task = req.task;
+        m_checked = true;
         ROS_DEBUG_STREAM_NAMED("external", "[REFBOX] Task loaded: " << std::endl << req.task);
         stateUpdate();
       } catch( const std::exception& e) {

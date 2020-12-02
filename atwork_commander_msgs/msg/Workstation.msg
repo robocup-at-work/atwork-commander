@@ -1,4 +1,4 @@
-# Table.msg
+# workstation.msg
 
  Object[] objects
 

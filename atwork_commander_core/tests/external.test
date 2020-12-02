@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+
+<launch>
+  <arg name="frequency" default="1"/>
+  <arg name="output" default="log"/>
+
+  <include file="$(find atwork_commander)/launch/atwork_commander.launch">
+    <arg name="publish_frequency" value="$(arg frequency)"/>
+    <arg name="multimaster" value="false"/>
+    <arg name="output" value="$(arg output)"/>
+  </include>
+
+  <test test-name="StartOnIdle" pkg="atwork_commander_core" type="external" name="external" args="--gtest_filter=*startOnIdle">
+    <param name="refbox" value="atwork_commander"/>
+  </test>
+
+  <test test-name="StopOnIdle" pkg="atwork_commander_core" type="external" name="external" args="--gtest_filter=*stoponIdle">
+    <param name="refbox" value="atwork_commander"/>
+  </test>
+
+  <test test-name="ForwardOnIdle" pkg="atwork_commander_core" type="external" name="external" args="--gtest_filter=*forwardOnIdle">
+    <param name="refbox" value="atwork_commander"/>
+  </test>
+
+</launch>

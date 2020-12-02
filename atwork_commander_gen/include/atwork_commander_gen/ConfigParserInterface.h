@@ -24,6 +24,7 @@ struct TaskDefinition {
   ParameterType objects;                                       ///< max. requested Object count
   StringList    cavities;                                      ///< requested deactivated Cavity types
   StringList    normalTableTypes { "00", "05", "10", "15" };   ///< types of normal tables
+  StringList    allowedTables;                                 ///< Explicit list of allowed tables, ignored if empty
   StringList    ttTypes { "TT" };                              ///< type name of TurnTable
   StringList    ppTypes { "PP" };                              ///< type name of PrecisionPlacement
   StringList    shTypes { "SH" };                              ///< type name of Shelf
