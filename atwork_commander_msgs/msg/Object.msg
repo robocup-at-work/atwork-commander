@@ -2,6 +2,7 @@
 
 uint16 object
 uint16 target
+bool   decoy
 
 uint16 EMPTY = 0
 

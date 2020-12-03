@@ -172,6 +172,7 @@ class Generator : public GeneratorPluginInterface {
     for( const array<size_t, 3>& cont : container_ids) {
       atwork_commander_msgs::Object o;
       o.object = cont[1];
+      o.decoy = false;
       o.target = atwork_commander_msgs::Object::EMPTY;
       task.arena_start_state[cont[0]-1].objects.push_back(o);
       task.arena_target_state[cont[0]-1].objects.push_back(o);
@@ -179,14 +180,17 @@ class Generator : public GeneratorPluginInterface {
     for(const array<int, 5>& obj : run) {
       atwork_commander_msgs::Object o;
       o.object = obj[obj_id];
+      o.decoy = false;
       if( obj[cont_id] == -1)
         o.target = atwork_commander_msgs::Object::EMPTY;
       else
         o.target = container_ids[obj[cont_id]][1];
       task.arena_start_state[obj[src_id]-1].objects.push_back(o);
-      if ( obj[dst_id] == -1 )
+      if ( obj[dst_id] == -1 ) {
+        o.decoy = true;
         task.arena_target_state[obj[src_id]-1].objects.push_back(o);
-      else
+        task.arena_target_state[obj[src_id]-1].objects.push_back(o);
+      } else
         task.arena_target_state[obj[dst_id]-1].objects.push_back(o);
     }
     return task;
@@ -413,6 +417,11 @@ class Generator : public GeneratorPluginInterface {
     for(const auto& objs: immobile) {
       tID = find(mTablesInverse.begin(), mTablesInverse.end(), objs.first) - mTablesInverse.begin();
       for( const auto& o: objs.second ) {
+        if(!o.decoy){
+          ROS_WARN_STREAM_COND_NAMED(o.object < atwork_commander_msgs::Object::CONTAINER_RED, "generator", 
+              "[REFBOX-Gen] Non moving object found, which is not a decoy:\n" << o);
+          continue;
+        }
         array<int, 5> t;
         t[0] = o.object;
         t[1] = tID;
