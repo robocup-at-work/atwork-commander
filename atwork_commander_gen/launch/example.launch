@@ -3,15 +3,17 @@
 <launch>
   <group ns="atwork_commander_gen/example">
     <arg name="generator" default="SimpleGen"/> 
-    <arg name="arena" default="arena"/> 
-    <arg name="task" default="task"/> 
+    <arg name="arena" default="example-arena"/> 
+    <arg name="task" default="example-task"/> 
+    <arg name="debug" default="false"/> 
 
     <param name="plugin" value="$(arg generator)"/> 
     <param name="taskName" value="$(arg task)"/> 
-    <rosparam file="$(find atwork_commander_gen)/config/example/$(arg task).yaml" ns="tasks"/>
-    <rosparam file="$(find atwork_commander_gen)/config/example/$(arg arena).yaml"/>
+    <rosparam file="$(find atwork_commander_gen)/config/$(arg task).yaml" ns="tasks"/>
+    <rosparam file="$(find atwork_commander_gen)/config/$(arg arena).yaml"/>
 
-    <node name="example_generator" type="ExampleGenerator" pkg="atwork_commander_gen" output="screen"/>
+    <node name="example_generator" type="ExampleGenerator" pkg="atwork_commander_gen" output="screen" launch-prefix="gdbserver :1234 " if="$(arg debug)"/>
+    <node name="example_generator" type="ExampleGenerator" pkg="atwork_commander_gen" output="screen" unless="$(arg debug)"/>
 
   </group>
 </launch>

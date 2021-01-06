@@ -21,7 +21,7 @@
         <rosparam file="$(find atwork_commander_gen)/config/BTT3.yaml"   ns="tasks"/>
         <rosparam file="$(find atwork_commander_gen)/config/RTT.yaml"    ns="tasks"/>
         <rosparam file="$(find atwork_commander_gen)/config/PPT.yaml"    ns="tasks"/>
-        <rosparam file="$(find atwork_commander_gen)/config/Final.yaml"  ns="tasks"/>
+        <rosparam file="$(find atwork_commander_gen)/config/FINAL.yaml"  ns="tasks"/>
         <rosparam file="$(find atwork_commander_gen)/config/Arena.yaml"/>
 
         <!-- start refbox (incl task generator) -->
