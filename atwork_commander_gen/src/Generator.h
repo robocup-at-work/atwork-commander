@@ -12,9 +12,11 @@ namespace task_generator {
 using Task = GeneratorPluginInterface::Task;
 
 struct Object;
+struct ObjectType;
 struct Table;
 
 using ObjectPtr = Object*;
+using ObjectTypePtr = ObjectType*;
 using TablePtr = Table*;
 
 enum class Orientation : unsigned int {
@@ -83,6 +85,18 @@ struct ObjectBase {
       color( extractColor( typeName ) ),
       orientation( extractOrientation( typeName ) )
   {}
+  bool operator==(const ObjectBase& b) const {
+    return type == b.type && form == b.form && color == b.color;
+  }
+  bool operator<(const ObjectBase& b) const {
+    if (type < b.type)
+      return true;
+    if (form < b.form)
+      return true;
+    if (color < b.color)
+      return true;
+    return false;
+  }
 };
 
 struct ObjectType : public ObjectBase {
@@ -100,6 +114,8 @@ struct ObjectType : public ObjectBase {
     count--;
     return temp;
   }
+  using ObjectBase::operator<;
+  using ObjectBase::operator==;
 };
 
 struct Object : public ObjectBase {
@@ -107,11 +123,11 @@ struct Object : public ObjectBase {
   unsigned int id=0;
   TablePtr source = nullptr;
   TablePtr destination = nullptr;
-  ObjectPtr container = nullptr;
+  ObjectTypePtr container = nullptr;
   Object() = default;
   Object(ObjectType& type): ObjectBase(type), id(globalID++) { type--; }
   Object(ObjectType&& type): ObjectBase(type), id(globalID++) {}
-  static void reset() { globalID = 0; }
+  static void reset() { globalID = 1; }
 };
 
 unsigned int Object::globalID = 1;
@@ -127,7 +143,7 @@ struct Table {
 }
 }
 
-std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::Type type) {
+inline std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::Type type) {
   switch ( type ) {
     case ( atwork_commander::task_generator::Type::CAVITY ):         return os << "Cavity";
     case ( atwork_commander::task_generator::Type::CONTAINER ):      return os << "Container";
@@ -137,7 +153,7 @@ std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generato
   }
 }
 
-std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::Orientation o) {
+inline std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::Orientation o) {
   switch ( o ) {
     case( atwork_commander::task_generator::Orientation::VERTICAL )  : return os << "V";
     case( atwork_commander::task_generator::Orientation::HORIZONTAL ): return os << "H";
@@ -146,7 +162,7 @@ std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generato
   }
 }
 
-std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::ObjectBase& type) {
+inline std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::ObjectBase& type) {
   switch ( type.type ) {
     case ( atwork_commander::task_generator::Type::CAVITY ):         return os << type.form << "_" << type.orientation;
     case ( atwork_commander::task_generator::Type::CONTAINER ):      return os << "CONTAINER_"     << type.color;
@@ -156,24 +172,24 @@ std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generato
   }
 }
 
-std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::ObjectType& type) {
+inline std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::ObjectType& type) {
   return os << ((atwork_commander::task_generator::ObjectBase)type) << "(" << type.count << ")";
 }
 
 
-std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::Table& t) {
+inline std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::Table& t) {
   return os << "Table " << t.name << "(" << t.type << "):";
 }
 
-std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::Object& o) {
+inline std::ostream& operator<<(std::ostream& os, const atwork_commander::task_generator::Object& o) {
   os << "Object " << atwork_commander::task_generator::ObjectBase(o) << "(" << o.id << "):";
   if ( o.source )      os << " Src: " << o.source->name      << "(" << o.source->type      << ")";
   if ( o.destination ) os << " Dst: " << o.destination->name << "(" << o.destination->type << ")";
-  if ( o.container )   os << " Cont: " << o.container->type   << "(" << o.container->id     << ")";
+  if ( o.container )   os << " Cont: " << o.container->type;
   return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const std::vector<atwork_commander::task_generator::Object>& v) {
+inline std::ostream& operator<<(std::ostream& os, const std::vector<atwork_commander::task_generator::Object>& v) {
   for (size_t i=0; i<v.size(); i++)
     os << v[i] << (i+1!=v.size()?"\n":"");
   return os;
@@ -196,26 +212,33 @@ std::ostream& operator<<(std::ostream& os, const std::unordered_multimap<K, V>& 
 template<typename T, size_t n>
 std::ostream& operator<<(std::ostream& os, const std::array<T,n>& vec)
 {
-  for(size_t i=0; i<vec.size(); i++)
-		os << vec[i] << (i==vec.size()-1?"":" ");
+  for(size_t i=0; i<vec.size(); i++) os << vec[i] << (i==vec.size()-1?"":" ");
   return os << std::endl;
 }
 
 template<typename T, size_t n>
 std::ostream& operator<<(std::ostream& os, const std::vector<std::array<T,n>>& vec)
 {
-  for(size_t i=0; i<vec.size(); i++)
-		os << vec[i];
+  for(size_t i=0; i<vec.size(); i++) os << vec[i];
   return os << std::endl;
 }
 
 template<typename T>
 std::ostream& operator<<(std::ostream& os, const std::vector<std::vector<T>>& vec)
 {
-  for(size_t i=0; i<vec.size(); i++)
-		os << vec[i];
+  for(size_t i=0; i<vec.size(); i++) os << vec[i];
   return os << std::endl;
 }
+
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const std::set<T>& s)
+{
+  os << "{ ";
+  for(const auto& obj: s)
+    os << obj << " ";
+  return os << "}";
+}
+
 
 template<typename T1, typename T2>
 std::ostream& operator<<(std::ostream& os, const std::map<T1, T2>& m)

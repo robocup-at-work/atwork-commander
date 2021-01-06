@@ -11,6 +11,7 @@
 #include <chrono>
 #include <numeric>
 #include <algorithm>
+#include <iterator>
 
 namespace atwork_commander {
 namespace task_generator {
@@ -71,13 +72,13 @@ class Generator : public GeneratorPluginInterface {
     }
   }
 
-  uint16_t toContainerType( const Object& o ) {
+  uint16_t toContainerType( const ObjectType& o ) {
     if ( o.color == "RED" )  return atwork_commander_msgs::Object::CONTAINER_RED;
     if ( o.color == "BLUE" ) return atwork_commander_msgs::Object::CONTAINER_BLUE;
     throw runtime_error("Unknown container object enocunted!");
   }
 
-  uint16_t toCavityType( const Object& o ) {
+  uint16_t toCavityType( const ObjectType& o ) {
     if ( o.form == "F20_20" )
       switch ( o.orientation ) {
         case( Orientation::VERTICAL )  : return atwork_commander_msgs::Object::F20_20_V;
@@ -117,7 +118,7 @@ class Generator : public GeneratorPluginInterface {
     throw runtime_error("Unknown cavity type encountered!");
   }
 
-  uint16_t toColoredObjectType( const Object& o ) {
+  uint16_t toColoredObjectType( const ObjectType& o ) {
     if ( o.form == "F20_20" ) {
       if ( o.color == "B" ) return atwork_commander_msgs::Object::F20_20_B;
       if ( o.color == "G" ) return atwork_commander_msgs::Object::F20_20_G;
@@ -129,7 +130,7 @@ class Generator : public GeneratorPluginInterface {
     throw runtime_error("Unknown colored object type encountered!");
   }
 
-  uint16_t toObjectType( const Object& o ) {
+  uint16_t toObjectType( const ObjectType& o ) {
     if ( o.form == "M20_100" )       return atwork_commander_msgs::Object::M20_100;
     if ( o.form == "M20" )           return atwork_commander_msgs::Object::M20;
     if ( o.form == "M30" )           return atwork_commander_msgs::Object::M30;
@@ -142,7 +143,7 @@ class Generator : public GeneratorPluginInterface {
     throw runtime_error("Unknown plain object enocunted!");
   }
 
-  atwork_commander_msgs::Object toTaskObject( const Object& o ) {
+  atwork_commander_msgs::Object toTaskObject( const ObjectType& o ) {
     atwork_commander_msgs::Object object;
     switch ( o.type ) {
       case( Type::CONTAINER )     : object.object = toContainerType(o); break;
@@ -151,6 +152,10 @@ class Generator : public GeneratorPluginInterface {
       case( Type::OBJECT )        : object.object = toObjectType(o); break;
       default                     : throw runtime_error("Unknown object type encountered in conversion to task message");
     }
+    return object;
+  }
+  atwork_commander_msgs::Object toTaskObject( const Object& o ) {
+    atwork_commander_msgs::Object object = toTaskObject((const ObjectType&)o);
     if ( o.container ) {
       switch (o.container->type ) {
         case ( Type::CONTAINER ): object.target = toContainerType( *o.container ); break;
@@ -171,7 +176,11 @@ class Generator : public GeneratorPluginInterface {
     }
     for( const array<size_t, 3>& cont : container_ids) {
       atwork_commander_msgs::Object o;
-      o.object = cont[1];
+      switch(cont[1]) {
+        case(0): o.object = atwork_commander_msgs::Object::CONTAINER_BLUE; break;
+        case(1): o.object = atwork_commander_msgs::Object::CONTAINER_RED; break;
+        default: ROS_ERROR_STREAM("Invalid container type encountered: " << cont);
+      }
       o.decoy = false;
       o.target = atwork_commander_msgs::Object::EMPTY;
       task.arena_start_state[cont[0]-1].objects.push_back(o);
@@ -185,13 +194,12 @@ class Generator : public GeneratorPluginInterface {
         o.target = atwork_commander_msgs::Object::EMPTY;
       else
         o.target = container_ids[obj[cont_id]][1];
-      task.arena_start_state[obj[src_id]-1].objects.push_back(o);
       if ( obj[dst_id] == -1 ) {
         o.decoy = true;
         task.arena_target_state[obj[src_id]-1].objects.push_back(o);
-        task.arena_target_state[obj[src_id]-1].objects.push_back(o);
       } else
         task.arena_target_state[obj[dst_id]-1].objects.push_back(o);
+      task.arena_start_state[obj[src_id]-1].objects.push_back(o);
     }
     return task;
   }
@@ -276,6 +284,7 @@ class Generator : public GeneratorPluginInterface {
         std::vector<std::vector<size_t>> validpicks;
         std::vector<size_t> picksleft;
         std::unordered_map<size_t, size_t> mTableTypes;
+        vector<set<ObjectType>> mAvailableObjectsPerTable;
 
         size_t tabletypes;
   using run = vector<array<int, 5>>;
@@ -388,12 +397,12 @@ class Generator : public GeneratorPluginInterface {
   }
 
 
-  vector<array<int, 5>> fromTask(const Task& task) {
+  vector<array<int, 5>> fromTask(const Task& origTask) {
+    Task task = origTask;
     vector<array<int,5>> run;
     readParameters(task.type);
     auto start  = Converter::toMap(task.arena_start_state);
     auto target = Converter::toMap(task.arena_target_state);
-
     auto immobile = Converter::intersect(start, target);
     auto startObjs = Converter::diff(start, immobile);
     auto targetObjs = Converter::diff(target, immobile);
@@ -405,7 +414,7 @@ class Generator : public GeneratorPluginInterface {
         array<int, 5> t;
         t[0] = o.object;
         t[1] = tID;
-        t[2] = find(mTablesInverse.begin(), mTablesInverse.end(), Converter::findObject(targetObjs, o, objs.first)) - mTablesInverse.begin();
+        t[2] = find(mTablesInverse.begin(), mTablesInverse.end(), Converter::findObject(targetObjs, o, objs.first, true)) - mTablesInverse.begin();
         t[4] = ++i;
         if (o.target != atwork_commander_msgs::Object::EMPTY)
           t[3] = Converter::findContainer(immobile, o, objs.first);
@@ -418,7 +427,7 @@ class Generator : public GeneratorPluginInterface {
       tID = find(mTablesInverse.begin(), mTablesInverse.end(), objs.first) - mTablesInverse.begin();
       for( const auto& o: objs.second ) {
         if(!o.decoy){
-          ROS_WARN_STREAM_COND_NAMED(o.object < atwork_commander_msgs::Object::CONTAINER_RED, "generator", 
+          ROS_WARN_STREAM_COND_NAMED(o.object < atwork_commander_msgs::Object::CONTAINER_RED, "generator",
               "[REFBOX-Gen] Non moving object found, which is not a decoy:\n" << o);
           continue;
         }
@@ -461,19 +470,48 @@ class Generator : public GeneratorPluginInterface {
   // for every task set random object type
   // if there are already entries select ppt objects only
   void generate_objects(run &tasks) {
-    const size_t objects = mObjects.size();
-    const size_t pptobjects = mPptObjects.size();
     const size_t count = tasks.size();
-    srand(time(NULL));
+    //srand(time(NULL));
     for(size_t i=0; i<count; ++i) {
       if(tasks.at(i).at(obj_id) == -1) {
-        if(tasks.at(i).at(dst_id) == -1) {
-          size_t obj = rand() % objects;
-          tasks.at(i).at(obj_id) = mObjects.at(obj);
+        if(tasks.at(i).at(dst_id) != -1) {
+          auto& dstObjs = mAvailableObjectsPerTable.at(tasks.at(i).at(dst_id));
+          auto& srcObjs = mAvailableObjectsPerTable.at(tasks.at(i).at(src_id));
+          ROS_DEBUG_STREAM("\tSrc(" << mTablesInverse.at(tasks.at(i).at(src_id)) << "): " << srcObjs << endl <<
+                           "\tDst(" << mTablesInverse.at(tasks.at(i).at(dst_id)) << "): " << dstObjs);
+          set<ObjectType> objs;
+          set_intersection(srcObjs.begin(), srcObjs.end(), dstObjs.begin(), dstObjs.end(), inserter(objs, objs.begin()));
+          if(objs.size()==0) {
+            ROS_ERROR_STREAM("No possible objects left: " << endl <<
+                             "\tSrc(" << mTablesInverse.at(tasks.at(i).at(src_id)) << "): " << srcObjs << endl <<
+                             "\tDst(" << mTablesInverse.at(tasks.at(i).at(dst_id)) << "): " << dstObjs);
+            continue;
+          }
+          size_t objIndex = rand() % objs.size();
+          const ObjectType* obj;
+          auto it = objs.begin();
+          do
+            obj=&*it++;
+          while(objIndex--!=0);
+          tasks.at(i).at(obj_id) = toTaskObject(*obj).object;
+          srcObjs.erase(*obj);
+          dstObjs.erase(*obj);
         }
         else {
-          size_t pptobj = rand() % pptobjects;
-          tasks.at(i).at(obj_id) = mPptObjects.at(pptobj);
+          auto& srcObjs = mAvailableObjectsPerTable.at(tasks.at(i).at(src_id));
+          if(srcObjs.size()==0) {
+            ROS_ERROR_STREAM("No possible objects left: " << endl <<
+                             "\tSrc(" << mTablesInverse.at(tasks.at(i).at(src_id)) << "): " << srcObjs);
+            continue;
+          }
+          size_t objIndex = rand() % srcObjs.size();
+          const ObjectType* obj;
+          auto it = srcObjs.begin();
+          do
+            obj=&*it++;
+          while(objIndex--!=0);
+          tasks.at(i).at(obj_id) = toTaskObject(*obj).object;
+          srcObjs.erase(*obj);
         }
       }
     }
@@ -647,6 +685,9 @@ class Generator : public GeneratorPluginInterface {
       size_t table5 = mTables5.size();
       size_t table10 = mTables10.size();
       size_t table15 = mTables15.size();
+      set<ObjectType> temp(mAvailableObjects.begin(), mAvailableObjects.end());
+      ROS_DEBUG_STREAM("Available Objects: " << mAvailableObjects << temp);
+      mAvailableObjectsPerTable = vector<set<ObjectType>>(mTablesInverse.size(), temp);
 
       if(paramFinal["FlexibleHeight"] == true) {
         tabletypes = 8;
@@ -703,9 +744,6 @@ class Generator : public GeneratorPluginInterface {
         tasks.at(placePpt.at(i)).at(dst_id) = mPpts.at(a);
       }
 
-      // generate the objects, pptobjects seperately from the others
-      // in the tasks wich already have vaild entries select ppt objects only
-      generate_objects(tasks);
 
       // write all the other distinations to the tasks
       for(size_t i=0; i<placeShelf.size(); ++i) {
@@ -716,11 +754,13 @@ class Generator : public GeneratorPluginInterface {
         a = rand() % conveyors;
         tasks.at(placeTurntable.at(i)).at(dst_id) = mConveyors.at(a);
       }
+
       // PLACES NOCH BEARBEITEN KEINE PLACES, FALLS KEINE PICK VON DER TISCHHÖHE
       for(size_t i=0; i<normalplace.size(); ++i) {
         a = rand() % tables;
         tasks.at(normalplace.at(i)).at(dst_id) = mJTables.at(a);
       }
+
 
       // collect all valid places to place a Container
       // If the respective setting is active add these dst to the valid containerplaces
@@ -772,7 +812,6 @@ class Generator : public GeneratorPluginInterface {
         size_t type_id = mTableTypes.at(table);				                     			// set type to the type of table (mTableTypes is a map)
         --picksleft.at(type_id);									                             	// reduce the number of picks left
         update_validpicks(type_id);								                           		// update the lists of vaild picks
-        //debugAll("taskgenerierung", tasks);
       }
 
       size_t all = paramFinal["pick_shelfs"] + paramFinal["pick_turntables"] + paramFinal["pick_tables0"] + paramFinal["pick_tables5"] + paramFinal["pick_tables10"] + paramFinal["pick_tables15"];
@@ -788,6 +827,11 @@ class Generator : public GeneratorPluginInterface {
           tasks.push_back({-1, (int)entry.second.at(rand() % entry.second.size()),-1,-1,-1});
 
       generate_objects(tasks);                                                  // generate objects for the decoys
+      debugAll("taskgenerierung", tasks);
+      checkPickNeqPlace(tasks);
+      checkPickCounts(tasks, paramFinal);
+      checkPlaceCounts(tasks, paramFinal);
+      const_cast<Generator*>(this)->checkContainers(tasks, paramFinal);
       return toTask(tasks);
     } catch(int i) {
       throw runtime_error(printError(i));
