@@ -176,11 +176,7 @@ class Generator : public GeneratorPluginInterface {
     }
     for( const array<size_t, 3>& cont : container_ids) {
       atwork_commander_msgs::Object o;
-      switch(cont[1]) {
-        case(0): o.object = atwork_commander_msgs::Object::CONTAINER_BLUE; break;
-        case(1): o.object = atwork_commander_msgs::Object::CONTAINER_RED; break;
-        default: ROS_ERROR_STREAM("Invalid container type encountered: " << cont);
-      }
+      o.object = cont[1];
       o.decoy = false;
       o.target = atwork_commander_msgs::Object::EMPTY;
       task.arena_start_state[cont[0]-1].objects.push_back(o);
@@ -262,8 +258,8 @@ class Generator : public GeneratorPluginInterface {
         static const size_t cont_id = 3;
         static const size_t obj_id_id = 4;
 
-        static const size_t blue = 0;
-        static const size_t red = 1;
+        static const size_t blue = atwork_commander_msgs::Object::CONTAINER_BLUE;
+        static const size_t red = atwork_commander_msgs::Object::CONTAINER_RED;
 
         static const size_t tables0_id = 0;
         static const size_t tables5_id = 1;
@@ -513,6 +509,62 @@ class Generator : public GeneratorPluginInterface {
           tasks.at(i).at(obj_id) = toTaskObject(*obj).object;
           srcObjs.erase(*obj);
         }
+      }
+    }
+  }
+
+  void checkObjectTypes(const Task& task) const {
+    auto checkFunc =
+    [](const atwork_commander_msgs::Object& obj){
+      if(obj.object == atwork_commander_msgs::Object::EMPTY)
+        throw runtime_error("Invalid object type in task: EMPTY");
+      if(obj.object >= atwork_commander_msgs::Object::CONTAINER_RED && obj.decoy)
+        throw runtime_error("Invalid object combination: Container or Cavity ("+to_string(obj.object)+") cannot be decoy");
+      if(obj.target != atwork_commander_msgs::Object::EMPTY && obj.target < atwork_commander_msgs::Object::CONTAINER_RED)
+        throw runtime_error("Invalid object combination: Target ("+to_string(obj.target)+") of object ("+to_string(obj.object)+")not container or cavity:");
+      if(obj.target != atwork_commander_msgs::Object::EMPTY && obj.decoy)
+        throw runtime_error("Invalid object combination: Decoys ("+to_string(obj.object)+") cannot have targets");
+    };
+    auto checkCont = [](const atwork_commander_msgs::Object& o){ return o.target == atwork_commander_msgs::Object::EMPTY;};
+    auto checkCavity = [](const atwork_commander_msgs::Object& o){ return o.object < atwork_commander_msgs::Object::F20_20_H;};
+    auto checkPPT = [this](const atwork_commander_msgs::Workstation& ws){
+      auto compFunc = [&ws](const pair<string, Table>& t){ return t.second.name == ws.workstation_name;};
+      return any_of(mTables.equal_range("PP").first, mTables.equal_range("PP").second, compFunc);
+    };
+
+    for(const atwork_commander_msgs::Workstation& ws: task.arena_start_state) {
+      try {
+         for(const atwork_commander_msgs::Object& obj: ws.objects)
+          checkFunc(obj);
+
+        if( checkPPT(ws) && any_of(ws.objects.begin(), ws.objects.end(), checkCavity)) {
+            ostringstream os;
+            os << "Non-Cavity objects on PPT table ( " << ws.workstation_name << "):\n\t";
+            for(const atwork_commander_msgs::Object& obj: ws.objects)
+              if(checkCavity(obj))
+                os << obj.object << " ";
+            throw runtime_error(os.str());
+          }
+      } catch(const runtime_error& e) {
+        throw runtime_error("Workstation "+ws.workstation_name+": "+e.what());
+      }
+    }
+
+    for(const atwork_commander_msgs::Workstation& ws: task.arena_target_state) {
+      try {
+        for(const atwork_commander_msgs::Object& obj: ws.objects) {
+          checkFunc(obj);
+
+          auto checkTarget = [&obj](const atwork_commander_msgs::Object& o){return o.target != obj.target;};
+          if(obj.target != atwork_commander_msgs::Object::EMPTY &&
+             all_of(ws.objects.begin(), ws.objects.end(), checkTarget))
+            throw runtime_error("No appropriate container or cavity found for object with target");
+        }
+
+        if( checkPPT(ws) && any_of(ws.objects.begin(), ws.objects.end(), checkCavity))
+            throw runtime_error("Non-Cavity placing on PPT table encountered");
+      } catch(const runtime_error& e) {
+        throw runtime_error("Workstation "+ws.workstation_name+": "+e.what());
       }
     }
   }
@@ -1005,6 +1057,7 @@ class Generator : public GeneratorPluginInterface {
       const run tasks = const_cast<Generator*>(this)->fromTask(task);
       try {
       debug_tasks("final tasks", tasks);
+        checkObjectTypes(task);
         checkPickNeqPlace(tasks);
         checkPickCounts(tasks, paramFinal);
         checkPlaceCounts(tasks, paramFinal);
@@ -1012,7 +1065,11 @@ class Generator : public GeneratorPluginInterface {
       } catch(std::string error) {
         ROS_ERROR_STREAM(error);
         return false;
-      } catch(...) {
+      } catch(std::runtime_error& e) {
+        ROS_ERROR_STREAM(e.what());
+        return false;
+      }catch(...) {
+        ROS_ERROR_STREAM("Unknown error in checking task");
         return false;
       }
       return true;
