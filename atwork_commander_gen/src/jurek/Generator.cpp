@@ -166,6 +166,22 @@ class Generator : public GeneratorPluginInterface {
     return object;
   }
 
+  size_t toCavity(size_t id, Orientation o) const {
+    size_t cavity;
+    switch(id) {
+      case(atwork_commander_msgs::Object::F20_20_B):
+      case(atwork_commander_msgs::Object::F20_20_G): cavity = atwork_commander_msgs::Object::F20_20_H; break;
+      case(atwork_commander_msgs::Object::S40_40_B):
+      case(atwork_commander_msgs::Object::S40_40_G): cavity = atwork_commander_msgs::Object::S40_40_H; break;
+      case(atwork_commander_msgs::Object::M20): cavity = atwork_commander_msgs::Object::M20_H; break;
+      case(atwork_commander_msgs::Object::M30): cavity = atwork_commander_msgs::Object::M30_H; break;
+      case(atwork_commander_msgs::Object::M20_100): cavity = atwork_commander_msgs::Object::M20_100_H; break;
+      case(atwork_commander_msgs::Object::R20): cavity = atwork_commander_msgs::Object::R20_H; break;
+      default: throw runtime_error("Object without existing cavity to be placed on PPT ("+to_string(id)+")");
+    }
+    return cavity+(size_t)o;
+  }
+
   Task toTask(const vector<array<int, 5>>& run) const {
     Task task;
     task.arena_start_state.resize(mTablesInverse.size()-1);
@@ -190,6 +206,9 @@ class Generator : public GeneratorPluginInterface {
         o.target = atwork_commander_msgs::Object::EMPTY;
       else
         o.target = container_ids[obj[cont_id]][1];
+      if(any_of(mTables.equal_range("PP").first, mTables.equal_range("PP").second, [this, obj](const pair<string, Table>& t){return t.second.name == mTablesInverse[obj[dst_id]];})) {
+        o.target = toCavity(o.object, Orientation::FREE);
+      }
       if ( obj[dst_id] == -1 ) {
         o.decoy = true;
         task.arena_target_state[obj[src_id]-1].objects.push_back(o);
@@ -527,6 +546,12 @@ class Generator : public GeneratorPluginInterface {
     };
     auto checkCont = [](const atwork_commander_msgs::Object& o){ return o.target == atwork_commander_msgs::Object::EMPTY;};
     auto checkCavity = [](const atwork_commander_msgs::Object& o){ return o.object < atwork_commander_msgs::Object::F20_20_H;};
+    auto checkCavityTarget = [this](const atwork_commander_msgs::Object& o){
+      if(o.target == toCavity(o.object, Orientation::HORIZONTAL)) return true;
+      if(o.target == toCavity(o.object, Orientation::VERTICAL)) return true;
+      if(o.target == toCavity(o.object, Orientation::FREE)) return true;
+      throw runtime_error("Object ("+to_string(o.object)+") with invalid PPT-Cavity ("+to_string(o.target)+") to be placed on PPT");
+    };
     auto checkPPT = [this](const atwork_commander_msgs::Workstation& ws){
       auto compFunc = [&ws](const pair<string, Table>& t){ return t.second.name == ws.workstation_name;};
       return any_of(mTables.equal_range("PP").first, mTables.equal_range("PP").second, compFunc);
@@ -561,8 +586,8 @@ class Generator : public GeneratorPluginInterface {
             throw runtime_error("No appropriate container or cavity found for object with target");
         }
 
-        if( checkPPT(ws) && any_of(ws.objects.begin(), ws.objects.end(), checkCavity))
-            throw runtime_error("Non-Cavity placing on PPT table encountered");
+        if( checkPPT(ws) )
+          all_of(ws.objects.begin(), ws.objects.end(), checkCavityTarget);
       } catch(const runtime_error& e) {
         throw runtime_error("Workstation "+ws.workstation_name+": "+e.what());
       }
@@ -737,9 +762,24 @@ class Generator : public GeneratorPluginInterface {
       size_t table5 = mTables5.size();
       size_t table10 = mTables10.size();
       size_t table15 = mTables15.size();
-      set<ObjectType> temp(mAvailableObjects.begin(), mAvailableObjects.end());
-      ROS_DEBUG_STREAM("Available Objects: " << mAvailableObjects << temp);
-      mAvailableObjectsPerTable = vector<set<ObjectType>>(mTablesInverse.size(), temp);
+      mAvailableObjectsPerTable = vector<set<ObjectType>>(mTablesInverse.size());
+      for(size_t i =1; i<mTablesInverse.size(); i++) {
+        auto checkPPT = [this](const string& name){
+          auto compFunc = [&name](const pair<string, Table>& t){ return t.second.name == name;};
+          return any_of(mTables.equal_range("PP").first, mTables.equal_range("PP").second, compFunc);
+        };
+        set<ObjectType> temp;
+        for(const ObjectType& obj: mAvailableObjects) {
+        try{
+          if(toObjectType(obj) == atwork_commander_msgs::Object::EMPTY) continue;
+          if(toObjectType(obj) >= atwork_commander_msgs::Object::CONTAINER_RED) continue;
+          if( checkPPT(mTablesInverse[i]) && toObjectType(obj) >=  atwork_commander_msgs::Object::BEARING_BOX ) continue;
+        }catch(...){
+          continue;
+        }
+          mAvailableObjectsPerTable[i].insert(obj);
+        }
+      }
 
       if(paramFinal["FlexibleHeight"] == true) {
         tabletypes = 8;

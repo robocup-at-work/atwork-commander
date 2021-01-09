@@ -20,9 +20,9 @@ using ObjectTypePtr = ObjectType*;
 using TablePtr = Table*;
 
 enum class Orientation : unsigned int {
-  FREE,       ///< Orientation to be chosen by the Team
-  VERTICAL,   ///< Vertical Orientation
-  HORIZONTAL  ///< Horizontal Orientation
+  HORIZONTAL,///< Horizontal Orientation
+  VERTICAL,  ///< Vertical Orientation
+  FREE       ///< Orientation to be chosen by the Team
 };
 
 enum class Type : unsigned int {
