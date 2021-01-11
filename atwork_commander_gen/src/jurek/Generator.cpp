@@ -547,6 +547,7 @@ class Generator : public GeneratorPluginInterface {
     auto checkCont = [](const atwork_commander_msgs::Object& o){ return o.target == atwork_commander_msgs::Object::EMPTY;};
     auto checkCavity = [](const atwork_commander_msgs::Object& o){ return o.object < atwork_commander_msgs::Object::F20_20_H;};
     auto checkCavityTarget = [this](const atwork_commander_msgs::Object& o){
+      if(o.object >= atwork_commander_msgs::Object::F20_20_H) return true;
       if(o.target == toCavity(o.object, Orientation::HORIZONTAL)) return true;
       if(o.target == toCavity(o.object, Orientation::VERTICAL)) return true;
       if(o.target == toCavity(o.object, Orientation::FREE)) return true;
@@ -763,6 +764,7 @@ class Generator : public GeneratorPluginInterface {
       size_t table10 = mTables10.size();
       size_t table15 = mTables15.size();
       mAvailableObjectsPerTable = vector<set<ObjectType>>(mTablesInverse.size());
+      container_ids.clear();
       for(size_t i =1; i<mTablesInverse.size(); i++) {
         auto checkPPT = [this](const string& name){
           auto compFunc = [&name](const pair<string, Table>& t){ return t.second.name == name;};
@@ -924,7 +926,38 @@ class Generator : public GeneratorPluginInterface {
       checkPickCounts(tasks, paramFinal);
       checkPlaceCounts(tasks, paramFinal);
       const_cast<Generator*>(this)->checkContainers(tasks, paramFinal);
-      return toTask(tasks);
+      Task task = toTask(tasks);
+      for(atwork_commander_msgs::Workstation& ws: task.arena_target_state) {
+        auto checkPPT = [this](const atwork_commander_msgs::Workstation& ws){
+          auto compFunc = [&ws](const pair<string, Table>& t){ return t.second.name == ws.workstation_name;};
+          return any_of(mTables.equal_range("PP").first, mTables.equal_range("PP").second, compFunc);
+        };
+        if(checkPPT(ws)) {
+          vector<atwork_commander_msgs::Object> cavities;
+          for(const atwork_commander_msgs::Object& o: ws.objects) {
+            if(o.decoy) continue;
+            try {
+              atwork_commander_msgs::Object cavity;
+              cavity.object = toCavity(o.object, Orientation::FREE);
+              cavities.push_back(cavity);
+            } catch(...) {
+              continue;
+            }
+          }
+          while(cavities.size() < 5){
+            size_t objectID = rand() % (atwork_commander_msgs::Object::R20 - atwork_commander_msgs::Object::F20_20_G);
+            objectID+=atwork_commander_msgs::Object::F20_20_G;
+            atwork_commander_msgs::Object cavity;
+            cavity.object = toCavity(objectID, Orientation::FREE);
+            cavities.push_back(cavity);
+          }
+          copy(cavities.begin(), cavities.end(), back_inserter(ws.objects));
+          auto it = find_if(task.arena_start_state.begin(), task.arena_start_state.end(), [&ws](const atwork_commander_msgs::Workstation& startWS){return startWS.workstation_name == ws.workstation_name;});
+          if(it == task.arena_start_state.end()) throw runtime_error("PPT does not exist in start state: "+ws.workstation_name);
+          copy(cavities.begin(), cavities.end(), back_inserter(it->objects));
+        }
+      }
+      return task;
     } catch(int i) {
       throw runtime_error(printError(i));
     }
