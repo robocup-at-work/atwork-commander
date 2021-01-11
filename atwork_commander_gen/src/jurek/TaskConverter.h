@@ -68,11 +68,14 @@ struct Converter  {
       return difference;
     }
 
-    static string findObject(const WorkstationObjs& wsMap, const Object& o, const string& source) {
-      for(const auto& ws: wsMap) {
+    static string findObject(WorkstationObjs& wsMap, const Object& o, const string& source, bool del=false) {
+      for(auto& ws: wsMap) {
         if( ws.first == source ) continue;
-        if( any_of(ws.second.begin(), ws.second.end(), [&o](const Object& b){return o.object == b.object && o.target == b.target;}) )
-            return ws.first;
+        auto objIter = find_if(ws.second.begin(), ws.second.end(), [&o](const Object& b){return o.object == b.object && o.target == b.target;});
+        if(objIter != ws.second.end()) {
+          if(del) ws.second.erase(objIter);
+          return ws.first;
+         }
       }
       return "";
     }
