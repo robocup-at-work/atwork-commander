@@ -96,4 +96,4 @@ Enable dynamic task generation according to specified task types of the
 
 - GUI is currently mockup only
 - COM only contains two multi-master ROS communication plugins
-- GEN is not fully RuleBook compatible
+- New JurekGen should be fully RuleBook compatible
