@@ -28,14 +28,14 @@ __AUTHOR__="Jeroen de Bruijn, Christoph Steup"
 
 set -e
 
-if [[ -n $TRAVIS_BUILD_NUMBER ]] ; then
+if [ -n "$TRAVIS_BUILD_NUMBER" ] ; then
   cd $CI_SOURCE_PATH/docu
   ##### Configure git.
   # Set the push default to simple i.e. push only the current branch.
   git config --global push.default simple
   # Pretend to be an user called Travis CI.
-  git config user.name "Travis CI"
-  git config user.email "travis@travis-ci.org"
+#  git config user.name "Travis CI"
+#  git config user.email "travis@travis-ci.org"
 
 git submodule update --init
 
@@ -70,7 +70,7 @@ doxygen Doxyfile > doxygen.log 2>&1
 # both exist. This is a good indication that Doxygen did it's work.
 if [ -d "html" ] && [ -f "html/index.html" ]; then
   echo "Documentation generated in" $(dirname $0)"/html"
-  if [ -z $TRAVIS_BUILD_NUMBER ] || [ -z $TRAVIS_COMMIT ]; then
+  if [ -z "$TRAVIS_BUILD_NUMBER" ] || [ -z "$TRAVIS_COMMIT" ]; then
     exit 0
   fi
     cd html
