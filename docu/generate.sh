@@ -89,7 +89,7 @@ if [ -d "html" ] && [ -f "html/index.html" ]; then
       # Force push to the remote gh-pages branch.
       # The ouput is redirected to /dev/null to hide any sensitive credential data
       # that might otherwise be exposed.
-      git push --force
+      git push --force origin HEAD:gh-pages
 else
     echo '' >&2
     echo 'Warning: No documentation files have been generated!' >&2
