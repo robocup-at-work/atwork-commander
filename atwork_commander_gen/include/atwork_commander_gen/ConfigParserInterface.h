@@ -30,16 +30,16 @@ struct TaskDefinition {
   StringList    shTypes { "SH" };                              ///< type name of Shelf
   ParameterType parameters {                                   ///< Various task specification parameters
     // Time
-    { "prep_time", 0 },
-    { "exec_time", 0 },
+    { "prep_time", 1 },
+    { "exec_time", 1 },
     // Nav
     { "waypoints", 0 },
     { "obstacles", 0 },
     { "barrier_tapes", 0 },
     // Transport
-    { "objects", 0 },
+    { "objects", 1 },
     { "decoys", 0 },
-    { "tables", 0 },
+    { "tables", 1 },
     { "ref_position", 0 },
     { "ref_rotation", 0 },
     { "ref_orientation", 0 },
@@ -57,7 +57,6 @@ struct TaskDefinition {
     { "tt_grasping", 0 },
     { "tt_placing", 0 },
     { "ref_tt_direction", 0 },
-    { "deliver_to_robot", 0},
     // Shelf
     { "shelfes_grasping", 0 },
     { "shelfes_placing", 0 }
