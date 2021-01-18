@@ -48,21 +48,12 @@ cache:
 language: generic
 jobs:
   include:
-  - name: "Focal noetic"
-    dist: focal
-    env:
-      - ROS_DISTRO=noetic
-      - PYTHON=python3
   - name: "Bionic melodic"
     dist: bionic
-    env:
-      - ROS_DISTRO=melodic
-      - PYTHON=python
+    env: ROS_DISTRO=melodic
   - name: "Xenial kinetic"
     dist: xenial
-    env:
-      - ROS_DISTRO=kinetic
-      - PYTHON=python
+    env: ROS_DISTRO=kinetic
 
 # Configuration variables. All variables are global now, but this can be used to
 # trigger a build matrix for different ROS distributions if desired.
@@ -85,7 +76,7 @@ before_install:
   - sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
   - sudo apt-get update -qq
   - sudo apt-get install dpkg
-  - sudo apt-get install -y ${PYTHON}-catkin-pkg ${PYTHON}-rosdep ${PYTHON}-wstool ros-${ROS_DISTRO}-ros-base 
+  - sudo apt-get install -y python-catkin-pkg python-rosdep python-wstool ros-${ROS_DISTRO}-ros-base 
   - sudo apt-get install doxygen doxygen-doc doxygen-latex doxygen-gui graphviz
   - source /opt/ros/$ROS_DISTRO/setup.bash
   # Prepare rosdep to install dependencies.
