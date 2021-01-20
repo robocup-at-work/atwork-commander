@@ -62,6 +62,10 @@
   of the architecture and the future GUI (Viewable and editable with e.g.
   [yEd Graph Editor](https://www.yworks.com/products/yed))
 
+  [Source Code Reference](https://steup.github.io/atwork-commander)
+
+  [Issues, Milestones and Releases](https://github.com/robocup-at-work/atwork-commander)
+
   ## Sub-Components
 
   The following section will briefly summarize the individual components purpose.
