@@ -126,4 +126,4 @@ deploy:
   local_dir: $CI_SOURCE_PATH/docu/html/
   skip_cleanup: true
   on:
-    branch: devel
+    branch: master
