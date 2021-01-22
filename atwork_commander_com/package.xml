@@ -54,8 +54,8 @@
   <depend>roscpp</depend>
   <depend>pluginlib</depend>
   <depend>atwork_commander_msgs</depend>
-  <exec_depend>master_discovery_fkie</exec_depend>
-  <exec_depend>master_sync_fkie</exec_depend>
+  <exec_depend>fkie_master_discovery</exec_depend>
+  <exec_depend>fkie_master_sync</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
