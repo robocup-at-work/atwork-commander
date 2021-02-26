@@ -178,15 +178,7 @@ TEST_F(ControlTests, forwardFromReady) {
 TEST_F(ControlTests, forwardFromPrep) {
   toState(RefboxState::PREPARATION);
 
-  EXPECT_CALL(refbox,
-    stateChange(
-      Field( &StateUpdate::Request::state,
-        Eq( RefboxState::EXECUTION )
-      ),
-      _
-    )
-  ).Times( 1 )
-   .WillOnce( Return( true ) );
+  EXPECT_STATE_CALL( RefboxState::EXECUTION );
 
   EXPECT_NO_THROW(control.forward());
 }
@@ -195,19 +187,47 @@ TEST_F(ControlTests, forwardFromPrep) {
 TEST_F(ControlTests, forwardFromExec) {
   toState(RefboxState::EXECUTION);
 
-  EXPECT_CALL(refbox,
-    stateChange(
-      Field( &StateUpdate::Request::state,
-        Eq( RefboxState::READY )
-      ),
-      _
-    )
-  ).Times( 1 )
-   .WillOnce(
-     Return( true )
-   );
+  EXPECT_STATE_CALL( RefboxState::READY );
 
   EXPECT_NO_THROW(control.forward());
+}
+
+TEST_F(ControlTests, stopFromIdle) {
+  toState(RefboxState::IDLE);
+
+  EXPECT_STATE_CALL( RefboxState::IDLE );
+
+  EXPECT_NO_THROW(control.stop());
+}
+
+TEST_F(ControlTests, stopFromReady) {
+  toState(RefboxState::READY);
+
+  EXPECT_STATE_CALL( RefboxState::READY );
+
+  EXPECT_NO_THROW(control.stop());
+}
+
+TEST_F(ControlTests, stopFromPrep) {
+  toState(RefboxState::PREPARATION);
+
+  EXPECT_STATE_CALL( RefboxState::READY );
+
+  EXPECT_NO_THROW(control.stop());
+}
+
+TEST_F(ControlTests, stopFromExec) {
+  toState(RefboxState::EXECUTION);
+
+  EXPECT_STATE_CALL( RefboxState::READY );
+
+  EXPECT_NO_THROW(control.stop());
+}
+
+TEST_F(ControlTests, stopFromFail) {
+  toState(RefboxState::FAILURE);
+
+  EXPECT_REASON(control.stop(), STATE_INVALID);
 }
 
 TEST_F(ControlTests, forwardServiceError) {

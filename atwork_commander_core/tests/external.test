@@ -14,7 +14,7 @@
     <param name="refbox" value="atwork_commander"/>
   </test>
 
-  <test test-name="StopOnIdle" pkg="atwork_commander_core" type="external" name="external" args="--gtest_filter=*stoponIdle">
+  <test test-name="StopOnIdle" pkg="atwork_commander_core" type="external" name="external" args="--gtest_filter=*stopOnIdle">
     <param name="refbox" value="atwork_commander"/>
   </test>
 
