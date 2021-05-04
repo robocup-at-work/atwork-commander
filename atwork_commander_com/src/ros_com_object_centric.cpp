@@ -142,7 +142,8 @@ public:
           t.destination = findObject(targetObjs, o, objs.first);
           objects.subtasks.push_back(t);
         }
-
+      objects.id = task.id;
+      objects.type = task.type;
       this->send_task_pub.publish( objects );
     }
 
