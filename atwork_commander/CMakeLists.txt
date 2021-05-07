@@ -6,7 +6,6 @@ add_compile_options(-g -Wall -std=c++11)
 find_package(catkin REQUIRED)
 catkin_package()
 
-<<<<<<< HEAD
 #############
 ## Install ##
 #############
@@ -46,8 +45,6 @@ install(PROGRAMS
 ## Testing ##
 #############
 ## Add gtest based cpp test target and link libraries
-=======
->>>>>>> 783ebd1eb3a248351dec2d29ef7d7e7b734ef772
 if(CATKIN_ENABLE_TESTING)
   find_package(catkin REQUIRED COMPONENTS atwork_commander_core rostest)
   include_directories(${catkin_INCLUDE_DIRS})
