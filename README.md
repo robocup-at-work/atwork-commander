@@ -56,7 +56,6 @@
   roslaunch atwork_commander stop.launch
   ```
 
-<<<<<<< HEAD
 ### Easy to use script
 
 You can use the script "default_bringup" which automates the refbox startup.
@@ -75,50 +74,46 @@ You can also modify the script to use other launchfiles than the default ones pr
 This is especially useful for your own arena configurations and robot descriptions.
 
 ## Documentation
-=======
-  ## Documentation
->>>>>>> 783ebd1eb3a248351dec2d29ef7d7e7b734ef772
 
-  Currently in the __docu__ folder. Multiple '.graphml' files showing the design
-  of the architecture and the future GUI (Viewable and editable with e.g.
-  [yEd Graph Editor](https://www.yworks.com/products/yed))
+Currently in the __docu__ folder. Multiple '.graphml' files showing the design
+of the architecture and the future GUI (Viewable and editable with e.g.
+[yEd Graph Editor](https://www.yworks.com/products/yed))
+[Source Code Reference](https://steup.github.io/atwork-commander)
 
-  [Source Code Reference](https://steup.github.io/atwork-commander)
+[Issues, Milestones and Releases](https://github.com/robocup-at-work/atwork-commander)
 
-  [Issues, Milestones and Releases](https://github.com/robocup-at-work/atwork-commander)
+## Sub-Components
 
-  ## Sub-Components
+The following section will briefly summarize the individual components purpose.
+For further information, please have a look at the respective sub-components' README.md.
 
-  The following section will briefly summarize the individual components purpose.
-  For further information, please have a look at the respective sub-components' README.md.
+### [atwork\_commander\_core](atwork_commander_core/README.md)
 
-  ### [atwork\_commander\_core](atwork_commander_core/README.md)
+State-Machine implementation, Pub/Sub and Service implementations to couple all
+sub-components.
 
-  State-Machine implementation, Pub/Sub and Service implementations to couple all
-  sub-components.
+### [atwork\_commander\_msgs](atwork_commander_msgs/README.md)
 
-  ### [atwork\_commander\_msgs](atwork_commander_msgs/README.md)
+Contains ROS messages and service descriptions necessary to communicate within
+the Refbox.
 
-  Contains ROS messages and service descriptions necessary to communicate within
-  the Refbox.
+### [atwork\_commander\_com](atwork_commander_com/README.md)
 
-  ### [atwork\_commander\_com](atwork_commander_com/README.md)
+Will contain multiple communication plugins to enable flexible communication
+links to various types of robots.
 
-  Will contain multiple communication plugins to enable flexible communication
-  links to various types of robots.
+### [atwork\_commander\_gui](atwork_commander_gui/README.md)
 
-  ### [atwork\_commander\_gui](atwork_commander_gui/README.md)
+Aims to enable visualization and control of multiple aspects of a Task before,
+during and after a run.
 
-  Aims to enable visualization and control of multiple aspects of a Task before,
-  during and after a run.
+### [atwork\_commander\_gen](atwork_commander_gen/README.md)
 
-  ### [atwork\_commander\_gen](atwork_commander_gen/README.md)
+Enable dynamic task generation according to specified task types of the
+[@Work RuleBook](https://github.com/robocup-at-work/rulebook).
 
-  Enable dynamic task generation according to specified task types of the
-  [@Work RuleBook](https://github.com/robocup-at-work/rulebook).
+## TODOs
 
-  ## TODOs
-
-  - GUI is currently mockup only
+- GUI is currently mockup only
 - COM only contains two multi-master ROS communication plugins
 - New JurekGen should be fully RuleBook compatible
