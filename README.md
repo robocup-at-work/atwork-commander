@@ -33,6 +33,23 @@ For testing the refbox without any robot a fake robot may be used using the **ex
 - the __stop__ launch file enables stopping of the currently running task:
   `roslaunch atwork_commander stop.launch`
 
+### Easy to use script
+
+You can use the script "default_bringup" which automates the refbox startup.
+Its purpose is mainly for new teams so that they can create bagfiles for tasks more easily.
+You can also use it for normal refbox startup, however you will need to kill the nodes afterwards manually..
+The cleanup is done automatically if you set the  **_immediate** param to **True**
+
+Use e.g. this command to start the script (replace the task for the one you want):
+
+`rosrun atwork_commander default_bringup _task:=BTT1 _immediate:=True _record_rosbag:=True`
+
+NOTE: This requires rosbash to be installed:
+`sudo apt install ros-melodic-rosbash ros-melodic-rosbash-params`
+
+You can also modify the script to use other launchfiles than the default ones provided within this package.
+This is especially useful for your own arena configurations and robot descriptions.
+
 ## Documentation
 
 Currently in the __docu__ folder. Multiple '.graphml' files showing the design of the architecture and the future GUI (Viewable and editable with e.g. [yEd Graph Editor](https://www.yworks.com/products/yed))

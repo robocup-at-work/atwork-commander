@@ -174,6 +174,12 @@ target_link_libraries(control ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 #   # myfile2
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
+
+install(PROGRAMS
+  scripts/default_bringup
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 #############
 ## Testing ##
 #############
