@@ -1,3 +1,8 @@
 *.sw?
 .clangd
+.cache
 compile_commands.json
+docu/doxygen.log
+docu/.nojekyll
+*.kdev*
+.vscode

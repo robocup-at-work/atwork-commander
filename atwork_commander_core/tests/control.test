@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<launch>
+  <test test-name="control" pkg="atwork_commander_core" type="control_test" name="control_test">
+    <param name="refbox" value="atwork_commander"/>
+  </test>
+
+</launch>

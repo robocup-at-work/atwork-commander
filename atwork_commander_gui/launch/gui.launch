@@ -8,6 +8,10 @@
 	<!-- both with rosrun and this launch file without saving config -->
 	<!-- <node pkg="atwork_refbox_ros_rviz" type="visualisation_node" name="visualisation_node" output="screen"/> -->
   <arg name="view" value="default"/>
-  <node name="gui" pkg="rviz" type="rviz" args="-d $(find atwork_commander_gui)/config/$(arg view).rviz" respawn="true"/>
+  <arg name="refbox" default="/atwork_commander"/>
+
+  <node name="gui" pkg="rviz" type="rviz" args="-d $(find atwork_commander_gui)/config/$(arg view).rviz" respawn="true">
+    <param name="refbox" value="$(arg refbox)"/>
+  </node>
   <node name="log" pkg="rqt_gui" type="rqt_gui" args="-p $(find atwork_commander_gui)/config/$(arg view).perspective" respawn="true"/>
 </launch>

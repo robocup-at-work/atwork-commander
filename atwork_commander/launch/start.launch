@@ -4,9 +4,10 @@
   <arg name="refbox" default="atwork_commander"/>
   <arg name="verbose" default="false"/>
   <arg name="output" default="screen"/>
+  <arg name="continuous" default="false"/>
 
   <arg name="robots" value=""/>
-    <node name="start_helper" pkg="atwork_commander" type="control" args="-v $(arg verbose) start $(arg robots)" output="$(arg output)">
+    <node name="start_helper" pkg="atwork_commander_core" type="control" args="-v $(arg verbose) -c $(arg continuous) start $(arg robots)" output="$(arg output)">
       <param name="refbox" value="$(arg refbox)"/>
     </node>
 </launch>

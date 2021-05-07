@@ -2,10 +2,12 @@
 
 uint16 object
 uint16 target
+bool   decoy
 
 uint16 EMPTY = 0
 
 # atwork
+uint16 ATWORK_START = 11
 uint16 F20_20_B = 11
 uint16 F20_20_G = 12
 uint16 S40_40_B = 13
@@ -14,19 +16,25 @@ uint16 M20_100 = 15
 uint16 M20 = 16
 uint16 M30 = 17
 uint16 R20 = 18
+uint16 ATWORK_END = 19
 
 # rockin
+uint16 ROCKIN_START = 21
 uint16 BEARING_BOX = 21
 uint16 BEARING = 22
 uint16 AXIS = 23
 uint16 DISTANCE_TUBE = 24
 uint16 MOTOR = 25
+uint16 ROCKIN_END = 26
 
 # container
+uint16 CONTAINER_START = 31
 uint16 CONTAINER_RED = 31
 uint16 CONTAINER_BLUE = 32
+uint16 CONTAINER_END = 33
 
 # cavity
+uint16 CAVITY_START = 41
 uint16 F20_20_H  = 41
 uint16 F20_20_V  = 42
 uint16 F20_20_F  = 43
@@ -45,3 +53,4 @@ uint16 M30_F     = 55
 uint16 R20_H     = 56
 uint16 R20_V     = 57
 uint16 R20_F     = 58
+uint16 CAVITY_END = 59

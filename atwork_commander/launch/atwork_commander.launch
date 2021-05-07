@@ -6,24 +6,26 @@
     <arg name="output" default="$(eval 'log' if arg('gui') else 'screen')" />
     <arg name="coms" default="[ 'atwork_commander::com_plugin::ros::TaskArenaCentric',
                                  'atwork_commander::com_plugin::ros::TaskObjectCentric' ]" />
+    <arg name="generator" default="JurekGen"/>
     <arg name="multimaster" default="true" />
     <arg name="publish_frequency" default="1.0"/>
 
 
     <group ns="atwork_commander">
         <!-- load config -->
-        <rosparam file="$(find atwork_commander)/config/BNT.yaml" ns="tasks"/>
-        <rosparam file="$(find atwork_commander)/config/BMT.yaml"  ns="tasks"/>
-        <rosparam file="$(find atwork_commander)/config/BTT1.yaml"  ns="tasks"/>
-        <rosparam file="$(find atwork_commander)/config/BTT2.yaml"  ns="tasks"/>
-        <rosparam file="$(find atwork_commander)/config/BTT3.yaml"  ns="tasks"/>
-        <rosparam file="$(find atwork_commander)/config/RTT.yaml"  ns="tasks"/>
-        <rosparam file="$(find atwork_commander)/config/PPT.yaml"  ns="tasks"/>
-        <rosparam file="$(find atwork_commander)/config/Final.yaml"  ns="tasks"/>
-        <rosparam file="$(find atwork_commander)/config/Arena.yaml"/>
+        <param name="generator" value="$(arg generator)"/>
+        <rosparam file="$(find atwork_commander_gen)/config/BNT.yaml"    ns="tasks"/>
+        <rosparam file="$(find atwork_commander_gen)/config/BMT.yaml"    ns="tasks"/>
+        <rosparam file="$(find atwork_commander_gen)/config/BTT1.yaml"   ns="tasks"/>
+        <rosparam file="$(find atwork_commander_gen)/config/BTT2.yaml"   ns="tasks"/>
+        <rosparam file="$(find atwork_commander_gen)/config/BTT3.yaml"   ns="tasks"/>
+        <rosparam file="$(find atwork_commander_gen)/config/RTT.yaml"    ns="tasks"/>
+        <rosparam file="$(find atwork_commander_gen)/config/PPT.yaml"    ns="tasks"/>
+        <rosparam file="$(find atwork_commander_gen)/config/FINAL.yaml"  ns="tasks"/>
+        <rosparam file="$(find atwork_commander_gen)/config/Arena.yaml"/>
 
         <!-- start refbox (incl task generator) -->
-        <node pkg="atwork_commander" type="atwork_commander_node" name="core" required="true" output="$(arg output)">
+        <node pkg="atwork_commander_core" type="atwork_commander_core_node" name="core" required="true" output="$(arg output)">
           <param name="publish_frequency" value="$(arg publish_frequency)"/>
           <param name="robot_timeout" value="10.0"/>
           <param name="debug" value="$(arg verbose)"/>

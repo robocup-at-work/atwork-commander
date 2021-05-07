@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+
+<launch>
+    <arg name="verbose" default="false" />
+    <arg name="ros_output" default="screen" />
+    <!-- load config -->
+    <rosparam file="$(find atwork_commander_gen)/config/BNT.yaml" ns="tasks"/>
+    <rosparam file="$(find atwork_commander_gen)/config/BMT.yaml"  ns="tasks"/>
+    <rosparam file="$(find atwork_commander_gen)/config/BTT1.yaml"  ns="tasks"/>
+    <rosparam file="$(find atwork_commander_gen)/config/BTT2.yaml"  ns="tasks"/>
+    <rosparam file="$(find atwork_commander_gen)/config/BTT3.yaml"  ns="tasks"/>
+    <rosparam file="$(find atwork_commander_gen)/config/RTT.yaml"  ns="tasks"/>
+    <rosparam file="$(find atwork_commander_gen)/config/PPT.yaml"  ns="tasks"/>
+    <rosparam file="$(find atwork_commander_gen)/config/Final.yaml"  ns="tasks"/>
+    <rosparam file="$(find atwork_commander_gen)/config/Arena.yaml"/>
+
+    <!-- start refbox (incl task generator) -->
+    <node pkg="atwork_commander_core" type="atwork_commander_core_node" name="core" required="true" output="$(arg ros_output)">
+      <param name="publish_frequency" value="1.0"/>
+      <param name="robot_timeout" value="10.0"/>
+      <param name="debug" value="$(arg verbose)"/>
+    </node>
+</launch>

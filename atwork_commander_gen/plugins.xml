@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+<library path="lib/libatwork_commander_gen_plugins">
+  <class name="SimpleGen" type="atwork_commander::task_generator::simple::Generator" base_class_type="atwork_commander::task_generator::GeneratorPluginInterface">
+    <description>
+      Simple task generator not rule-book compatible!
+    </description>
+  </class>
+  <class name="JurekGen" type="atwork_commander::task_generator::jurek::Generator" base_class_type="atwork_commander::task_generator::GeneratorPluginInterface">
+    <description>
+      Rule-Book compatible mathematical task generator by Jurek Rostalsky!
+    </description>
+  </class>
+</library>

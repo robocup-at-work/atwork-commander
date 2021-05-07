@@ -24,21 +24,22 @@ struct TaskDefinition {
   ParameterType objects;                                       ///< max. requested Object count
   StringList    cavities;                                      ///< requested deactivated Cavity types
   StringList    normalTableTypes { "00", "05", "10", "15" };   ///< types of normal tables
+  StringList    allowedTables;                                 ///< Explicit list of allowed tables, ignored if empty
   StringList    ttTypes { "TT" };                              ///< type name of TurnTable
   StringList    ppTypes { "PP" };                              ///< type name of PrecisionPlacement
   StringList    shTypes { "SH" };                              ///< type name of Shelf
   ParameterType parameters {                                   ///< Various task specification parameters
     // Time
-    { "prep_time", 0 },
-    { "exec_time", 0 },
+    { "prep_time", 1 },
+    { "exec_time", 1 },
     // Nav
     { "waypoints", 0 },
     { "obstacles", 0 },
     { "barrier_tapes", 0 },
     // Transport
-    { "objects", 0 },
+    { "objects", 1 },
     { "decoys", 0 },
-    { "tables", 0 },
+    { "tables", 1 },
     { "ref_position", 0 },
     { "ref_rotation", 0 },
     { "ref_orientation", 0 },
@@ -56,7 +57,6 @@ struct TaskDefinition {
     { "tt_grasping", 0 },
     { "tt_placing", 0 },
     { "ref_tt_direction", 0 },
-    { "deliver_to_robot", 0},
     // Shelf
     { "shelfes_grasping", 0 },
     { "shelfes_placing", 0 }
@@ -65,6 +65,35 @@ struct TaskDefinition {
 
 /** Definition of all available Tasks with the appropriate configuration parameters **/
 using TaskDefinitions = std::unordered_map<std::string, TaskDefinition>;
+
+class ConfigParserInterface {
+  private:
+    std::string mTaskConfig;
+    std::string mArenaConfig;
+  protected:
+    virtual void update() = 0;
+  public:
+    void reload(const std::string& arenaConfig, const std::string& taskConfig) {
+      std::string oldTaskConfig = mTaskConfig;
+      std::string oldArenaConfig = mArenaConfig;
+      mTaskConfig = taskConfig;
+      mArenaConfig = arenaConfig;
+      try {
+        update();
+      } catch(std::exception& e) {
+        mTaskConfig = oldTaskConfig;
+        mArenaConfig = oldArenaConfig;
+        throw e;
+      }
+      mTaskConfig = taskConfig;
+      mArenaConfig = arenaConfig;
+    }
+    const std::string& taskConfig() const { return mTaskConfig; }
+    const std::string& arenaConfig() const { return mArenaConfig; }
+    virtual const TaskDefinitions& tasks() const = 0;
+    virtual const ArenaDescription& arena() const = 0;
+};
+
 }
 
 /** \brief Output operator for ArenaDescriptions

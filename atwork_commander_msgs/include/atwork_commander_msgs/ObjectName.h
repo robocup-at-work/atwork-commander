@@ -4,7 +4,7 @@
 
 namespace atwork_commander_msgs {
 
-const char* objectName(uint16_t typeID) {
+inline const char* objectName(uint16_t typeID) {
 
   switch(typeID) {
     case(Object::EMPTY): return "Nothing"; break;

@@ -114,7 +114,6 @@ public:
     virtual ~TaskObjectCentric() {}
 
 
-    /** \todo implement **/
     virtual void sendTask( atwork_commander_msgs::Task task ) {
       ObjectTask objects;
       objects.execute_on = task.execute_on;

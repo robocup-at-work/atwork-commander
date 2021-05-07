@@ -12,6 +12,8 @@ arena:
     TT01: "TT"
     SH01: "SH"
     SH02: "SH"
+    WS10: "10"
+    WS11: "10"
   objects:
     F20_20_G      : 10
     F20_20_B      : 10
