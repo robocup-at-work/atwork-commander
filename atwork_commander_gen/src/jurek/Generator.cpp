@@ -772,14 +772,16 @@ class Generator : public GeneratorPluginInterface {
         };
         set<ObjectType> temp;
         for(const ObjectType& obj: mAvailableObjects) {
-        try{
-          if(toObjectType(obj) == atwork_commander_msgs::Object::EMPTY) continue;
-          if(toObjectType(obj) >= atwork_commander_msgs::Object::CONTAINER_RED) continue;
-          if( checkPPT(mTablesInverse[i]) && toObjectType(obj) >=  atwork_commander_msgs::Object::BEARING_BOX ) continue;
-        }catch(...){
-          continue;
-        }
+          try{
+            auto taskObj = toTaskObject(obj).object;
+            if( taskObj == atwork_commander_msgs::Object::EMPTY) continue;
+            if( taskObj >= atwork_commander_msgs::Object::CONTAINER_RED) continue;
+            if( checkPPT(mTablesInverse[i]) && taskObj >=  atwork_commander_msgs::Object::BEARING_BOX ) continue;
           mAvailableObjectsPerTable[i].insert(obj);
+          }catch(...){
+            ROS_ERROR_STREAM("Object lost because of matching error: " << endl << obj);
+            continue;
+          }
         }
       }
 
