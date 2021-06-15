@@ -130,7 +130,6 @@ struct Object : public ObjectBase {
   static void reset() { globalID = 1; }
 };
 
-unsigned int Object::globalID = 1;
 
 struct Table {
   std::string name ="";

@@ -1,5 +1,5 @@
 #include <atwork_commander_gen/ConfigParserInterface.h>
-
+#include "Generator.h"
 #include <iostream>
 
 using namespace atwork_commander;
@@ -50,3 +50,5 @@ ostream& operator<<(ostream& os, const TaskDefinitions& defs) {
     os << item.first << endl << item.second;
   return os;
 }
+
+unsigned int atwork_commander::task_generator::Object::globalID = 1;
