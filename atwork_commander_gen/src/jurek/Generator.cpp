@@ -205,8 +205,9 @@ class Generator : public GeneratorPluginInterface {
       if( obj[cont_id] == -1)
         o.target = atwork_commander_msgs::Object::EMPTY;
       else
-        o.target = container_ids[obj[cont_id]][1];
-      if(any_of(mTables.equal_range("PP").first, mTables.equal_range("PP").second, [this, obj](const pair<string, Table>& t){return t.second.name == mTablesInverse[obj[dst_id]];})) {
+        o.target = container_ids[obj[cont_id]-1][1];
+      if(o.target == atwork_commander_msgs::Object::EMPTY &&
+         any_of(mTables.equal_range("PP").first, mTables.equal_range("PP").second, [this, obj](const pair<string, Table>& t){return t.second.name == mTablesInverse[obj[dst_id]];})) {
         o.target = toCavity(o.object, Orientation::FREE);
       }
       if ( obj[dst_id] == -1 ) {
@@ -411,6 +412,26 @@ class Generator : public GeneratorPluginInterface {
    ROS_DEBUG_STREAM("Parameters    : " << paramFinal);
   }
 
+  size_t get_container_id(const size_t table, const size_t color) {
+    // if there already is a container of this color on the same table
+    for(size_t i=0; i<container_ids.size(); ++i) {
+      if (container_ids.at(i).at(0) == table && container_ids.at(i).at(1) == color) {
+        return container_ids.at(i).at(2);
+      }
+    }
+    //else get new id from the worldmodel
+    if(color == blue) {
+      std::array<size_t, 3> id = {table, blue, contId++};
+      container_ids.push_back(id);
+      return id.at(2);
+    }
+    else if(color == red) {
+      std::array<size_t, 3> id = {table, red, contId++};
+      container_ids.push_back(id);
+      return id.at(2);
+    }
+    else {throw 229;}
+  }
 
   vector<array<int, 5>> fromTask(const Task& origTask) {
     Task task = origTask;
@@ -423,19 +444,20 @@ class Generator : public GeneratorPluginInterface {
     auto targetObjs = Converter::diff(target, immobile);
     size_t i = 0;
     size_t tID = 0;
-    for(const auto& objs: startObjs) {
+    container_ids.clear();
+    contId=1;
+    for(const auto& objs: immobile) {
       tID = find(mTablesInverse.begin(), mTablesInverse.end(), objs.first) - mTablesInverse.begin();
       for( const auto& o: objs.second ) {
-        array<int, 5> t;
-        t[0] = o.object;
-        t[1] = tID;
-        t[2] = find(mTablesInverse.begin(), mTablesInverse.end(), Converter::findObject(targetObjs, o, objs.first, true)) - mTablesInverse.begin();
-        t[4] = ++i;
-        if (o.target != atwork_commander_msgs::Object::EMPTY)
-          t[3] = Converter::findContainer(immobile, o, objs.first);
-        else
+        if(o.object == red || o.object == blue) {
+          array<int, 5> t;
+          t[0] = o.object;
+          t[1] = tID;
+          t[2] = -1;
           t[3] = -1;
-        run.push_back(t);
+          t[4] = ++i;
+          run.push_back(t);
+        }
       }
     }
     for(const auto& objs: immobile) {
@@ -452,6 +474,22 @@ class Generator : public GeneratorPluginInterface {
         t[2] = -1;
         t[3] = -1;
         t[4] = ++i;
+        run.push_back(t);
+      }
+    }
+    for(const auto& objs: startObjs) {
+      tID = find(mTablesInverse.begin(), mTablesInverse.end(), objs.first) - mTablesInverse.begin();
+      for( const auto& o: objs.second ) {
+        array<int, 5> t;
+        t[0] = o.object;
+        t[1] = tID;
+        t[2] = find(mTablesInverse.begin(), mTablesInverse.end(), Converter::findObject(targetObjs, o, objs.first, true)) - mTablesInverse.begin();
+        t[4] = ++i;
+        switch(o.target) {
+          case(atwork_commander_msgs::Object::EMPTY): t[3] = -1;break;
+          case(red):
+          case(blue): t[3] = get_container_id(tID, o.target); break;
+        }
         run.push_back(t);
       }
     }
@@ -627,26 +665,6 @@ class Generator : public GeneratorPluginInterface {
     variation(positions, k, vec_k, trash);
   }
 
-  size_t get_container_id(const size_t table, const size_t color) {
-    // if there already is a container of this color on the same table
-    for(size_t i=0; i<container_ids.size(); ++i) {
-      if (container_ids.at(i).at(0) == table && container_ids.at(i).at(1) == color) {
-        return container_ids.at(i).at(2);
-      }
-    }
-    //else get new id from the worldmodel
-    if(color == blue) {
-      std::array<size_t, 3> id = {table, blue, contId++};
-      container_ids.push_back(id);
-      return id.at(2);
-    }
-    else if(color == red) {
-      std::array<size_t, 3> id = {table, red, contId++};
-      container_ids.push_back(id);
-      return id.at(2);
-    }
-    else {throw 229;}
-  }
 
   void initialize_mAllTables() {
     size_t size = mTables0.size() + mTables5.size() + mTables10.size()
@@ -765,6 +783,7 @@ class Generator : public GeneratorPluginInterface {
       size_t table15 = mTables15.size();
       mAvailableObjectsPerTable = vector<set<ObjectType>>(mTablesInverse.size());
       container_ids.clear();
+      contId=1;
       for(size_t i =1; i<mTablesInverse.size(); i++) {
         auto checkPPT = [this](const string& name){
           auto compFunc = [&name](const pair<string, Table>& t){ return t.second.name == name;};
@@ -936,8 +955,9 @@ class Generator : public GeneratorPluginInterface {
         };
         if(checkPPT(ws)) {
           vector<atwork_commander_msgs::Object> cavities;
-          for(const atwork_commander_msgs::Object& o: ws.objects) {
+          for(atwork_commander_msgs::Object& o: ws.objects) {
             if(o.decoy) continue;
+            if(o.target!=atwork_commander_msgs::Object::EMPTY) continue;
             try {
               atwork_commander_msgs::Object cavity;
               cavity.object = toCavity(o.object, Orientation::FREE);
@@ -1029,10 +1049,12 @@ class Generator : public GeneratorPluginInterface {
       std::vector<size_t> counter(tabletypes,0);
       size_t decoys = 0;
       for(size_t i=0; i<tasks.size(); ++i) {
-        if(tasks.at(i).at(dst_id) == -1) {                                      // count decoys
-          ++decoys;
-        } else {
-          counter.at(mTableTypes.at(tasks.at(i).at(dst_id)))++;                 // not decoys
+        if(tasks.at(i).at(obj_id) != red && tasks.at(i).at(obj_id) != blue) {
+          if(tasks.at(i).at(dst_id) == -1) {                                      // count decoys
+            ++decoys;
+          } else {
+            counter.at(mTableTypes.at(tasks.at(i).at(dst_id)))++;                 // not decoys
+          }
         }
       }
       if(decoys != (size_t)params["decoys"]) {
@@ -1071,11 +1093,10 @@ class Generator : public GeneratorPluginInterface {
     void checkContainers(const run& tasks, Parameters params) {
       size_t bluecontainer = 0, redcontainer = 0;
       for(size_t i=0; i<container_ids.size(); ++i) {
-        if(container_ids.at(i).at(1) == blue) {
+        if(container_ids.at(i).at(1) == blue)
           ++bluecontainer;
-        } else {
+        if(container_ids.at(i).at(1) == red)
           ++redcontainer;
-        }
       }
       if(bluecontainer != (size_t)paramFinal["B_Container"]) {
         std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["B_Container"]));
@@ -1108,6 +1129,25 @@ class Generator : public GeneratorPluginInterface {
           }
         }
       }
+      size_t bTarget = 0, rTarget = 0;
+      for(const auto& task: tasks) {
+        switch(container_ids[task.at(cont_id)-1][1]){
+          case(red): rTarget++;
+                     break;
+          case(blue):bTarget++;
+        }
+      }
+      if(bTarget != paramFinal["B_Container"]) {
+          std::string errormessage = "There are not enough objects to be placed in BLUE CONTAINERs: ";
+          errormessage += std::to_string(bTarget) + " <-> " + std::to_string(paramFinal["B_Container"]);
+          throw errormessage;
+      }
+      if(bTarget != paramFinal["R_Container"]) {
+          std::string errormessage = "There are not enough objects to be placed in RED CONTAINERs: ";
+          errormessage += std::to_string(rTarget) + " <-> " + std::to_string(paramFinal["R_Container"]);
+          throw errormessage;
+      }
+
       ROS_DEBUG_STREAM_NAMED("generator", "All container types occure with correct multiplicities.");
     }
 
