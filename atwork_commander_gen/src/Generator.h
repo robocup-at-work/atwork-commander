@@ -106,12 +106,12 @@ struct ObjectType : public ObjectBase {
   {}
   operator bool() const { return count; }
   ObjectType& operator--() {
-    count--;
+    count = std::max(1u, count)-1;
     return *this;
   }
   ObjectType operator--(int) {
     ObjectType temp(*this);
-    count--;
+    count = std::max(1u, count)-1;
     return temp;
   }
   using ObjectBase::operator<;
