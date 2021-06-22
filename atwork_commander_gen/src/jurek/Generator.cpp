@@ -871,11 +871,17 @@ class Generator : public GeneratorPluginInterface {
       }
 
       // PLACES NOCH BEARBEITEN KEINE PLACES, FALLS KEINE PICK VON DER TISCHHÖHE
-      for(size_t i=0; i<normalplace.size(); ++i) {
+      if(taskName == "BMT") {
         a = rand() % tables;
-        tasks.at(normalplace.at(i)).at(dst_id) = mJTables.at(a);
+        for(size_t i=0; i<normalplace.size(); ++i) {
+          tasks.at(normalplace.at(i)).at(dst_id) = mJTables.at(a);
+        }
+      } else {
+        for(size_t i=0; i<normalplace.size(); ++i) {
+          a = rand() % tables;
+          tasks.at(normalplace.at(i)).at(dst_id) = mJTables.at(a);
+        }
       }
-
 
       // collect all valid places to place a Container
       // If the respective setting is active add these dst to the valid containerplaces
@@ -1131,10 +1137,12 @@ class Generator : public GeneratorPluginInterface {
       }
       size_t bTarget = 0, rTarget = 0;
       for(const auto& task: tasks) {
-        switch(container_ids[task.at(cont_id)-1][1]){
-          case(red): rTarget++;
-                     break;
-          case(blue):bTarget++;
+        if(task.at(cont_id)!=-1) {
+          switch(container_ids[task.at(cont_id)-1][1]){
+            case(red): rTarget++;
+                       break;
+            case(blue):bTarget++;
+          }
         }
       }
       if(bTarget != paramFinal["B_Container"]) {
