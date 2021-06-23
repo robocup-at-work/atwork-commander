@@ -2,9 +2,14 @@
 
 #include <pluginlib/class_list_macros.h>
 
+#include <algorithm>
+
 namespace atwork_commander {
 namespace com_plugin {
 namespace ros {
+
+using namespace std;
+using namespace atwork_commander_msgs;
 
 class TaskArenaCentric : public Base {
 
@@ -18,6 +23,15 @@ public:
     virtual ~TaskArenaCentric() {}
 
     virtual void sendTask( atwork_commander_msgs::Task task ) {
+      for(atwork_commander_msgs::Workstation& ws : task.arena_start_state) {
+        auto endIt = remove_if(ws.objects.begin(), ws.objects.end(), [](const Object& o){ return o.decoy;});
+        ws.objects.erase(endIt, ws.objects.end());
+      }
+      for(atwork_commander_msgs::Workstation& ws : task.arena_target_state) {
+        auto endIt = remove_if(ws.objects.begin(), ws.objects.end(), [](const Object& o){ return o.decoy;});
+        ws.objects.erase(endIt, ws.objects.end());
+      }
+
         this->send_task_pub.publish( task );
     }
 
@@ -25,11 +39,11 @@ public:
         this->rh = roshandle;
 
         this->robot_state_sub = this->rh.subscribe( "robot_state", 10, &TaskArenaCentric::receiveRobotStateClb, this );
-        this->send_task_pub = this->rh.advertise<atwork_commander_msgs::Task>("task", 1);
+        this->send_task_pub = this->rh.advertise<Task>("task", 1);
     }
 
 private:
-    void receiveRobotStateClb( const atwork_commander_msgs::RobotState::ConstPtr& msg ) {
+    void receiveRobotStateClb( const RobotState::ConstPtr& msg ) {
       this->sendRobotState( *msg );
     }
 
