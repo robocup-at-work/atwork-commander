@@ -6,12 +6,13 @@
 #include <pluginlib/class_list_macros.h>
 #include <ros/ros.h>
 
+#include <algorithm>
+#include <chrono>
+#include <exception>
+#include <iterator>
+#include <numeric>
 #include <random>
 #include <sstream>
-#include <chrono>
-#include <numeric>
-#include <algorithm>
-#include <iterator>
 
 namespace atwork_commander {
 namespace task_generator {
@@ -646,6 +647,9 @@ class Generator : public GeneratorPluginInterface {
    * Output: vector with k random entries between 0<= entry <n in ascending order
    */
   void variation(vector<size_t> position, size_t k, vector<size_t> &vec_k, vector<size_t> &vec_n_k) {
+    if(k > position.size()) {
+      throw std::logic_error("Can't choose " + std::to_string(k) + " from " + std::to_string(position.size()) +  " objects!");
+    }
     size_t n = position.size();
     vec_k.resize(k);
     vec_n_k.resize(n-k);
@@ -665,6 +669,34 @@ class Generator : public GeneratorPluginInterface {
     variation(positions, k, vec_k, trash);
   }
 
+  std::vector<size_t> findValidContainerTables() {
+    size_t size = mTables0.size() + mTables5.size() + mTables10.size()
+            + mTables15.size();
+    if(paramContainerOnTurntable == true) {
+      size += mConveyors.size();
+    }
+    if(paramContainerOnPpt == true) {
+      size += mPpts.size();
+    }
+    if(paramContainerInShelf == true) {
+      size += mShelfs.size();
+    }
+    std::vector<size_t> valid_containerTables(size);
+    auto end = copy(mTables0.begin(), mTables0.end(), valid_containerTables.begin());
+    end = copy(mTables5.begin(), mTables5.end(), end);
+    end = copy(mTables10.begin(), mTables10.end(), end);
+    end = copy(mTables15.begin(), mTables15.end(), end);
+    if(paramContainerOnTurntable == true) {
+      end = copy(mConveyors.begin(), mConveyors.end(), end);
+    }
+    if(paramContainerOnPpt) {
+      end = copy(mPpts.begin(), mPpts.end(), end);
+    }
+    if(paramContainerInShelf == true) {
+      end = copy(mShelfs.begin(), mShelfs.end(), end);
+    }
+    return valid_containerTables;
+  }
 
   void initialize_mAllTables() {
     size_t size = mTables0.size() + mTables5.size() + mTables10.size()
@@ -776,7 +808,6 @@ class Generator : public GeneratorPluginInterface {
       size_t tables = mJTables.size();
       size_t ppts = mPpts.size();
       size_t conveyors = mConveyors.size();
-      size_t containers = paramFinal["B_Container"] + paramFinal["R_Container"];
       size_t table0 = mTables0.size();
       size_t table5 = mTables5.size();
       size_t table10 = mTables10.size();
@@ -845,6 +876,7 @@ class Generator : public GeneratorPluginInterface {
       std::vector<size_t>container;
       std::vector<size_t>b_container;
       std::vector<size_t>r_container;
+      std::vector<size_t>containerTables;
       size_t specialplaces = paramFinal["place_shelfs"] + paramFinal["place_turntables"] + paramFinal["place_ppts"];
       size_t shelfTurntables = paramFinal["place_shelfs"] + paramFinal["place_turntables"];
       size_t a;
@@ -852,25 +884,84 @@ class Generator : public GeneratorPluginInterface {
       variation(specialplace, shelfTurntables ,placeShelfTurntable, placePpt);
       variation(placeShelfTurntable, paramFinal["place_shelfs"], placeShelf, placeTurntable);
 
+      if(paramFinal["container_placing"] > 0) {
+        // collect all valid tables to place containers
+        std::vector<size_t> valid_containerTables = findValidContainerTables();
+
+        size_t numberOfContainerTables;
+        if(paramFinal["paired_containers"] == true) {
+          numberOfContainerTables = std::min(paramFinal["B_Container"], paramFinal["R_Container"]);
+        } else {
+          numberOfContainerTables = paramFinal["B_Container"] + paramFinal["R_Container"];
+        }
+        // choose the tables with containers
+        variation(valid_containerTables, numberOfContainerTables, containerTables);
+
+        // collect all valid places to place a Container
+        // If the respective setting is active add these dst to the valid containerplaces
+        vector<size_t>valid_containerplaces = normalplace;
+        vector<size_t>mBContainer, mRContainer;
+        if(paramContainerInShelf == true) {
+          copy(placeShelf.begin(), placeShelf.end(), back_inserter(valid_containerplaces));
+        }
+        if(paramContainerOnTurntable == true) {
+          copy(placeTurntable.begin(), placeTurntable.end(), back_inserter(valid_containerplaces));
+        }
+        if(paramContainerOnPpt == true) {
+          copy(placePpt.begin(), placePpt.end(), back_inserter(valid_containerplaces));
+        }
+
+        // choose randomly the task with containerplaces
+        variation(valid_containerplaces, paramFinal["container_placing"], container);
+        size_t blueContainers = random() % paramFinal["container_placing"];
+        variation(container, blueContainers, b_container, r_container);
+
+        for(size_t i=0; i<paramFinal["container_placing"]; ++i) {
+          a = rand() % valid_containerTables.size();
+          tasks.at(container.at(i)).at(dst_id) = valid_containerTables.at(a);
+        }
+
+        for(size_t i=0; i<size_t(paramFinal["B_Container"]); ++i) {
+          size_t table = tasks.at(b_container.at(i)).at(dst_id);
+          size_t blue_container_id = get_container_id(table, blue);
+          tasks.at(b_container.at(i)).at(cont_id) = blue_container_id;
+          if(paramFinal["paired_containers"] == true) {
+            get_container_id(table,red);
+          }
+        }
+        for(size_t i=0; i<size_t(paramFinal["R_Container"]); ++i) {
+          size_t table = tasks.at(r_container.at(i)).at(dst_id);
+          size_t red_container_id = get_container_id(table, red);
+          tasks.at(r_container.at(i)).at(cont_id) = red_container_id;
+          if(paramFinal["paired_containers"] == true) {
+            get_container_id(table,blue);
+          }
+        }
+      }     
 
       // write the Ppts as destinations to the tasks
       for(size_t i=0; i<placePpt.size(); ++i) {
-        a = rand() % ppts;
-        tasks.at(placePpt.at(i)).at(dst_id) = mPpts.at(a);
+        if(tasks.at(placePpt.at(i)).at(dst_id) == -1) {
+          a = rand() % ppts;
+          tasks.at(placePpt.at(i)).at(dst_id) = mPpts.at(a);
+        }
       }
-
 
       // write all the other distinations to the tasks
       for(size_t i=0; i<placeShelf.size(); ++i) {
-        a = rand() % shelfs;
-        tasks.at(placeShelf.at(i)).at(dst_id) = mShelfs.at(a);
+        if(tasks.at(placeShelf.at(i)).at(dst_id) == -1) {
+          a = rand() % shelfs;
+          tasks.at(placeShelf.at(i)).at(dst_id) = mShelfs.at(a);
+        }
       }
       for(size_t i=0; i<placeTurntable.size(); ++i) {
-        a = rand() % conveyors;
-        tasks.at(placeTurntable.at(i)).at(dst_id) = mConveyors.at(a);
+        if(tasks.at(placeTurntable.at(i)).at(dst_id) == -1) {
+          a = rand() % conveyors;
+          tasks.at(placeTurntable.at(i)).at(dst_id) = mConveyors.at(a);
+        }
       }
 
-      // PLACES NOCH BEARBEITEN KEINE PLACES, FALLS KEINE PICK VON DER TISCHHÖHE
+      // BMT
       if(taskName == "BMT") {
         a = rand() % tables;
         for(size_t i=0; i<normalplace.size(); ++i) {
@@ -878,42 +969,10 @@ class Generator : public GeneratorPluginInterface {
         }
       } else {
         for(size_t i=0; i<normalplace.size(); ++i) {
-          a = rand() % tables;
-          tasks.at(normalplace.at(i)).at(dst_id) = mJTables.at(a);
-        }
-      }
-
-      // collect all valid places to place a Container
-      // If the respective setting is active add these dst to the valid containerplaces
-      vector<size_t>valid_containerplaces = normalplace;
-      vector<size_t>mBContainer, mRContainer;
-      if(paramContainerInShelf == true) {
-        copy(placeShelf.begin(), placeShelf.end(), back_inserter(valid_containerplaces));
-      }
-      if(paramContainerOnTurntable == true) {
-        copy(placeTurntable.begin(), placeTurntable.end(), back_inserter(valid_containerplaces));
-      }
-      if(paramContainerOnPpt == true) {
-        copy(placePpt.begin(), placePpt.end(), back_inserter(valid_containerplaces));
-      }
-
-      variation(valid_containerplaces, containers, container);
-      variation(container, paramFinal["B_Container"], b_container, r_container);
-
-      for(size_t i=0; i<size_t(paramFinal["B_Container"]); ++i) {
-        size_t table = tasks.at(b_container.at(i)).at(dst_id);
-        size_t blue_container_id = get_container_id(table, blue);
-        tasks.at(b_container.at(i)).at(cont_id) = blue_container_id;
-        if(paramFinal["paired_containers"] == true) {
-          get_container_id(table,red);
-        }
-      }
-      for(size_t i=0; i<size_t(paramFinal["R_Container"]); ++i) {
-        size_t table = tasks.at(r_container.at(i)).at(dst_id);
-        size_t red_container_id = get_container_id(table, red);
-        tasks.at(r_container.at(i)).at(cont_id) = red_container_id;
-        if(paramFinal["paired_containers"] == true) {
-          get_container_id(table,blue);
+          if(tasks.at(normalplace.at(i)).at(dst_id) == -1) {
+            a = rand() % tables;
+            tasks.at(normalplace.at(i)).at(dst_id) = mJTables.at(a);
+          }
         }
       }
 
@@ -1150,7 +1209,7 @@ class Generator : public GeneratorPluginInterface {
           errormessage += std::to_string(bTarget) + " <-> " + std::to_string(paramFinal["B_Container"]);
           throw errormessage;
       }
-      if(bTarget != paramFinal["R_Container"]) {
+      if(rTarget != paramFinal["R_Container"]) {
           std::string errormessage = "There are not enough objects to be placed in RED CONTAINERs: ";
           errormessage += std::to_string(rTarget) + " <-> " + std::to_string(paramFinal["R_Container"]);
           throw errormessage;
