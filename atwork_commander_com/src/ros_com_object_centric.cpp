@@ -101,11 +101,14 @@ class TaskObjectCentric : public Base {
       return difference;
     }
 
-    static const string& findObject(const WorkstationObjs& wsMap, const Object& o, const string& source) {
-      for(const auto& ws: wsMap) {
+    static const string& findObject(WorkstationObjs& wsMap, const Object& o, const string& source) {
+      for(auto& ws: wsMap) {
         if( ws.first == source ) continue;
-        if( any_of(ws.second.begin(), ws.second.end(), [&o](const Object& b){return o.object == b.object && o.target == b.target;}) )
+        auto it = find_if(ws.second.begin(), ws.second.end(), [&o](const Object& b){return o.object == b.object && o.target == b.target && !o.decoy;});
+        if ( it != ws.second.end() ) {
+            ws.second.erase(it);
             return ws.first;
+        }
       }
       return source;
     }
