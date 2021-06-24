@@ -78,7 +78,7 @@ class Generator : public GeneratorPluginInterface {
     throw runtime_error("Unknown container object enocunted!");
   }
 
-  uint16_t toCavityType( const ObjectType& o ) {
+  static uint16_t toCavityType( const ObjectType& o ) {
     if ( o.form == "F20_20" )
       switch ( o.orientation ) {
         case( Orientation::VERTICAL )  : return atwork_commander_msgs::Object::F20_20_V;
@@ -955,6 +955,9 @@ class Generator : public GeneratorPluginInterface {
       checkPlaceCounts(tasks, paramFinal);
       const_cast<Generator*>(this)->checkContainers(tasks, paramFinal);
       Task task = toTask(tasks);
+      vector<uint16_t> remainingCavities(mAvailableCavities.size());
+      transform(mAvailableCavities.begin(), mAvailableCavities.end(), remainingCavities.begin(), &Generator::toCavityType);
+      auto cavitiesEnd = remainingCavities.end();
       for(atwork_commander_msgs::Workstation& ws: task.arena_target_state) {
         auto checkPPT = [this](const atwork_commander_msgs::Workstation& ws){
           auto compFunc = [&ws](const pair<string, Table>& t){ return t.second.name == ws.workstation_name;};
@@ -964,22 +967,27 @@ class Generator : public GeneratorPluginInterface {
           vector<atwork_commander_msgs::Object> cavities;
           for(atwork_commander_msgs::Object& o: ws.objects) {
             if(o.decoy) continue;
-            if(o.target!=atwork_commander_msgs::Object::EMPTY) continue;
-            try {
-              atwork_commander_msgs::Object cavity;
-              cavity.object = toCavity(o.object, Orientation::FREE);
-              cavities.push_back(cavity);
-            } catch(...) {
-              continue;
-            }
-          }
-          while(cavities.size() < 5){
-            size_t objectID = rand() % (atwork_commander_msgs::Object::R20 - atwork_commander_msgs::Object::F20_20_G);
-            objectID+=atwork_commander_msgs::Object::F20_20_G;
+            if(o.target<atwork_commander_msgs::Object::CAVITY_START ||
+               o.target>=atwork_commander_msgs::Object::CAVITY_END) continue;
+            cavitiesEnd = remove(cavitiesEnd, remainingCavities.end(), o.target);
             atwork_commander_msgs::Object cavity;
-            cavity.object = toCavity(objectID, Orientation::FREE);
+            cavity.object = o.target;
             cavities.push_back(cavity);
           }
+          sort(cavities.begin(), cavities.end(), [](const atwork_commander_msgs::Object& a, const atwork_commander_msgs::Object& b){ return a.object < b.object; });
+          auto rem = unique(cavities.begin(), cavities.end());
+          cavities.erase(rem, cavities.end());
+          while(cavities.size() < 5){
+            if(cavitiesEnd == remainingCavities.begin())
+              throw runtime_error("Not enough cavconst atwork_commander_msgs::Object& iities left");
+            size_t i = rand() %  (cavitiesEnd - remainingCavities.begin());
+            atwork_commander_msgs::Object cavity;
+            cavity.object = remainingCavities[i];
+            cavities.push_back(cavity);
+            iter_swap(remainingCavities.begin()+i, cavitiesEnd);
+            cavitiesEnd--;
+          }
+          shuffle(cavities.begin(), cavities.end(), mt19937(random_device()()));
           copy(cavities.begin(), cavities.end(), back_inserter(ws.objects));
           auto it = find_if(task.arena_start_state.begin(), task.arena_start_state.end(), [&ws](const atwork_commander_msgs::Workstation& startWS){return startWS.workstation_name == ws.workstation_name;});
           if(it == task.arena_start_state.end()) throw runtime_error("PPT does not exist in start state: "+ws.workstation_name);
