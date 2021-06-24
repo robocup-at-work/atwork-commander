@@ -379,8 +379,11 @@ class Generator : public GeneratorPluginInterface {
    paramFinal.emplace("place_shelfs", mTasks[taskName].parameters["shelfes_placing"]);
    paramFinal.emplace("objects", mTasks[taskName].parameters["objects"]);
    paramFinal.emplace("decoys", mTasks[taskName].parameters["decoys"]);
-   paramFinal.emplace("B_Container", mTasks[taskName].parameters["container_placing"]/2);
-   paramFinal.emplace("R_Container", mTasks[taskName].parameters["container_placing"]-mTasks[taskName].parameters["container_placing"]/2);
+   paramFinal.emplace("container_placing", mTasks[taskName].parameters["container_placing"]);
+   auto rContNumIt = mConfig.arena().objects.find("R_Container");
+   paramFinal.emplace("R_Container", rContNumIt!=mConfig.arena().objects.end()?rContNumIt->second:0);
+   auto bContNumIt = mConfig.arena().objects.find("B_Container");
+   paramFinal.emplace("B_Container", bContNumIt!=mConfig.arena().objects.end()?bContNumIt->second:0);
    paramFinal.emplace("place_cavity_container", 0);
    paramFinal.emplace("pick_turntables", mTasks[taskName].parameters["tt_grasping"]);
    paramFinal.emplace("place_turntables", mTasks[taskName].parameters["tt_placing"]);
