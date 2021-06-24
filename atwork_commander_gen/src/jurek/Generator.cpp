@@ -486,6 +486,7 @@ class Generator : public GeneratorPluginInterface {
         t[2] = find(mTablesInverse.begin(), mTablesInverse.end(), Converter::findObject(targetObjs, o, objs.first, true)) - mTablesInverse.begin();
         t[4] = ++i;
         switch(o.target) {
+          default:
           case(atwork_commander_msgs::Object::EMPTY): t[3] = -1;break;
           case(red):
           case(blue): t[3] = get_container_id(tID, o.target); break;
@@ -814,7 +815,7 @@ class Generator : public GeneratorPluginInterface {
       if (mObjects.size() == 0) {throw 220;}																			                               // No Objects
       if (shelfs == 0 && (paramFinal["pick_shelfs"] > 0 || paramFinal["place_shelfs"] > 0)) {throw 221;}				   // No shelfpick/place without shelf
       if (tables == 0 && paramFinal["objects"] > paramFinal["pick_shelfs"]) {throw 222;}								           // No tables
-      if (shelfs + tables + conveyors + paramFinal["B_Container"] + paramFinal["R_Container"] <= 1) {throw 223;} // pick = place
+      if (shelfs + tables + ppts +conveyors + paramFinal["B_Container"] + paramFinal["R_Container"] <= 1) {throw 223;} // pick = place
       if (paramContainerInShelf == true) {
         if (tables + shelfs == 0 && paramFinal["B_Container"] + paramFinal["R_Container"] > 0) {throw 224;}			 // No tables, no shelfs, no conveyors, No container place in air
       }
