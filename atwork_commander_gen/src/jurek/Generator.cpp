@@ -300,7 +300,7 @@ class Generator : public GeneratorPluginInterface {
         std::vector<std::vector<size_t>> validpicks;
         std::vector<size_t> picksleft;
         std::unordered_map<size_t, size_t> mTableTypes;
-        vector<set<ObjectType>> mAvailableObjectsPerTable;
+        vector<set<ObjectType*>> mAvailableObjectsPerTable;
 
         size_t tabletypes;
   using run = vector<array<int, 5>>;
@@ -533,7 +533,7 @@ class Generator : public GeneratorPluginInterface {
           auto& srcObjs = mAvailableObjectsPerTable.at(tasks.at(i).at(src_id));
           ROS_DEBUG_STREAM("\tSrc(" << mTablesInverse.at(tasks.at(i).at(src_id)) << "): " << srcObjs << endl <<
                            "\tDst(" << mTablesInverse.at(tasks.at(i).at(dst_id)) << "): " << dstObjs);
-          set<ObjectType> objs;
+          set<ObjectType*> objs;
           set_intersection(srcObjs.begin(), srcObjs.end(), dstObjs.begin(), dstObjs.end(), inserter(objs, objs.begin()));
           if(objs.size()==0) {
             ROS_ERROR_STREAM("No possible objects left: " << endl <<
@@ -542,14 +542,15 @@ class Generator : public GeneratorPluginInterface {
             continue;
           }
           size_t objIndex = rand() % objs.size();
-          const ObjectType* obj;
+          ObjectType* obj;
           auto it = objs.begin();
           do
-            obj=&*it++;
+            obj=*it++;
           while(objIndex--!=0);
           tasks.at(i).at(obj_id) = toTaskObject(*obj).object;
-          srcObjs.erase(*obj);
-          dstObjs.erase(*obj);
+          srcObjs.erase(obj);
+          dstObjs.erase(obj);
+          (*obj)--;
         }
         else {
           auto& srcObjs = mAvailableObjectsPerTable.at(tasks.at(i).at(src_id));
@@ -559,14 +560,21 @@ class Generator : public GeneratorPluginInterface {
             continue;
           }
           size_t objIndex = rand() % srcObjs.size();
-          const ObjectType* obj;
+          ObjectType* obj;
           auto it = srcObjs.begin();
           do
-            obj=&*it++;
+            obj=*it++;
           while(objIndex--!=0);
           tasks.at(i).at(obj_id) = toTaskObject(*obj).object;
-          srcObjs.erase(*obj);
+          srcObjs.erase(obj);
+          (*obj)--;
         }
+      }
+
+      for(auto& objects : mAvailableObjectsPerTable){
+        std::set<ObjectType*> temp;
+        copy_if(objects.begin(), objects.end(), inserter(temp, temp.begin()), [](ObjectType* o){ return (bool)*o;});
+        objects = temp;
       }
     }
   }
@@ -782,7 +790,7 @@ class Generator : public GeneratorPluginInterface {
       size_t table5 = mTables5.size();
       size_t table10 = mTables10.size();
       size_t table15 = mTables15.size();
-      mAvailableObjectsPerTable = vector<set<ObjectType>>(mTablesInverse.size());
+      mAvailableObjectsPerTable = vector<set<ObjectType*>>(mTablesInverse.size());
       container_ids.clear();
       contId=1;
       for(size_t i =1; i<mTablesInverse.size(); i++) {
@@ -791,13 +799,13 @@ class Generator : public GeneratorPluginInterface {
           return any_of(mTables.equal_range("PP").first, mTables.equal_range("PP").second, compFunc);
         };
         set<ObjectType> temp;
-        for(const ObjectType& obj: mAvailableObjects) {
+        for(ObjectType& obj: mAvailableObjects) {
           try{
             auto taskObj = toTaskObject(obj).object;
             if( taskObj == atwork_commander_msgs::Object::EMPTY) continue;
             if( taskObj >= atwork_commander_msgs::Object::CONTAINER_RED) continue;
             if( checkPPT(mTablesInverse[i]) && taskObj >=  atwork_commander_msgs::Object::BEARING_BOX ) continue;
-          mAvailableObjectsPerTable[i].insert(obj);
+            mAvailableObjectsPerTable[i].insert(&obj);
           }catch(...){
             ROS_ERROR_STREAM("Object lost because of matching error: " << endl << obj);
             continue;
@@ -936,17 +944,23 @@ class Generator : public GeneratorPluginInterface {
         update_validpicks(type_id);								                           		// update the lists of vaild picks
       }
 
-      size_t all = paramFinal["pick_shelfs"] + paramFinal["pick_turntables"] + paramFinal["pick_tables0"] + paramFinal["pick_tables5"] + paramFinal["pick_tables10"] + paramFinal["pick_tables15"];
-      vector<pair<size_t, vector<unsigned int>>> decoyFracs = {
-       make_pair((size_t)round(paramFinal["decoys"]*(float)paramFinal["pick_shelfs"]/all), mShelfs),
-       make_pair((size_t)round(paramFinal["decoys"]*(float)paramFinal["pick_turntables"]/all), mConveyors),
-      };
-      size_t decoysToDo = paramFinal["decoys"];
-      decoyFracs.push_back(make_pair(max(0l, (ssize_t)decoysToDo - (ssize_t)accumulate(decoyFracs.begin(), decoyFracs.end(), 0, [](size_t sum, decltype(decoyFracs)::value_type& a){return sum+a.first;})), mJTables));
+      decltype(tasks) decoyTasks(paramFinal["decoys"]);
+      auto it  = decoyTasks.begin();
+      for(const auto& task: tasks) { 
+        if(mTableTypes[task[src_id]] ==shelfs_id || mTableTypes[task[src_id]] == conveyors_id ) {
+          (*it++)={-1, task[src_id], -1, -1, -1};
+        }
+      }
+      while(it != decoyTasks.end())
+        for(const auto& task: tasks) {
+          if(mTableTypes[task[src_id]] !=shelfs_id && mTableTypes[task[src_id]] != conveyors_id )
+            (*it++)={-1, task[src_id], -1, -1, -1};
+          if(it == decoyTasks.end())
+            break;
+        }
 
-      for(const auto& entry: decoyFracs)
-        for(int i=0; i<entry.first; i++)
-          tasks.push_back({-1, (int)entry.second.at(rand() % entry.second.size()),-1,-1,-1});
+      tasks.resize(tasks.size()+decoyTasks.size());
+      copy(decoyTasks.begin(), decoyTasks.end(), tasks.end()-decoyTasks.size());
 
       generate_objects(tasks);                                                  // generate objects for the decoys
       debugAll("taskgenerierung", tasks);
