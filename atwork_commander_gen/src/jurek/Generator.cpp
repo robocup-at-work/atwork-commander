@@ -323,13 +323,33 @@ class Generator : public GeneratorPluginInterface {
     mTablesInverse.push_back("");
     const auto& nTables = mTasks[taskName].normalTableTypes;
 
-    for( const pair<string, Table>& e : mTables ) {
-      const Table& t = e.second;
+    // Copy Tables to mutable vector
+    vector<Table> tables(mTables.size());
+    transform(mTables.begin(), mTables.end(), tables.begin(),
+      [](const pair<string, Table>& e){ return e.second; }
+    );
 
-//    Configure Tables Types
-      if( ( t.type == "00" || t.type == "05" || t.type == "10" || t.type == "15" ) &&
-          count(nTables.begin(), nTables.end(), t.type) == 0 )
-        continue;
+
+    // shuffle vector
+    random_device rd;
+    mt19937 g(rd());
+
+    shuffle(tables.begin(), tables.end(), g);
+
+    int nTableCount = 0;
+    unsigned int maxNTables = mTasks[taskName].parameters["tables"];
+    if( maxNTables == 0)
+      maxNTables = tables.size();
+
+    for( const Table t : tables ) {
+
+    //Check if table type is supported by task and if maximum amount of tables is already used
+      if( t.type == "00" || t.type == "05" || t.type == "10" || t.type == "15" ) {
+          if( count(nTables.begin(), nTables.end(), t.type) == 0  || nTableCount >= maxNTables )
+            continue;
+          else
+            nTableCount++;
+      }
 
       if( ! allowedTables.empty() &&
           ! count( allowedTables.begin(), allowedTables.end(), t.name ) )
