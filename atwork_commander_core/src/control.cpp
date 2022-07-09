@@ -131,6 +131,7 @@ public:
   void stop() {
     StateUpdate update;
     switch( state.state ) {
+      case( RefboxState::READY ):
       case( RefboxState::PREPARATION ):
       case( RefboxState::EXECUTION )  : update.request.state = RefboxState::READY; break;
       case( RefboxState::IDLE)        : update.request.state = RefboxState::IDLE; break;

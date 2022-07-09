@@ -12,32 +12,32 @@
 namespace atwork_commander {
 namespace testing {
 
-  struct BasicControlTest : public ::testing::Test {
-    
-    Control control;
+struct BasicControlTest : public ::testing::Test {
 
-    static std::string readRefboxName() {
-      std::string refbox;
-      if( !ros::param::get("~refbox", refbox) ) {
-          refbox = "atwork_commander";
-          ROS_WARN_STREAM("[TEST-SETUP] No Refbox name specified! Using \"" << refbox << "\"!");
-      }
-      return refbox;
-    }
+  Control control;
 
-    void SetUp() override {
-      control.refbox(readRefboxName());
+  static std::string readRefboxName() {
+    std::string refbox;
+    if( !ros::param::get("~refbox", refbox) ) {
+        refbox = "atwork_commander";
+        ROS_WARN_STREAM("[TEST-SETUP] No Refbox name specified! Using \"" << refbox << "\"!");
     }
+    return refbox;
+  }
 
-    void expectReason(std::function<void()> func, ControlError::Reasons reason) {
-      try {
-        func();
-      } catch(const ControlError& e) {
-        EXPECT_EQ(e.reason(), reason);
-        throw;
-      }
+  void SetUp() override {
+    control.refbox(readRefboxName());
+  }
+
+  void expectReason(std::function<void()> func, ControlError::Reasons reason) {
+    try {
+      func();
+    } catch(const ControlError& e) {
+      EXPECT_EQ(e.reason(), reason);
+      throw;
     }
-  };
+  }
+};
 }
 }
 
@@ -47,3 +47,16 @@ namespace testing {
                             ),                                                \
                 atwork_commander::ControlError                                \
               );
+
+#define EXPECT_STATE_CALL(targetState)                                        \
+  EXPECT_CALL(refbox,                                                         \
+    stateChange(                                                              \
+      Field( &StateUpdate::Request::state,                                    \
+        Eq( targetState )                                                     \
+      ),                                                                      \
+      _                                                                       \
+    )                                                                         \
+  ).Times(1)                                                                  \
+   .WillOnce(                                                                 \
+    Return( true )                                                            \
+  );

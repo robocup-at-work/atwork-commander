@@ -39,7 +39,7 @@ struct TaskDefinition {
     // Transport
     { "objects", 1 },
     { "decoys", 0 },
-    { "tables", 1 },
+    { "tables", 0 },
     { "ref_position", 0 },
     { "ref_rotation", 0 },
     { "ref_orientation", 0 },
