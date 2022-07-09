@@ -1,5 +1,5 @@
 FINAL:
-  prep_time: 3
+  prep_time: 5
   exec_time: 13
   objects: 10
   decoys: 5
@@ -8,11 +8,11 @@ FINAL:
   barrier_tapes: 2
   arbitrary_surfaces: 3
   pp_placing: 1
-  container_placing: 2
-  tt_grasping: 1
-  tt_placing: 1
+  container_placing: 4
+  tt_grasping: 0
+  tt_placing: 0
   ref_tt_direction: true
-  shelfes_grasping: 1
+  shelfes_grasping: 2
   shelfes_placing:  1
   ref_position: true
   ref_rotation: true
