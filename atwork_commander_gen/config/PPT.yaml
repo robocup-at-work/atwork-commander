@@ -1,9 +1,9 @@
 PPT:
-  prep_time: 3
+  prep_time: 5
   exec_time: 5
   objects: 3
   tables: 2
   pp_placing: 3
   ref_cavity_position: true
   ref_cavity_rotation: true
-  normal_table_types: [ "10" ]
+  allowed_tables: ["WS06", "PP01"]

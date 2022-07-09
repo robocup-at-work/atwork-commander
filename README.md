@@ -56,48 +56,64 @@
   roslaunch atwork_commander stop.launch
   ```
 
-  ## Documentation
+### Easy to use script
 
-  Currently in the __docu__ folder. Multiple '.graphml' files showing the design
-  of the architecture and the future GUI (Viewable and editable with e.g.
-  [yEd Graph Editor](https://www.yworks.com/products/yed))
+You can use the script "default_bringup" which automates the refbox startup.
+Its purpose is mainly for new teams so that they can create bagfiles for tasks more easily.
+You can also use it for normal refbox startup, however you will need to kill the nodes afterwards manually..
+The cleanup is done automatically if you set the  **_immediate** param to **True**
 
-  [Source Code Reference](https://steup.github.io/atwork-commander)
+Use e.g. this command to start the script (replace the task for the one you want):
 
-  [Issues, Milestones and Releases](https://github.com/robocup-at-work/atwork-commander)
+`rosrun atwork_commander default_bringup _task:=BTT1 _immediate:=True _record_rosbag:=True`
 
-  ## Sub-Components
+NOTE: This requires rosbash to be installed:
+`sudo apt install ros-melodic-rosbash ros-melodic-rosbash-params`
 
-  The following section will briefly summarize the individual components purpose.
-  For further information, please have a look at the respective sub-components' README.md.
+You can also modify the script to use other launchfiles than the default ones provided within this package.
+This is especially useful for your own arena configurations and robot descriptions.
 
-  ### [atwork\_commander\_core](atwork_commander_core/README.md)
+## Documentation
 
-  State-Machine implementation, Pub/Sub and Service implementations to couple all
-  sub-components.
+Currently in the __docu__ folder. Multiple '.graphml' files showing the design
+of the architecture and the future GUI (Viewable and editable with e.g.
+[yEd Graph Editor](https://www.yworks.com/products/yed))
+[Source Code Reference](https://steup.github.io/atwork-commander)
 
-  ### [atwork\_commander\_msgs](atwork_commander_msgs/README.md)
+[Issues, Milestones and Releases](https://github.com/robocup-at-work/atwork-commander)
 
-  Contains ROS messages and service descriptions necessary to communicate within
-  the Refbox.
+## Sub-Components
 
-  ### [atwork\_commander\_com](atwork_commander_com/README.md)
+The following section will briefly summarize the individual components purpose.
+For further information, please have a look at the respective sub-components' README.md.
 
-  Will contain multiple communication plugins to enable flexible communication
-  links to various types of robots.
+### [atwork\_commander\_core](atwork_commander_core/README.md)
 
-  ### [atwork\_commander\_gui](atwork_commander_gui/README.md)
+State-Machine implementation, Pub/Sub and Service implementations to couple all
+sub-components.
 
-  Aims to enable visualization and control of multiple aspects of a Task before,
-  during and after a run.
+### [atwork\_commander\_msgs](atwork_commander_msgs/README.md)
 
-  ### [atwork\_commander\_gen](atwork_commander_gen/README.md)
+Contains ROS messages and service descriptions necessary to communicate within
+the Refbox.
 
-  Enable dynamic task generation according to specified task types of the
-  [@Work RuleBook](https://github.com/robocup-at-work/rulebook).
+### [atwork\_commander\_com](atwork_commander_com/README.md)
 
-  ## TODOs
+Will contain multiple communication plugins to enable flexible communication
+links to various types of robots.
 
-  - GUI is currently mockup only
-  - COM only contains two multi-master ROS communication plugins
-  - New JurekGen should be fully RuleBook compatible
+### [atwork\_commander\_gui](atwork_commander_gui/README.md)
+
+Aims to enable visualization and control of multiple aspects of a Task before,
+during and after a run.
+
+### [atwork\_commander\_gen](atwork_commander_gen/README.md)
+
+Enable dynamic task generation according to specified task types of the
+[@Work RuleBook](https://github.com/robocup-at-work/rulebook).
+
+## TODOs
+
+- GUI is currently mockup only
+- COM only contains two multi-master ROS communication plugins
+- New JurekGen should be fully RuleBook compatible

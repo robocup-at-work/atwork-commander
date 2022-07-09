@@ -9,20 +9,21 @@
     <arg name="generator" default="JurekGen"/>
     <arg name="multimaster" default="true" />
     <arg name="publish_frequency" default="1.0"/>
+    <arg name="config" default="$(find atwork_commander_gen)/config"/>
 
 
     <group ns="atwork_commander">
         <!-- load config -->
         <param name="generator" value="$(arg generator)"/>
-        <rosparam file="$(find atwork_commander_gen)/config/BNT.yaml"    ns="tasks"/>
-        <rosparam file="$(find atwork_commander_gen)/config/BMT.yaml"    ns="tasks"/>
-        <rosparam file="$(find atwork_commander_gen)/config/BTT1.yaml"   ns="tasks"/>
-        <rosparam file="$(find atwork_commander_gen)/config/BTT2.yaml"   ns="tasks"/>
-        <rosparam file="$(find atwork_commander_gen)/config/BTT3.yaml"   ns="tasks"/>
-        <rosparam file="$(find atwork_commander_gen)/config/RTT.yaml"    ns="tasks"/>
-        <rosparam file="$(find atwork_commander_gen)/config/PPT.yaml"    ns="tasks"/>
-        <rosparam file="$(find atwork_commander_gen)/config/FINAL.yaml"  ns="tasks"/>
-        <rosparam file="$(find atwork_commander_gen)/config/Arena.yaml"/>
+        <rosparam file="$(arg config)/BNT.yaml"    ns="tasks"/>
+        <rosparam file="$(arg config)/BMT.yaml"    ns="tasks"/>
+        <rosparam file="$(arg config)/BTT1.yaml"   ns="tasks"/>
+        <rosparam file="$(arg config)/BTT2.yaml"   ns="tasks"/>
+        <rosparam file="$(arg config)/BTT3.yaml"   ns="tasks"/>
+        <rosparam file="$(arg config)/RTT.yaml"    ns="tasks"/>
+        <rosparam file="$(arg config)/PPT.yaml"    ns="tasks"/>
+        <rosparam file="$(arg config)/FINAL.yaml"  ns="tasks"/>
+        <rosparam file="$(arg config)/Arena.yaml"/>
 
         <!-- start refbox (incl task generator) -->
         <node pkg="atwork_commander_core" type="atwork_commander_core_node" name="core" required="true" output="$(arg output)">

@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+
+# Load ROS parameters
+roscore &
+
+sleep 1
+
+rosbash_init_node "task_to_bag" "$@"
+
+rosbash_param task "task" "BTT1"
+rosbash_param immediate "immediate" False
+rosbash_param record_bag "record_rosbag" False
+
+
+# State that we begin now
+
+echo "Starting the atwork commander with task ('${task}') specified"
+roslaunch atwork_commander atwork_commander.launch 1>/dev/null & 
+
+sleep 1
+
+
+if [ "${record_bag}" == "True" ]; then
+    echo "Starting to record a rosbag!"
+    rosbag record -O "AC_${task}" atwork_commander/task atwork_commander/object_task __name:=task_to_bag 1>/dev/null &
+fi
+
+
+roslaunch atwork_commander example_robot.launch 1>/dev/null &
+
+sleep 1
+
+echo "Loading the task.."
+
+roslaunch atwork_commander generate.launch task:="${task}" 1>/dev/null &
+
+sleep 1
+
+echo "Starting prep phase!"
+
+roslaunch atwork_commander start.launch 1>/dev/null &
+
+sleep 1
+
+if [ "${immediate}" == "True" ]; then
+    echo "Forwarding to execution immediately!"
+    roslaunch atwork_commander forward.launch 1>/dev/null &
+    sleep 10
+
+    echo "Recorded 10s of the task. Shutting down now .."
+    
+    # kill all nodes
+    rosnode kill -a
+    killall -9 rosmaster
+    echo "Done"
+fi
+
+
+if [ "${immediate}" == "False" ]; then
+    echo "Started a couple of nodes in the background"
+    echo "Please use <rosnode kill -a> to stop them once you're done!"
+    echo "To kill the core, use <killall -9 rosmaster>"
+fi
