@@ -1,25 +1,27 @@
 arena:
   workstations:
-    WS01: "10"
-    WS02: "10"
-    WS03: "05"
-    WS04: "00"
-    WS05: "00"
-    WS06: "15"
-    WS07: "15"
-    WS08: "05"
+    WS01: "05"
+    WS02: "15"
+    WS03: "10"
+    WS04: "10"
+    WS05: "10"
+    WS06: "10"
+    WS07: "10"
+    WS08: "00"
+    WS09: "00"
+    WS10: "05"
+    WS11: "10"
+    WS12: "15"
+    WS13: "00"
     PP01: "PP"
     TT01: "TT"
     SH01: "SH"
-    SH02: "SH"
-    WS10: "10"
-    WS11: "10"
   objects:
     F20_20_G      : 10
     F20_20_B      : 10
     S40_40_B      : 10
     S40_40_G      : 10
-    M20           : 10
+    M20           : 2
     M30           : 10
     M20_100       : 10
     R20           : 10
@@ -28,6 +30,6 @@ arena:
     BEARING_BOX   : 10
     DISTANCE_TUBE : 10
     MOTOR         : 10
-    CONTAINER_RED :  0
-    CONTAINER_BLUE:  0
+    CONTAINER_RED :  2
+    CONTAINER_BLUE:  2
   cavities: [ "F20_20_H", "S40_40_H", "M20_H", "M30_H", "M20_100_H", "R20_H", "F20_20_V", "S40_40_V", "M20_V", "M30_V", "R20_V" ]
