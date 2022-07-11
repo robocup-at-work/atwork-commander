@@ -1276,7 +1276,7 @@ class Generator : public GeneratorPluginInterface {
       }
       catch(const exception& e) {
         ROS_ERROR_STREAM_NAMED("generator", "[REFBOX-GEN] Error during initialization of plugin: " << e.what());
-        throw e;
+        throw;
       }
     }
 

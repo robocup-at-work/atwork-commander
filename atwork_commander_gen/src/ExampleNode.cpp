@@ -4,8 +4,8 @@
 #include <ros/console.h>
 
 #include <exception>
-#include <thread>
 #include <chrono>
+#include <thread>
 
 using namespace atwork_commander;
 using namespace std;
@@ -15,6 +15,7 @@ static void activateDebug() {
   if( ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
     ros::console::notifyLoggerLevelsChanged();
     this_thread::sleep_for(seconds(1)); // Necessary to allow rosconsole to react to logger level change
+    ROS_DEBUG_STREAM("Debugging mode activated!");
   }
 }
 
