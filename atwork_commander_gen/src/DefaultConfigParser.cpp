@@ -140,10 +140,15 @@ static TaskDefinitions readTaskList(const string& taskConfig) {
   ROS_INFO_STREAM_NAMED("parser", "[REFBOX] Try to read task definitions from '" << taskConfig << "'");
 
   XmlRpc::XmlRpcValue my_list;
+  try {
   nh.getParam(taskConfig, my_list);
+  } catch(const ros::InvalidNameException& e) {
+    ROS_ERROR_STREAM_NAMED("parser", "Invalid Name for task config specified: " << taskConfig << ": " << e.what());
+    throw;
+  }
 
   if (my_list.getType() != XmlRpc::XmlRpcValue::TypeStruct) {
-      ROS_ERROR_NAMED("parser", "[REFBOX] Couldn't read Tasklist. Aspect 'XmlRpc::XmlRpcValue::TypeStruct' under '%s'.", taskConfig.c_str());
+      ROS_ERROR_STREAM_NAMED("parser", "[REFBOX] Couldn't read Tasklist. Aspect 'XmlRpc::XmlRpcValue::TypeStruct' under " <<  taskConfig << "!");
       throw runtime_error(string("No struct under ") +taskConfig +"! bailing out!");
   }
 
@@ -175,34 +180,39 @@ static ArenaDescription readArenaDefinition(const string& arenaConfig) {
 
   string obj_param = arenaConfig + "/objects";
   ROS_INFO_STREAM_NAMED("parser", "[REFBOX] try to read available objects from '" << obj_param << "'") ;
+  try {
+    map<string, string> temp_ws;
+    if( ! nh.getParam(ws_param, temp_ws) ) throw runtime_error("No workstations defined for arena: "+arenaConfig);
+    for (auto& ws : temp_ws) {
+        arena.workstations[ws.first] = ws.second;
+    }
 
-  map<string, string> temp_ws;
-  nh.getParam(ws_param, temp_ws);
-  for (auto& ws : temp_ws) {
-      arena.workstations[ws.first] = ws.second;
+    std::map<std::string, std::string> temp_wp;
+    if( nh.getParam(wp_param, temp_wp) ) {
+      for (auto& wp : temp_wp) {
+          arena.waypoints[wp.first] = wp.second;
+      }
+    }
+
+    std::map<std::string, int> temp_obj;
+    if( ! nh.getParam(obj_param, temp_obj) ) throw runtime_error("No objects defined for arena: "+arenaConfig);
+    for (auto& obj : temp_obj) {
+        arena.objects[obj.first] = obj.second;
+    }
+  } catch(const ros::InvalidNameException& e) {
+    ROS_ERROR_STREAM_NAMED("parser", "Invalid Name for arena config specified: " << arenaConfig << ": " << e.what());
+    throw;
   }
-
-  std::map<std::string, std::string> temp_wp;
-  nh.getParam(wp_param, temp_wp);
-  for (auto& wp : temp_wp) {
-      arena.waypoints[wp.first] = wp.second;
-  }
-
-  std::map<std::string, int> temp_obj;
-  nh.getParam(obj_param, temp_obj);
-  for (auto& obj : temp_obj) {
-      arena.objects[obj.first] = obj.second;
-  }
-
   ROS_ASSERT(arena.workstations.size() > 1);
 
   ROS_INFO_STREAM_NAMED("parser", "[REFBOX] Read " << arena.workstations.size() << " workstations from parameter server");
 
 
-  std::string ppc_param = ros::this_node::getNamespace() + "/arena/cavities";
+  std::string ppc_param = arenaConfig + "/cavities";
   ROS_INFO_STREAM_NAMED("parser", "[REFBOX] try to read PP cavities from '" << ppc_param << "'");
 
-  nh.getParam(ppc_param, arena.cavities);
+  if( !nh.getParam(ppc_param, arena.cavities) )
+    ROS_WARN_STREAM("No PPT cavities defined for Arena: " << arenaConfig);
 
   ROS_INFO_STREAM_NAMED("parser", "[REFBOX] read " << arena.cavities.size() << " PP cavities from parameter server");
   ROS_DEBUG_STREAM_NAMED("parser", "[REFBOX] Read Arena Definition:" << std::endl << arena);

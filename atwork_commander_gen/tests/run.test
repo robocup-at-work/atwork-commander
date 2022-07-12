@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<launch>
+  <rosparam file="$(find atwork_commander_gen)/tests/test-tasks.yaml" ns="test_tasks"/>
+  <rosparam file="$(find atwork_commander_gen)/tests/test-arena.yaml" ns="test_arena"/>
+  <param name="jurek" value="JurekGen"/>
+  <arg name="debug" default="false"/>
+  <arg name="gdb" default="false"/>
+
+  <test test-name="generators" pkg="atwork_commander_gen" type="atwork_commander_gen_tests" name="generator_tests" unless="$(arg gdb)">
+    <param name="debug" value="$(arg debug)"/>
+  </test>
+  <node pkg="atwork_commander_gen" type="atwork_commander_gen_tests" name="generator_tests" launch-prefix="gdbserver :1234 " if="$(arg gdb)">
+    <param name="debug" value="$(arg debug)"/>
+  </node>
+
+</launch>

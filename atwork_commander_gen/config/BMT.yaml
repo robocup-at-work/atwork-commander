@@ -1,7 +1,7 @@
 BMT:
-  prep_time: 5
+  prep_time: 3
   exec_time: 5
   objects: 5
   ref_position: true
   tables: 2
-  allowed_tables: [ "WS06", "WS11" ]
+  allowed_tables: [ "WS02", "WS03" ]

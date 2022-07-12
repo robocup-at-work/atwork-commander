@@ -343,6 +343,10 @@ class Generator : public GeneratorPluginInterface {
 
     for( const Table t : tables ) {
 
+      if( ! allowedTables.empty() &&
+          ! count( allowedTables.begin(), allowedTables.end(), t.name ) )
+        continue;
+
     //Check if table type is supported by task and if maximum amount of tables is already used
       if( t.type == "00" || t.type == "05" || t.type == "10" || t.type == "15" ) {
           if( count(nTables.begin(), nTables.end(), t.type) == 0  || nTableCount >= maxNTables )
@@ -350,10 +354,6 @@ class Generator : public GeneratorPluginInterface {
           else
             nTableCount++;
       }
-
-      if( ! allowedTables.empty() &&
-          ! count( allowedTables.begin(), allowedTables.end(), t.name ) )
-        continue;
 
       if( t.type == "00" )                  { mTables0.push_back(++id);  mJTables.push_back(id); mTablesInverse.push_back(t.name); continue; }
       if( t.type == "05" )                  { mTables5.push_back(++id);  mJTables.push_back(id); mTablesInverse.push_back(t.name); continue; }
@@ -519,13 +519,12 @@ class Generator : public GeneratorPluginInterface {
   }
 
   void debugAll(const string info, const run &tasks) {
-    cout<<info<<"\n===========================\n";
-    cout<<"mAllTables\n"<<mAllTables;
-    cout<<"validpicks\n"<<validpicks;
-    cout<<"picksleft\n"<<picksleft;
-    cout<<"tabletypes "<<tabletypes<<"\n";
-    cout<<"container_ids\n"<<container_ids;
-    cout<<"tasks\n"<<tasks;
+    ROS_DEBUG_STREAM("mAllTables "<<mAllTables<<endl<<
+                     "validpicks "<<validpicks<<endl<<
+                     "picksleft "<<picksleft<<endl<<
+                     "tabletypes "<<tabletypes<<endl<<
+                     "container_ids "<<container_ids<<endl<<
+                     "tasks "<<tasks);
   }
 
   void debug_tasks(const string info, const run &tasks) const {
@@ -838,7 +837,7 @@ class Generator : public GeneratorPluginInterface {
       } else {
         tabletypes = 7;
       }
-
+      ROS_DEBUG_STREAM("JTables: [ "<<mJTables << " ]");
       // check validity
       if (mObjects.size() == 0) {throw 220;}																			                               // No Objects
       if (shelfs == 0 && (paramFinal["pick_shelfs"] > 0 || paramFinal["place_shelfs"] > 0)) {throw 221;}				   // No shelfpick/place without shelf
@@ -1214,7 +1213,7 @@ class Generator : public GeneratorPluginInterface {
       }
       catch(const exception& e) {
         ROS_ERROR_STREAM_NAMED("generator", "[REFBOX-GEN] Error during initialization of plugin: " << e.what());
-        throw e;
+        throw;
       }
     }
 
