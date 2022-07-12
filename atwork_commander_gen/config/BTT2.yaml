@@ -6,4 +6,4 @@ BTT2:
   tables: 4
   arbitrary_surfaces: 2
   obstacles: 2
-  tt_placing: 0
+  tt_placing: 1
