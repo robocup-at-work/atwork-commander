@@ -2,7 +2,7 @@
 
 <launch>
   <group ns="atwork_commander_gen/example">
-    <arg name="generator" default="SimpleGen"/> 
+    <arg name="generator" default="JurekGen"/> 
     <arg name="arena" default="example-arena"/> 
     <arg name="task" default="example-task"/> 
     <arg name="debug" default="false"/> 

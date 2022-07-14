@@ -9,6 +9,7 @@ BTT3:
   arbitrary_surfaces: 2
   obstacles: 2
   barrier_tapes: 1
-  object_types:
-    CONTAINER_RED: 2
-    CONTAINER_BLUE: 2
+  container_placing_r: 2
+  container_placing_b: 2
+  paired_containers: 1
+  normal_table_types: [ "10" ]
