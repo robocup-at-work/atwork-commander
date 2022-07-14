@@ -26,5 +26,5 @@ objects:
     BEARING_BOX   : 2
     DISTANCE_TUBE : 2
     MOTOR         : 2
-    CONTAINER_RED : 2
-    CONTAINER_BLUE: 2
+    CONTAINER_RED : 3
+    CONTAINER_BLUE: 3

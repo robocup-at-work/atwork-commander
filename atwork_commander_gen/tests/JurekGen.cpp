@@ -21,6 +21,11 @@ TEST_F(JurekGenSuite, tables) {
     EXPECT_TRUE(gen.check(task)) << task;
 }
 
+TEST_F(JurekGenSuite, container) {
+    auto task = gen("container");
+    EXPECT_TRUE(gen.check(task)) << task;
+}
+
 TEST_F(JurekGenSuite, tt) {
     auto task = gen("tt");
     EXPECT_TRUE(gen.check(task)) << task;

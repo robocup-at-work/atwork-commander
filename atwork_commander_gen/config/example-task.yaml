@@ -6,7 +6,7 @@ example-task:
       decoys                : 3
       pp_placing            : 1
       ref_cavity_orientation: 1
-      container_placing     : 2
+      container_placing     : 1
       tt_grasping           : 1
       tt_placing            : 1
       shelfes_grasping      : 2
