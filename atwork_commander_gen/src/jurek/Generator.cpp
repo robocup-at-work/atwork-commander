@@ -368,8 +368,8 @@ class Generator : public GeneratorPluginInterface {
       }
 
       if(t.type == "SH"                                && 
-         mTasks[taskName].parameters["shelf_grasping"]==0 && 
-         mTasks[taskName].parameters["shelf_placing"]==0) {
+         mTasks[taskName].parameters["shelfes_grasping"]==0 && 
+         mTasks[taskName].parameters["shelfes_placing"]==0) {
         ROS_DEBUG_STREAM("Skipping shelf " << id);
         continue;
       }
@@ -1067,9 +1067,10 @@ class Generator : public GeneratorPluginInterface {
       decltype(tasks) decoyTasks(paramFinal["decoys"]);
       auto it  = decoyTasks.begin();
       for(const auto& task: tasks) { 
-        if(mTableTypes[task[src_id]] ==shelfs_id || mTableTypes[task[src_id]] == conveyors_id ) {
+        if(it == decoyTasks.end())
+          break;
+        if(mTableTypes[task[src_id]] ==shelfs_id || mTableTypes[task[src_id]] == conveyors_id )
           (*it++)={-1, task[src_id], -1, -1, -1};
-        }
       }
       while(it != decoyTasks.end())
         for(const auto& task: tasks) {
