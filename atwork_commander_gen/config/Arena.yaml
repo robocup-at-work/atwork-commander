@@ -1,11 +1,11 @@
 arena:
   workstations:
-    WS01: "SH"
+    SH01: "SH"
     WS02: "10"
     WS03: "10"
     WS04: "00"
-    WS05: "PP"
-    WS06: "TT"
+    PP01: "PP"
+    TT01: "TT"
     WS07: "05"
     WS08: "05"
     WS09: "15"
@@ -15,7 +15,7 @@ arena:
     WS13: "00"
     WS14: "10"
     WS15: "10"
-    WS16: "SH"
+    SH01: "SH"
     WS17: "15"
     WS18: "15"
   objects:

@@ -80,7 +80,7 @@ class ConfigParserInterface {
       mArenaConfig = arenaConfig;
       try {
         update();
-      } catch(std::exception& e) {
+      } catch(const std::exception& e) {
         mTaskConfig = oldTaskConfig;
         mArenaConfig = oldArenaConfig;
         throw e;

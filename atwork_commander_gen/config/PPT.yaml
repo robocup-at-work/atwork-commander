@@ -6,4 +6,4 @@ PPT:
   pp_placing: 3
   ref_cavity_position: true
   ref_cavity_rotation: true
-  allowed_tables: ["WS06", "PP01"]
+  allowed_tables: ["WS14", "WS05"]
