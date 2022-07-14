@@ -5,12 +5,16 @@
   <rosparam file="$(find atwork_commander_gen)/tests/test-arena.yaml" ns="test_arena"/>
   <param name="jurek" value="JurekGen"/>
   <arg name="debug" default="false"/>
+  <arg name="tests" default=""/>
   <arg name="gdb" default="false"/>
+  <arg name="repeat" default="1" />
 
-  <test test-name="generators" pkg="atwork_commander_gen" type="atwork_commander_gen_tests" name="generator_tests" unless="$(arg gdb)">
+  <test test-name="generators" pkg="atwork_commander_gen" type="atwork_commander_gen_tests" name="generator_tests" 
+    args="$(eval '--gtest_repeat='+str(repeat)+' --gtest_filter='+('-' if tests=='' else tests)+' '+('--gtest_throw_on_failure --gtest_catch_exceptions=0' if debug else ''))" unless="$(arg gdb)">
     <param name="debug" value="$(arg debug)"/>
   </test>
-  <node pkg="atwork_commander_gen" type="atwork_commander_gen_tests" name="generator_tests" launch-prefix="gdbserver :1234 " if="$(arg gdb)">
+  <node pkg="atwork_commander_gen" type="atwork_commander_gen_tests" name="generator_tests" 
+    args="$(eval '--gtest_repeat='+str(repeat)+' --gtest_filter='+('-' if tests=='' else tests)+' '+('--gtest_throw_on_failure --gtest_catch_exceptions=0' if debug else ''))" launch-prefix="gdbserver :1234 " if="$(arg gdb)">
     <param name="debug" value="$(arg debug)"/>
   </node>
 
