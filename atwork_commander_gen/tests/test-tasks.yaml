@@ -12,10 +12,17 @@ complete:
 tables:
       objects               : 4
       tables                : 4
-specialTables:
-      objects               : 1
+tt:
+      objects               : 2
       tables                : 2
       tt_placing            : 1
+      tt_grasping           : 1
+      normal_table_types    : [ "10" ]
+shelf:
+      objects               : 2
+      tables                : 2
+      shelfes_placing         : 1
+      shelfes_grasping        : 1
       normal_table_types    : [ "10" ]
 limitedTables:
       objects               : 5
