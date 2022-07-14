@@ -14,6 +14,14 @@
 #include <random>
 #include <sstream>
 
+template<typename T>
+std::ostream& operator<<(std::ostream& o, const std::set<T*>& v) {
+  o << "[ ";
+  for(const T* t: v)
+    o << *t << " ";
+  return o << "]";
+}
+
 namespace atwork_commander {
 namespace task_generator {
 namespace jurek {
@@ -31,7 +39,9 @@ class Generator : public GeneratorPluginInterface {
     return cavities;
   }
 
-  default_random_engine mRand;
+  random_device mRD;
+  mt19937_64 mRand=mt19937_64(mRand);
+
   DefaultConfigParser mConfig;
   TaskDefinitions& mTasks = const_cast<TaskDefinitions&>(mConfig.tasks());
   unordered_multimap<string, Table> mTables;
@@ -185,6 +195,7 @@ class Generator : public GeneratorPluginInterface {
 
   Task toTask(const vector<array<int, 5>>& run) const {
     Task task;
+    ROS_DEBUG_STREAM("Starting task conversion with inverse tables "<<mTablesInverse);
     task.arena_start_state.resize(mTablesInverse.size()-1);
     task.arena_target_state.resize(mTablesInverse.size()-1);
     for( unsigned int i=1; i < mTablesInverse.size(); i++ ) {
@@ -200,6 +211,7 @@ class Generator : public GeneratorPluginInterface {
       task.arena_target_state[cont[0]-1].objects.push_back(o);
     }
     for(const array<int, 5>& obj : run) {
+      ROS_DEBUG_STREAM("Converting object: "<<obj);
       atwork_commander_msgs::Object o;
       o.object = obj[obj_id];
       o.decoy = false;
@@ -218,6 +230,7 @@ class Generator : public GeneratorPluginInterface {
         task.arena_target_state[obj[dst_id]-1].objects.push_back(o);
       task.arena_start_state[obj[src_id]-1].objects.push_back(o);
     }
+    ROS_DEBUG_STREAM("Task after conversion:"<<std::endl<<task);
     return task;
   }
 
@@ -250,9 +263,9 @@ class Generator : public GeneratorPluginInterface {
             case 229 : return "[Final] Unknown color of container";
             case 230 : return "[Final] No valid picks left";
             case 231 : return "[Final] No tables0 : Can't generate table0 picks without table0";
-            case 232 : return "[Final] No tables5 : Can't generate table0 picks without table5";
-            case 233 : return "[Final] No tables10 : Can't generate table0 picks without table10";
-            case 234 : return "[Final] No tables15 : Can't generate table0 picks without table15";
+            case 232 : return "[Final] No tables5 : Can't generate table5 picks without table5";
+            case 233 : return "[Final] No tables10 : Can't generate table10 picks without table10";
+            case 234 : return "[Final] No tables15 : Can't generate table15 picks without table15";
             case 235 : return "[Final] Picks from cavity plattforms are not implemented yet";
             default  : return "Unknown error";
     }
@@ -332,15 +345,9 @@ class Generator : public GeneratorPluginInterface {
 
 
     // shuffle vector
-    random_device rd;
-    mt19937 g(rd());
 
-    shuffle(tables.begin(), tables.end(), g);
+    //shuffle(tables.begin(), tables.end(), mRand);
 
-    int nTableCount = 0;
-    unsigned int maxNTables = mTasks[taskName].parameters["tables"];
-    if( maxNTables == 0)
-      maxNTables = tables.size();
 
     for( const Table t : tables ) {
 
@@ -348,24 +355,51 @@ class Generator : public GeneratorPluginInterface {
           ! count( allowedTables.begin(), allowedTables.end(), t.name ) )
         continue;
 
-    //Check if table type is supported by task and if maximum amount of tables is already used
-      if( t.type == "00" || t.type == "05" || t.type == "10" || t.type == "15" ) {
-          if( count(nTables.begin(), nTables.end(), t.type) == 0  || nTableCount >= maxNTables )
-            continue;
-          else
-            nTableCount++;
+      if(t.type == "TT"                                && 
+         mTasks[taskName].parameters["tt_grasping"]==0 && 
+         mTasks[taskName].parameters["tt_placing"]==0) {
+        ROS_DEBUG_STREAM("Skipping turntable " << id);
+        continue;
       }
 
-      if( t.type == "00" )                  { mTables0.push_back(++id);  mJTables.push_back(id); mTablesInverse.push_back(t.name); continue; }
-      if( t.type == "05" )                  { mTables5.push_back(++id);  mJTables.push_back(id); mTablesInverse.push_back(t.name); continue; }
-      if( t.type == "10" )                  { mTables10.push_back(++id); mJTables.push_back(id); mTablesInverse.push_back(t.name); continue; }
-      if( t.type == "15" )                  { mTables15.push_back(++id); mJTables.push_back(id); mTablesInverse.push_back(t.name); continue; }
-      if( t.type == "TT" || t.type == "CB") { mConveyors.push_back(++id);                        mTablesInverse.push_back(t.name); continue; }
-      if( t.type == "PP" )                  { mPpts.push_back(++id);                             mTablesInverse.push_back(t.name); continue; }
-      if( t.type == "SH" )                  { mShelfs.push_back(++id);                           mTablesInverse.push_back(t.name); continue; }
+      if(t.type == "PP"                                && 
+         mTasks[taskName].parameters["pp_placing"]==0) {
+        ROS_DEBUG_STREAM("Skipping precision placement table " << id);
+        continue;
+      }
+
+      if(t.type == "SH"                                && 
+         mTasks[taskName].parameters["shelfes_grasping"]==0 && 
+         mTasks[taskName].parameters["shelfes_placing"]==0) {
+        ROS_DEBUG_STREAM("Skipping shelf " << id);
+        continue;
+      }
+
+      if(t.type != "TT" && t.type!= "PP" && t.type!= "SH" &&
+         count(nTables.begin(), nTables.end(), t.type)==0) {
+        ROS_DEBUG_STREAM("Skipping unwanted height " << t.type << " table " << id);
+        continue;
+      }
+
+      if( t.type == "00" )                  { mTables0.push_back(++id);   mTablesInverse.push_back(t.name); continue; }
+      if( t.type == "05" )                  { mTables5.push_back(++id);   mTablesInverse.push_back(t.name); continue; }
+      if( t.type == "10" )                  { mTables10.push_back(++id);  mTablesInverse.push_back(t.name); continue; }
+      if( t.type == "15" )                  { mTables15.push_back(++id);  mTablesInverse.push_back(t.name); continue; }
+      if( t.type == "TT" || t.type == "CB") { mConveyors.push_back(++id); mTablesInverse.push_back(t.name); continue; }
+      if( t.type == "PP" )                  { mPpts.push_back(++id);      mTablesInverse.push_back(t.name); continue; }
+      if( t.type == "SH" )                  { mShelfs.push_back(++id);    mTablesInverse.push_back(t.name); continue; }
 
       ROS_ERROR_STREAM("Unknown table type" << t);
     }
+    
+    
+    mJTables.resize(mTables0.size()+mTables5.size()+mTables10.size()+mTables15.size());
+    auto it = mJTables.begin();
+    it = copy(mTables0.begin(),  mTables0.end(),  it);
+    it = copy(mTables5.begin(),  mTables5.end(),  it);
+    it = copy(mTables10.begin(), mTables10.end(), it);
+    it = copy(mTables15.begin(), mTables15.end(), it);
+    
 
     ROS_DEBUG_STREAM("Allowed Tables : " << allowedTables);
     ROS_DEBUG_STREAM("Normal Tables  : " << mJTables);
@@ -399,11 +433,13 @@ class Generator : public GeneratorPluginInterface {
    paramFinal.emplace("place_shelfs", mTasks[taskName].parameters["shelfes_placing"]);
    paramFinal.emplace("objects", mTasks[taskName].parameters["objects"]);
    paramFinal.emplace("decoys", mTasks[taskName].parameters["decoys"]);
-   paramFinal.emplace("container_placing", mTasks[taskName].parameters["container_placing"]);
-   auto rContNumIt = mConfig.arena().objects.find("R_Container");
-   paramFinal.emplace("R_Container", rContNumIt!=mConfig.arena().objects.end()?rContNumIt->second:0);
-   auto bContNumIt = mConfig.arena().objects.find("B_Container");
-   paramFinal.emplace("B_Container", bContNumIt!=mConfig.arena().objects.end()?bContNumIt->second:0);
+   paramFinal.emplace("container_placing_r", mTasks[taskName].parameters["container_placing_r"]);
+   paramFinal.emplace("container_placing_b", mTasks[taskName].parameters["container_placing_b"]);
+   paramFinal.emplace("paired_containers", mTasks[taskName].parameters["paired_containers"]);
+   auto rContNumIt = mConfig.arena().objects.find("CONTAINER_RED");
+   paramFinal.emplace("CONTAINER_RED", rContNumIt!=mConfig.arena().objects.end()?rContNumIt->second:0);
+   auto bContNumIt = mConfig.arena().objects.find("CONTAINER_BLUE");
+   paramFinal.emplace("CONTAINER_BLUE", bContNumIt!=mConfig.arena().objects.end()?bContNumIt->second:0);
    paramFinal.emplace("place_cavity_container", 0);
    paramFinal.emplace("pick_turntables", mTasks[taskName].parameters["tt_grasping"]);
    paramFinal.emplace("place_turntables", mTasks[taskName].parameters["tt_placing"]);
@@ -430,7 +466,6 @@ class Generator : public GeneratorPluginInterface {
    paramFinal.emplace("pick_cavity_plattforms", 0);
    paramFinal.emplace("FlexibleHeight", 0);
 
-   paramFinal.emplace("paired_containers", 0);
 
    ROS_DEBUG_STREAM("PPT Objects   : " << mPptObjects);
    ROS_DEBUG_STREAM("Parameters    : " << paramFinal);
@@ -481,6 +516,7 @@ class Generator : public GeneratorPluginInterface {
           t[3] = -1;
           t[4] = ++i;
           run.push_back(t);
+          get_container_id(tID, o.object);
         }
       }
     }
@@ -562,7 +598,7 @@ class Generator : public GeneratorPluginInterface {
             ROS_ERROR_STREAM("No possible objects left: " << endl <<
                              "\tSrc(" << mTablesInverse.at(tasks.at(i).at(src_id)) << "): " << srcObjs << endl <<
                              "\tDst(" << mTablesInverse.at(tasks.at(i).at(dst_id)) << "): " << dstObjs);
-            continue;
+            throw std::runtime_error("No possible objects left: ");
           }
           size_t objIndex = rand() % objs.size();
           ObjectType* obj;
@@ -580,7 +616,7 @@ class Generator : public GeneratorPluginInterface {
           if(srcObjs.size()==0) {
             ROS_ERROR_STREAM("No possible objects left: " << endl <<
                              "\tSrc(" << mTablesInverse.at(tasks.at(i).at(src_id)) << "): " << srcObjs);
-            continue;
+            throw std::runtime_error("No possible objects left: ");
           }
           size_t objIndex = rand() % srcObjs.size();
           ObjectType* obj;
@@ -774,24 +810,31 @@ class Generator : public GeneratorPluginInterface {
 
   void initialize_mTableTypes() {
     for(size_t table : mTables0) {
+      ROS_DEBUG_STREAM("Entering 0cm table " << table << " in mTableTypes");
       mTableTypes[table] = tables0_id;
     }
     for(size_t table : mTables5) {
+      ROS_DEBUG_STREAM("Entering 5cm table " << table << " in mTableTypes");
       mTableTypes[table] = tables5_id;
     }
     for(size_t table : mTables10) {
+      ROS_DEBUG_STREAM("Entering 10cm table " << table << " in mTableTypes");
       mTableTypes[table] = tables10_id;
     }
     for(size_t table : mTables15) {
+      ROS_DEBUG_STREAM("Entering 15cm table " << table << " in mTableTypes");
       mTableTypes[table] = tables15_id;
     }
     for(size_t table : mConveyors) {
+      ROS_DEBUG_STREAM("Entering tt table " << table << " in mTableTypes");
       mTableTypes[table] = conveyors_id;
     }
     for(size_t table : mPpts) {
+      ROS_DEBUG_STREAM("Entering pp table " << table << " in mTableTypes");
       mTableTypes[table] = ppts_id;
     }
     for(size_t table : mShelfs) {
+      ROS_DEBUG_STREAM("Entering shelf table " << table << " in mTableTypes");
       mTableTypes[table] = shelfs_id;
     }
   }
@@ -835,6 +878,66 @@ class Generator : public GeneratorPluginInterface {
     try {
       // initialize tasks
       run tasks(paramFinal["objects"], {-1, -1, -1, -1, -1});
+
+      unsigned int maxNTables = mTasks[taskName].parameters["tables"];
+
+      if(maxNTables != 0 && mTasks[taskName].allowedTables.empty()) {
+
+        const std::vector<std::vector<unsigned int>*> tables({&mTables0, &mTables5, &mTables10, &mTables15, &mConveyors, &mPpts, &mShelfs});
+        std::vector<std::vector<unsigned int>*> workingTables(tables);
+
+        for(const auto vPtr: tables)
+          shuffle(vPtr->begin(), vPtr->end(), mRand);
+
+        auto sumUp=[](std::vector<std::vector<unsigned int>*> tables){
+          unsigned int sum=0;
+          for(const vector<unsigned int>* vPtr: tables)
+            sum+=vPtr->size();
+          return sum;
+        };
+
+        while(sumUp(tables) > maxNTables) {
+
+          workingTables.erase(
+            remove_if(workingTables.begin(), workingTables.end(),
+                      [](std::vector<unsigned int>* v){ return v->size()<=1; }
+                     ),
+            workingTables.end()
+          );
+
+          if(workingTables.empty())
+            throw std::runtime_error("Less tables requested then table types in task");
+
+          shuffle(workingTables.begin(), workingTables.end(), mRand);
+          unsigned int d=min((unsigned int)workingTables.size(), sumUp(tables)-maxNTables);
+          ROS_DEBUG_STREAM("Removing tables from " << d << "types");
+
+          for(unsigned int i=0; i<d; i++) {
+            ROS_DEBUG_STREAM("Removing table " << workingTables.at(i)->at(workingTables.at(i)->size()-1));
+            workingTables.at(i)->erase(workingTables.at(i)->end()-1,workingTables.at(i)->end());
+          }
+        }
+      }
+      {
+        mJTables.clear();
+        mJTables.resize(mTables0.size()+mTables5.size()+mTables10.size()+mTables15.size());
+        auto it = mJTables.begin();
+        it = copy(mTables0.begin(),  mTables0.end(),  it);
+        it = copy(mTables5.begin(),  mTables5.end(),  it);
+        it = copy(mTables10.begin(), mTables10.end(), it);
+        it = copy(mTables15.begin(), mTables15.end(), it);
+      }
+
+      ROS_DEBUG_STREAM("Task specific Tables : " << endl <<
+                       "Allowed Tables : " << mTasks[taskName].allowedTables << endl <<
+                       "Normal Tables  : " << mJTables << endl <<
+                       "0cm Tables     : " << mTables0 << endl <<
+                       "5cm Tables     : " << mTables5 << endl <<
+                       "10cm Tables    : " << mTables10 << endl <<
+                       "15cm Tables    : " << mTables15 << endl <<
+                       "Conveyors      : " << mConveyors << endl <<
+                       "PPTs           : " << mPpts << endl <<
+                       "Shelfs         : " << mShelfs);
       size_t shelfs = mShelfs.size();
       size_t tables = mJTables.size();
       size_t ppts = mPpts.size();
@@ -915,15 +1018,18 @@ class Generator : public GeneratorPluginInterface {
       variation(specialplace, shelfTurntables ,placeShelfTurntable, placePpt);
       variation(placeShelfTurntable, paramFinal["place_shelfs"], placeShelf, placeTurntable);
 
-      if(paramFinal["container_placing"] > 0) {
+      unsigned int contPlace = paramFinal["container_placing_b"] + paramFinal["container_placing_r"];
+      if(contPlace > 0) {
         // collect all valid tables to place containers
         std::vector<size_t> valid_containerTables = findValidContainerTables();
+        unsigned int rContNum = paramFinal["container_placing_r"];
+        unsigned int bContNum = paramFinal["container_placing_b"];
 
         size_t numberOfContainerTables;
         if(paramFinal["paired_containers"] == true) {
-          numberOfContainerTables = std::min(paramFinal["B_Container"], paramFinal["R_Container"]);
+          numberOfContainerTables = std::min(rContNum, bContNum);
         } else {
-          numberOfContainerTables = paramFinal["B_Container"] + paramFinal["R_Container"];
+          numberOfContainerTables = rContNum + bContNum;
         }
         // choose the tables with containers
         variation(valid_containerTables, numberOfContainerTables, containerTables);
@@ -943,27 +1049,26 @@ class Generator : public GeneratorPluginInterface {
         }
 
         // choose randomly the task with containerplaces
-        variation(valid_containerplaces, paramFinal["container_placing"], container);
-        size_t blueContainers = random() % paramFinal["container_placing"];
-        variation(container, blueContainers, b_container, r_container);
+        variation(valid_containerplaces, contPlace, container);
+        variation(container, bContNum, b_container, r_container);
 
-        for(size_t i=0; i<paramFinal["container_placing"]; ++i) {
+        for(size_t i=0; i<contPlace; ++i) {
           a = rand() % valid_containerTables.size();
           tasks.at(container.at(i)).at(dst_id) = valid_containerTables.at(a);
         }
 
-        for(size_t i=0; i<size_t(paramFinal["B_Container"]); ++i) {
-          size_t table = tasks.at(b_container.at(i)).at(dst_id);
+        for(auto& container: b_container) {
+          size_t table = tasks.at(container).at(dst_id);
           size_t blue_container_id = get_container_id(table, blue);
-          tasks.at(b_container.at(i)).at(cont_id) = blue_container_id;
+          tasks.at(container).at(cont_id) = blue_container_id;
           if(paramFinal["paired_containers"] == true) {
             get_container_id(table,red);
           }
         }
-        for(size_t i=0; i<size_t(paramFinal["R_Container"]); ++i) {
-          size_t table = tasks.at(r_container.at(i)).at(dst_id);
+        for(auto& container: r_container) {
+          size_t table = tasks.at(container).at(dst_id);
           size_t red_container_id = get_container_id(table, red);
-          tasks.at(r_container.at(i)).at(cont_id) = red_container_id;
+          tasks.at(container).at(cont_id) = red_container_id;
           if(paramFinal["paired_containers"] == true) {
             get_container_id(table,blue);
           }
@@ -1028,9 +1133,10 @@ class Generator : public GeneratorPluginInterface {
       decltype(tasks) decoyTasks(paramFinal["decoys"]);
       auto it  = decoyTasks.begin();
       for(const auto& task: tasks) { 
-        if(mTableTypes[task[src_id]] ==shelfs_id || mTableTypes[task[src_id]] == conveyors_id ) {
+        if(it == decoyTasks.end())
+          break;
+        if(mTableTypes[task[src_id]] ==shelfs_id || mTableTypes[task[src_id]] == conveyors_id )
           (*it++)={-1, task[src_id], -1, -1, -1};
-        }
       }
       while(it != decoyTasks.end())
         for(const auto& task: tasks) {
@@ -1074,7 +1180,7 @@ class Generator : public GeneratorPluginInterface {
           cavities.erase(rem, cavities.end());
           while(cavities.size() < 5){
             if(cavitiesEnd == remainingCavities.begin())
-              throw runtime_error("Not enough cavconst atwork_commander_msgs::Object& iities left");
+              throw runtime_error("Not enough cavities left");
             size_t i = rand() %  (cavitiesEnd - remainingCavities.begin());
             atwork_commander_msgs::Object cavity;
             cavity.object = remainingCavities[i];
@@ -1201,23 +1307,23 @@ class Generator : public GeneratorPluginInterface {
     }
 
     void checkContainers(const run& tasks, Parameters params) {
-      size_t bluecontainer = 0, redcontainer = 0;
-      for(size_t i=0; i<container_ids.size(); ++i) {
-        if(container_ids.at(i).at(1) == blue)
-          ++bluecontainer;
-        if(container_ids.at(i).at(1) == red)
-          ++redcontainer;
-      }
-      if(bluecontainer != (size_t)paramFinal["B_Container"]) {
-        std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["B_Container"]));
-        errormessage += " wated, but " + to_string(bluecontainer) + " blue containers found.\n";
-        throw errormessage;
-      }
-      if(redcontainer != (size_t)paramFinal["R_Container"]) {
-        std::string errormessage = "Missmatch: " + to_string(size_t(paramFinal["R_Container"]));
-        errormessage += " wated, but " + to_string(redcontainer) + " red containers found.\n";
-        throw errormessage;
-      }
+//      size_t bluecontainer = 0, redcontainer = 0;
+//      for(size_t i=0; i<container_ids.size(); ++i) {
+//        if(container_ids.at(i).at(1) == blue)
+//          ++bluecontainer;
+//        if(container_ids.at(i).at(1) == red)
+//          ++redcontainer;
+//      }
+//      if(bluecontainer != (size_t)mConfig.arena().objects.at("CONTAINER_BLUE")) {
+//        std::string errormessage = "Missmatch: " + to_string(mConfig.arena().objects.at("CONTAINER_BLUE"));
+//        errormessage += " wated, but " + to_string(bluecontainer) + " blue containers found.\n";
+//        throw errormessage;
+//      }
+//      if(redcontainer != (size_t)mConfig.arena().objects.at("CONTAINER_RED")) {
+//        std::string errormessage = "Missmatch: " + to_string(mConfig.arena().objects.at("CONTAINER_RED"));
+//        errormessage += " wated, but " + to_string(redcontainer) + " red containers found.\n";
+//        throw errormessage;
+//      }
 
       if(paramFinal["paired_containers"] == true) {
         vector<std::array<size_t, 3>> red_container_ids, blue_container_ids;
@@ -1229,11 +1335,15 @@ class Generator : public GeneratorPluginInterface {
             red_container_ids.push_back(container_ids.at(i));
           }
         }
-        auto comp = [](const auto& left, const auto& right){return left.at(1) < right.at(1);};
+        auto comp = [](const auto& left, const auto& right){return left.at(0) < right.at(0);};
         std::sort(begin(blue_container_ids),end(blue_container_ids), comp);
         std::sort(begin(red_container_ids),end(red_container_ids), comp);
-        for(size_t i=0; i<container_ids.size(); ++i) {
-          if(blue_container_ids.at(i).at(1) != red_container_ids.at(i).at(1)) {
+        ROS_DEBUG_STREAM("blue containers: " << blue_container_ids);
+        ROS_DEBUG_STREAM("red containers: " << red_container_ids);
+        if(blue_container_ids.size() != red_container_ids.size())
+          throw runtime_error("Different amounts of containers created: BLUE: "+to_string(blue_container_ids.size())+"vs. RED: "+to_string(red_container_ids.size())+"!");
+        for(size_t i=0; i<blue_container_ids.size(); ++i) {
+          if(blue_container_ids.at(i).at(0) != red_container_ids.at(i).at(0)) {
             std::string errormessage = "There is only one color of containers on table with id " + to_string(i) +".";
             throw errormessage;
           }
@@ -1249,14 +1359,14 @@ class Generator : public GeneratorPluginInterface {
           }
         }
       }
-      if(bTarget != paramFinal["B_Container"]) {
+      if(bTarget != paramFinal["container_placing_b"]) {
           std::string errormessage = "There are not enough objects to be placed in BLUE CONTAINERs: ";
-          errormessage += std::to_string(bTarget) + " <-> " + std::to_string(paramFinal["B_Container"]);
+          errormessage += std::to_string(bTarget) + " <-> " + std::to_string(paramFinal["container_placing_b"]);
           throw errormessage;
       }
-      if(rTarget != paramFinal["R_Container"]) {
+      if(rTarget != paramFinal["container_placing_r"]) {
           std::string errormessage = "There are not enough objects to be placed in RED CONTAINERs: ";
-          errormessage += std::to_string(rTarget) + " <-> " + std::to_string(paramFinal["R_Container"]);
+          errormessage += std::to_string(rTarget) + " <-> " + std::to_string(paramFinal["container_placing_r"]);
           throw errormessage;
       }
 
@@ -1295,9 +1405,12 @@ class Generator : public GeneratorPluginInterface {
       } catch(std::runtime_error& e) {
         ROS_ERROR_STREAM(e.what());
         return false;
-      }catch(...) {
-        ROS_ERROR_STREAM("Unknown error in checking task");
-        return false;
+//      } catch(std::exception& e) {
+//        ROS_ERROR_STREAM(e.what());
+//        return false;
+//      }catch(...) {
+//        ROS_ERROR_STREAM("Unknown error in checking task");
+//        return false;
       }
       return true;
     }

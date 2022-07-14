@@ -45,7 +45,9 @@ struct TaskDefinition {
     { "ref_orientation", 0 },
     { "arbitrary_surfaces", 0},
     // Container
-    { "container_placing", 0 },
+    { "container_placing_b", 0 },
+    { "container_placing_r", 0 },
+    { "paired_containers", 0 },
     { "container_on_shelf", 0 },
     { "container_on_tt", 0 },
     // PP
@@ -80,7 +82,7 @@ class ConfigParserInterface {
       mArenaConfig = arenaConfig;
       try {
         update();
-      } catch(std::exception& e) {
+      } catch(const std::exception& e) {
         mTaskConfig = oldTaskConfig;
         mArenaConfig = oldArenaConfig;
         throw e;

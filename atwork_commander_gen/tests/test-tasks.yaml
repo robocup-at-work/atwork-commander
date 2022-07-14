@@ -1,13 +1,38 @@
-task1:
-      prep_time             : 3
-      exec_time             : 8
-      waypoints             : 0
+complete:
       objects               : 5
       decoys                : 3
       pp_placing            : 1
       ref_cavity_orientation: 1
-      container_placing     : 1
+      container_placing_r   : 1
+      paired_containers     : 1
       tt_grasping           : 1
       tt_placing            : 1
-      shelfes_grasping      : 2
-      shelfes_placing       : 2
+      shelfes_grasping      : 1
+      shelfes_placing       : 1
+      tables                : 8
+tables:
+      objects               : 4
+      tables                : 4
+tt:
+      objects               : 2
+      tables                : 2
+      tt_placing            : 1
+      tt_grasping           : 1
+      normal_table_types    : [ "10" ]
+shelf:
+      objects               : 2
+      tables                : 2
+      shelfes_placing         : 1
+      shelfes_grasping        : 1
+      normal_table_types    : [ "10" ]
+container:
+      objects               : 4
+      tables                : 3
+      container_placing_b   : 2
+      container_placing_r   : 2
+      paired_containers     : true
+      normal_table_types    : [ "10" ]
+      
+limitedTables:
+      objects               : 5
+      allowed_tables        : ["WS01", "WS02"]
