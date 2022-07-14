@@ -18,12 +18,17 @@ class JurekGenSuite : public ::testing::Test  {
 
 TEST_F(JurekGenSuite, tables) {
     auto task = gen("tables");
-    ASSERT_TRUE(gen.check(task)) << task;
+    EXPECT_TRUE(gen.check(task)) << task;
 }
 
-TEST_F(JurekGenSuite, specialTables) {
-    auto task = gen("specialTables");
-    ASSERT_TRUE(gen.check(task)) << task;
+TEST_F(JurekGenSuite, tt) {
+    auto task = gen("tt");
+    EXPECT_TRUE(gen.check(task)) << task;
+}
+
+TEST_F(JurekGenSuite, shelf) {
+    auto task = gen("shelf");
+    EXPECT_TRUE(gen.check(task)) << task;
 }
 
 
