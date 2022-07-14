@@ -1,31 +1,30 @@
 workstations:
-    WS01: "10"
+    SH01: "SH"
     WS02: "10"
-    WS03: "05"
+    WS03: "10"
     WS04: "00"
     WS05: "00"
-    WS06: "15"
-    WS07: "15"
-    WS08: "05"
-    WS09: "10"
-    PP01: "PP"
+    WS06: "05"
+    WS07: "05"
     TT01: "TT"
-    SH01: "SH"
+    WS09: "15"
+    WS10: "15"
+    PP01: "PP"
     SH02: "SH"
 cavities: [ "F20_20_H", "F20_20_V", "S40_40_H", "S40_40_V", "M20_H", "M20_V", "M30_H", "M30_V", "M20_100_H", "R20_H", "R20_V" ]
 objects:
-    F20_20_G      : 1
-    F20_20_B      : 1
-    S40_40_B      : 1
-    S40_40_G      : 1
-    M20           : 1
-    M30           : 1
-    M20_100       : 1
-    R20           : 1
-    AXIS          : 1
-    BEARING       : 1
-    BEARING_BOX   : 1
-    DISTANCE_TUBE : 1
-    MOTOR         : 1
-    CONTAINER_RED : 1
-    CONTAINER_BLUE: 1
+    F20_20_G      : 2
+    F20_20_B      : 2
+    S40_40_B      : 2
+    S40_40_G      : 2
+    M20           : 2
+    M30           : 2
+    M20_100       : 2
+    R20           : 2
+    AXIS          : 2
+    BEARING       : 2
+    BEARING_BOX   : 2
+    DISTANCE_TUBE : 2
+    MOTOR         : 2
+    CONTAINER_RED : 2
+    CONTAINER_BLUE: 2

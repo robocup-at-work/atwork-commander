@@ -13,6 +13,14 @@
 #include <algorithm>
 #include <iterator>
 
+template<typename T>
+std::ostream& operator<<(std::ostream& o, const std::set<T*>& v) {
+  o << "[ ";
+  for(const T* t: v)
+    o << *t << " ";
+  return o << "]";
+}
+
 namespace atwork_commander {
 namespace task_generator {
 namespace jurek {
@@ -30,7 +38,9 @@ class Generator : public GeneratorPluginInterface {
     return cavities;
   }
 
-  default_random_engine mRand;
+  random_device mRD;
+  mt19937_64 mRand=mt19937_64(mRand);
+
   DefaultConfigParser mConfig;
   TaskDefinitions& mTasks = const_cast<TaskDefinitions&>(mConfig.tasks());
   unordered_multimap<string, Table> mTables;
@@ -184,6 +194,7 @@ class Generator : public GeneratorPluginInterface {
 
   Task toTask(const vector<array<int, 5>>& run) const {
     Task task;
+    ROS_DEBUG_STREAM("Starting task conversion with inverse tables "<<mTablesInverse);
     task.arena_start_state.resize(mTablesInverse.size()-1);
     task.arena_target_state.resize(mTablesInverse.size()-1);
     for( unsigned int i=1; i < mTablesInverse.size(); i++ ) {
@@ -199,6 +210,7 @@ class Generator : public GeneratorPluginInterface {
       task.arena_target_state[cont[0]-1].objects.push_back(o);
     }
     for(const array<int, 5>& obj : run) {
+      ROS_DEBUG_STREAM("Converting object: "<<obj);
       atwork_commander_msgs::Object o;
       o.object = obj[obj_id];
       o.decoy = false;
@@ -217,6 +229,7 @@ class Generator : public GeneratorPluginInterface {
         task.arena_target_state[obj[dst_id]-1].objects.push_back(o);
       task.arena_start_state[obj[src_id]-1].objects.push_back(o);
     }
+    ROS_DEBUG_STREAM("Task after conversion:"<<std::endl<<task);
     return task;
   }
 
@@ -249,9 +262,9 @@ class Generator : public GeneratorPluginInterface {
             case 229 : return "[Final] Unknown color of container";
             case 230 : return "[Final] No valid picks left";
             case 231 : return "[Final] No tables0 : Can't generate table0 picks without table0";
-            case 232 : return "[Final] No tables5 : Can't generate table0 picks without table5";
-            case 233 : return "[Final] No tables10 : Can't generate table0 picks without table10";
-            case 234 : return "[Final] No tables15 : Can't generate table0 picks without table15";
+            case 232 : return "[Final] No tables5 : Can't generate table5 picks without table5";
+            case 233 : return "[Final] No tables10 : Can't generate table10 picks without table10";
+            case 234 : return "[Final] No tables15 : Can't generate table15 picks without table15";
             case 235 : return "[Final] Picks from cavity plattforms are not implemented yet";
             default  : return "Unknown error";
     }
@@ -331,15 +344,9 @@ class Generator : public GeneratorPluginInterface {
 
 
     // shuffle vector
-    random_device rd;
-    mt19937 g(rd());
 
-    shuffle(tables.begin(), tables.end(), g);
+    //shuffle(tables.begin(), tables.end(), mRand);
 
-    int nTableCount = 0;
-    unsigned int maxNTables = mTasks[taskName].parameters["tables"];
-    if( maxNTables == 0)
-      maxNTables = tables.size();
 
     for( const Table t : tables ) {
 
@@ -347,24 +354,51 @@ class Generator : public GeneratorPluginInterface {
           ! count( allowedTables.begin(), allowedTables.end(), t.name ) )
         continue;
 
-    //Check if table type is supported by task and if maximum amount of tables is already used
-      if( t.type == "00" || t.type == "05" || t.type == "10" || t.type == "15" ) {
-          if( count(nTables.begin(), nTables.end(), t.type) == 0  || nTableCount >= maxNTables )
-            continue;
-          else
-            nTableCount++;
+      if(t.type == "TT"                                && 
+         mTasks[taskName].parameters["tt_grasping"]==0 && 
+         mTasks[taskName].parameters["tt_placing"]==0) {
+        ROS_DEBUG_STREAM("Skipping turntable " << id);
+        continue;
       }
 
-      if( t.type == "00" )                  { mTables0.push_back(++id);  mJTables.push_back(id); mTablesInverse.push_back(t.name); continue; }
-      if( t.type == "05" )                  { mTables5.push_back(++id);  mJTables.push_back(id); mTablesInverse.push_back(t.name); continue; }
-      if( t.type == "10" )                  { mTables10.push_back(++id); mJTables.push_back(id); mTablesInverse.push_back(t.name); continue; }
-      if( t.type == "15" )                  { mTables15.push_back(++id); mJTables.push_back(id); mTablesInverse.push_back(t.name); continue; }
-      if( t.type == "TT" || t.type == "CB") { mConveyors.push_back(++id);                        mTablesInverse.push_back(t.name); continue; }
-      if( t.type == "PP" )                  { mPpts.push_back(++id);                             mTablesInverse.push_back(t.name); continue; }
-      if( t.type == "SH" )                  { mShelfs.push_back(++id);                           mTablesInverse.push_back(t.name); continue; }
+      if(t.type == "PP"                                && 
+         mTasks[taskName].parameters["pp_placing"]==0) {
+        ROS_DEBUG_STREAM("Skipping precision placement table " << id);
+        continue;
+      }
+
+      if(t.type == "SH"                                && 
+         mTasks[taskName].parameters["shelf_grasping"]==0 && 
+         mTasks[taskName].parameters["shelf_placing"]==0) {
+        ROS_DEBUG_STREAM("Skipping shelf " << id);
+        continue;
+      }
+
+      if(t.type != "TT" && t.type!= "PP" && t.type!= "SH" &&
+         count(nTables.begin(), nTables.end(), t.type)==0) {
+        ROS_DEBUG_STREAM("Skipping unwanted height " << t.type << " table " << id);
+        continue;
+      }
+
+      if( t.type == "00" )                  { mTables0.push_back(++id);   mTablesInverse.push_back(t.name); continue; }
+      if( t.type == "05" )                  { mTables5.push_back(++id);   mTablesInverse.push_back(t.name); continue; }
+      if( t.type == "10" )                  { mTables10.push_back(++id);  mTablesInverse.push_back(t.name); continue; }
+      if( t.type == "15" )                  { mTables15.push_back(++id);  mTablesInverse.push_back(t.name); continue; }
+      if( t.type == "TT" || t.type == "CB") { mConveyors.push_back(++id); mTablesInverse.push_back(t.name); continue; }
+      if( t.type == "PP" )                  { mPpts.push_back(++id);      mTablesInverse.push_back(t.name); continue; }
+      if( t.type == "SH" )                  { mShelfs.push_back(++id);    mTablesInverse.push_back(t.name); continue; }
 
       ROS_ERROR_STREAM("Unknown table type" << t);
     }
+    
+    
+    mJTables.resize(mTables0.size()+mTables5.size()+mTables10.size()+mTables15.size());
+    auto it = mJTables.begin();
+    it = copy(mTables0.begin(),  mTables0.end(),  it);
+    it = copy(mTables5.begin(),  mTables5.end(),  it);
+    it = copy(mTables10.begin(), mTables10.end(), it);
+    it = copy(mTables15.begin(), mTables15.end(), it);
+    
 
     ROS_DEBUG_STREAM("Allowed Tables : " << allowedTables);
     ROS_DEBUG_STREAM("Normal Tables  : " << mJTables);
@@ -558,7 +592,7 @@ class Generator : public GeneratorPluginInterface {
             ROS_ERROR_STREAM("No possible objects left: " << endl <<
                              "\tSrc(" << mTablesInverse.at(tasks.at(i).at(src_id)) << "): " << srcObjs << endl <<
                              "\tDst(" << mTablesInverse.at(tasks.at(i).at(dst_id)) << "): " << dstObjs);
-            continue;
+            throw std::runtime_error("No possible objects left: ");
           }
           size_t objIndex = rand() % objs.size();
           ObjectType* obj;
@@ -576,7 +610,7 @@ class Generator : public GeneratorPluginInterface {
           if(srcObjs.size()==0) {
             ROS_ERROR_STREAM("No possible objects left: " << endl <<
                              "\tSrc(" << mTablesInverse.at(tasks.at(i).at(src_id)) << "): " << srcObjs);
-            continue;
+            throw std::runtime_error("No possible objects left: ");
           }
           size_t objIndex = rand() % srcObjs.size();
           ObjectType* obj;
@@ -739,24 +773,31 @@ class Generator : public GeneratorPluginInterface {
 
   void initialize_mTableTypes() {
     for(size_t table : mTables0) {
+      ROS_DEBUG_STREAM("Entering 0cm table " << table << " in mTableTypes");
       mTableTypes[table] = tables0_id;
     }
     for(size_t table : mTables5) {
+      ROS_DEBUG_STREAM("Entering 5cm table " << table << " in mTableTypes");
       mTableTypes[table] = tables5_id;
     }
     for(size_t table : mTables10) {
+      ROS_DEBUG_STREAM("Entering 10cm table " << table << " in mTableTypes");
       mTableTypes[table] = tables10_id;
     }
     for(size_t table : mTables15) {
+      ROS_DEBUG_STREAM("Entering 15cm table " << table << " in mTableTypes");
       mTableTypes[table] = tables15_id;
     }
     for(size_t table : mConveyors) {
+      ROS_DEBUG_STREAM("Entering tt table " << table << " in mTableTypes");
       mTableTypes[table] = conveyors_id;
     }
     for(size_t table : mPpts) {
+      ROS_DEBUG_STREAM("Entering pp table " << table << " in mTableTypes");
       mTableTypes[table] = ppts_id;
     }
     for(size_t table : mShelfs) {
+      ROS_DEBUG_STREAM("Entering shelf table " << table << " in mTableTypes");
       mTableTypes[table] = shelfs_id;
     }
   }
@@ -800,6 +841,66 @@ class Generator : public GeneratorPluginInterface {
     try {
       // initialize tasks
       run tasks(paramFinal["objects"], {-1, -1, -1, -1, -1});
+
+      unsigned int maxNTables = mTasks[taskName].parameters["tables"];
+
+      if(maxNTables != 0 && mTasks[taskName].allowedTables.empty()) {
+
+        const std::vector<std::vector<unsigned int>*> tables({&mTables0, &mTables5, &mTables10, &mTables15, &mConveyors, &mPpts, &mShelfs});
+        std::vector<std::vector<unsigned int>*> workingTables(tables);
+
+        for(const auto vPtr: tables)
+          shuffle(vPtr->begin(), vPtr->end(), mRand);
+
+        auto sumUp=[](std::vector<std::vector<unsigned int>*> tables){
+          unsigned int sum=0;
+          for(const vector<unsigned int>* vPtr: tables)
+            sum+=vPtr->size();
+          return sum;
+        };
+
+        while(sumUp(tables) > maxNTables) {
+
+          workingTables.erase(
+            remove_if(workingTables.begin(), workingTables.end(),
+                      [](std::vector<unsigned int>* v){ return v->size()<=1; }
+                     ),
+            workingTables.end()
+          );
+
+          if(workingTables.empty())
+            throw std::runtime_error("Less tables requested then table types in task");
+
+          shuffle(workingTables.begin(), workingTables.end(), mRand);
+          unsigned int d=min((unsigned int)workingTables.size(), sumUp(tables)-maxNTables);
+          ROS_DEBUG_STREAM("Removing tables from " << d << "types");
+
+          for(unsigned int i=0; i<d; i++) {
+            ROS_DEBUG_STREAM("Removing table " << workingTables.at(i)->at(workingTables.at(i)->size()-1));
+            workingTables.at(i)->erase(workingTables.at(i)->end()-1,workingTables.at(i)->end());
+          }
+        }
+      }
+      {
+        mJTables.clear();
+        mJTables.resize(mTables0.size()+mTables5.size()+mTables10.size()+mTables15.size());
+        auto it = mJTables.begin();
+        it = copy(mTables0.begin(),  mTables0.end(),  it);
+        it = copy(mTables5.begin(),  mTables5.end(),  it);
+        it = copy(mTables10.begin(), mTables10.end(), it);
+        it = copy(mTables15.begin(), mTables15.end(), it);
+      }
+
+      ROS_DEBUG_STREAM("Task specific Tables : " << endl <<
+                       "Allowed Tables : " << mTasks[taskName].allowedTables << endl <<
+                       "Normal Tables  : " << mJTables << endl <<
+                       "0cm Tables     : " << mTables0 << endl <<
+                       "5cm Tables     : " << mTables5 << endl <<
+                       "10cm Tables    : " << mTables10 << endl <<
+                       "15cm Tables    : " << mTables15 << endl <<
+                       "Conveyors      : " << mConveyors << endl <<
+                       "PPTs           : " << mPpts << endl <<
+                       "Shelfs         : " << mShelfs);
       size_t shelfs = mShelfs.size();
       size_t tables = mJTables.size();
       size_t ppts = mPpts.size();
@@ -880,7 +981,7 @@ class Generator : public GeneratorPluginInterface {
       variation(specialplace, shelfTurntables ,placeShelfTurntable, placePpt);
       variation(placeShelfTurntable, paramFinal["place_shelfs"], placeShelf, placeTurntable);
 
-
+      ROS_DEBUG_STREAM("mJTables: "<<mJTables);
       // write the Ppts as destinations to the tasks
       for(size_t i=0; i<placePpt.size(); ++i) {
         a = rand() % ppts;
@@ -1012,7 +1113,7 @@ class Generator : public GeneratorPluginInterface {
           cavities.erase(rem, cavities.end());
           while(cavities.size() < 5){
             if(cavitiesEnd == remainingCavities.begin())
-              throw runtime_error("Not enough cavconst atwork_commander_msgs::Object& iities left");
+              throw runtime_error("Not enough cavities left");
             size_t i = rand() %  (cavitiesEnd - remainingCavities.begin());
             atwork_commander_msgs::Object cavity;
             cavity.object = remainingCavities[i];
@@ -1233,9 +1334,12 @@ class Generator : public GeneratorPluginInterface {
       } catch(std::runtime_error& e) {
         ROS_ERROR_STREAM(e.what());
         return false;
-      }catch(...) {
-        ROS_ERROR_STREAM("Unknown error in checking task");
-        return false;
+//      } catch(std::exception& e) {
+//        ROS_ERROR_STREAM(e.what());
+//        return false;
+//      }catch(...) {
+//        ROS_ERROR_STREAM("Unknown error in checking task");
+//        return false;
       }
       return true;
     }
