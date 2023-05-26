@@ -21,6 +21,15 @@ inline const char* objectName(uint16_t typeID) {
     case(Object::AXIS): return "AXIS"; break;
     case(Object::DISTANCE_TUBE): return "DISTANCE_TUBE"; break;
     case(Object::MOTOR): return "MOTOR"; break;
+    case(Object::Axis2): return "Axis2"; break;
+    case(Object::Bearing2): return "Bearing2"; break;
+    case(Object::Housing): return "Housing"; break;
+    case(Object::Motor2): return "Motor2"; break;
+    case(Object::Spacer): return "Spacer"; break;
+    case(Object::Screwdriver): return "Screwdriver"; break;
+    case(Object::Wrench): return "Wrench"; break;
+    case(Object::Drill): return "Drill"; break;
+    case(Object::AllenKey): return "AllenKey"; break;
     case(Object::CONTAINER_RED): return "CONTAINER_RED"; break;
     case(Object::CONTAINER_BLUE): return "CONTAINER_BLUE"; break;
     case(Object::F20_20_H): return "F20_20_H"; break;
