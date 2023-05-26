@@ -259,7 +259,7 @@ namespace simple {
  *
  * Implements the generation of Task according to supplied configurations.
  *
- * 
+ *
  *
  **/
 class Generator: public GeneratorPluginInterface {
@@ -423,6 +423,15 @@ class Generator: public GeneratorPluginInterface {
     if ( o.form == "BEARING_BOX" )   return atwork_commander_msgs::Object::BEARING_BOX;
     if ( o.form == "DISTANCE_TUBE" ) return atwork_commander_msgs::Object::DISTANCE_TUBE;
     if ( o.form == "MOTOR" )         return atwork_commander_msgs::Object::MOTOR;
+    if ( o.form == "Axis2" )         return atwork_commander_msgs::Object::Axis2;
+    if ( o.form == "Bearing2" )      return atwork_commander_msgs::Object::Bearing2;
+    if ( o.form == "Housing" )       return atwork_commander_msgs::Object::Housing;
+    if ( o.form == "Motor2" )        return atwork_commander_msgs::Object::Motor2;
+    if ( o.form == "Spacer" )        return atwork_commander_msgs::Object::Spacer;
+    if ( o.form == "Wrench" )        return atwork_commander_msgs::Object::Wrench;
+    if ( o.form == "Drill" )         return atwork_commander_msgs::Object::Drill;
+    if ( o.form == "AllenKey" )      return atwork_commander_msgs::Object::AllenKey;
+    if ( o.form == "Screwdriver" )   return atwork_commander_msgs::Object::Screwdriver;
     throw runtime_error("Unknown plain object enocunted!");
   }
 

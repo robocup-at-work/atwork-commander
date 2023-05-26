@@ -151,6 +151,15 @@ class Generator : public GeneratorPluginInterface {
     if ( o.form == "BEARING_BOX" )   return atwork_commander_msgs::Object::BEARING_BOX;
     if ( o.form == "DISTANCE_TUBE" ) return atwork_commander_msgs::Object::DISTANCE_TUBE;
     if ( o.form == "MOTOR" )         return atwork_commander_msgs::Object::MOTOR;
+    if ( o.form == "Axis2" )         return atwork_commander_msgs::Object::Axis2;
+    if ( o.form == "Bearing2" )      return atwork_commander_msgs::Object::Bearing2;
+    if ( o.form == "Housing" )       return atwork_commander_msgs::Object::Housing;
+    if ( o.form == "Motor2" )        return atwork_commander_msgs::Object::Motor2;
+    if ( o.form == "Spacer" )        return atwork_commander_msgs::Object::Spacer;
+    if ( o.form == "Wrench" )        return atwork_commander_msgs::Object::Wrench;
+    if ( o.form == "Drill" )         return atwork_commander_msgs::Object::Drill;
+    if ( o.form == "AllenKey" )      return atwork_commander_msgs::Object::AllenKey;
+    if ( o.form == "Screwdriver" )   return atwork_commander_msgs::Object::Screwdriver;
     throw runtime_error("Unknown plain object enocunted!");
   }
 
@@ -355,21 +364,21 @@ class Generator : public GeneratorPluginInterface {
           ! count( allowedTables.begin(), allowedTables.end(), t.name ) )
         continue;
 
-      if(t.type == "TT"                                && 
-         mTasks[taskName].parameters["tt_grasping"]==0 && 
+      if(t.type == "TT"                                &&
+         mTasks[taskName].parameters["tt_grasping"]==0 &&
          mTasks[taskName].parameters["tt_placing"]==0) {
         ROS_DEBUG_STREAM("Skipping turntable " << id);
         continue;
       }
 
-      if(t.type == "PP"                                && 
+      if(t.type == "PP"                                &&
          mTasks[taskName].parameters["pp_placing"]==0) {
         ROS_DEBUG_STREAM("Skipping precision placement table " << id);
         continue;
       }
 
-      if(t.type == "SH"                                && 
-         mTasks[taskName].parameters["shelfes_grasping"]==0 && 
+      if(t.type == "SH"                                &&
+         mTasks[taskName].parameters["shelfes_grasping"]==0 &&
          mTasks[taskName].parameters["shelfes_placing"]==0) {
         ROS_DEBUG_STREAM("Skipping shelf " << id);
         continue;
@@ -391,15 +400,15 @@ class Generator : public GeneratorPluginInterface {
 
       ROS_ERROR_STREAM("Unknown table type" << t);
     }
-    
-    
+
+
     mJTables.resize(mTables0.size()+mTables5.size()+mTables10.size()+mTables15.size());
     auto it = mJTables.begin();
     it = copy(mTables0.begin(),  mTables0.end(),  it);
     it = copy(mTables5.begin(),  mTables5.end(),  it);
     it = copy(mTables10.begin(), mTables10.end(), it);
     it = copy(mTables15.begin(), mTables15.end(), it);
-    
+
 
     ROS_DEBUG_STREAM("Allowed Tables : " << allowedTables);
     ROS_DEBUG_STREAM("Normal Tables  : " << mJTables);
@@ -960,7 +969,7 @@ class Generator : public GeneratorPluginInterface {
             auto taskObj = toTaskObject(obj).object;
             if( taskObj == atwork_commander_msgs::Object::EMPTY) continue;
             if( taskObj >= atwork_commander_msgs::Object::CONTAINER_RED) continue;
-            if( checkPPT(mTablesInverse[i]) && taskObj >=  atwork_commander_msgs::Object::BEARING_BOX ) continue;
+            //if( checkPPT(mTablesInverse[i]) && taskObj >=  atwork_commander_msgs::Object::BEARING_BOX ) continue;
             mAvailableObjectsPerTable[i].insert(&obj);
           }catch(...){
             ROS_ERROR_STREAM("Object lost because of matching error: " << endl << obj);
@@ -1073,7 +1082,7 @@ class Generator : public GeneratorPluginInterface {
             get_container_id(table,blue);
           }
         }
-      }     
+      }
 
       // write the Ppts as destinations to the tasks
       for(size_t i=0; i<placePpt.size(); ++i) {
@@ -1132,7 +1141,7 @@ class Generator : public GeneratorPluginInterface {
 
       decltype(tasks) decoyTasks(paramFinal["decoys"]);
       auto it  = decoyTasks.begin();
-      for(const auto& task: tasks) { 
+      for(const auto& task: tasks) {
         if(it == decoyTasks.end())
           break;
         if(mTableTypes[task[src_id]] ==shelfs_id || mTableTypes[task[src_id]] == conveyors_id )

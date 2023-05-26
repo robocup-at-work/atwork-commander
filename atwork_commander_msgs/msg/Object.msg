@@ -27,6 +27,20 @@ uint16 DISTANCE_TUBE = 24
 uint16 MOTOR = 25
 uint16 ROCKIN_END = 26
 
+
+# advanced
+uint16 ADVANCED_START = 201
+uint16 Axis2 = 201
+uint16 Bearing2 = 202
+uint16 Housing = 203
+uint16 Motor2 = 204
+uint16 Spacer = 205
+uint16 Screwdriver = 206
+uint16 Wrench = 207
+uint16 Drill = 208
+uint16 AllenKey = 209
+uint16 ADVANCED_END = 210
+
 # container
 uint16 CONTAINER_START = 31
 uint16 CONTAINER_RED = 31
