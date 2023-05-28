@@ -969,7 +969,7 @@ class Generator : public GeneratorPluginInterface {
             auto taskObj = toTaskObject(obj).object;
             if( taskObj == atwork_commander_msgs::Object::EMPTY) continue;
             if( taskObj >= atwork_commander_msgs::Object::CONTAINER_RED) continue;
-            //if( checkPPT(mTablesInverse[i]) && taskObj >=  atwork_commander_msgs::Object::BEARING_BOX ) continue;
+            if( checkPPT(mTablesInverse[i]) && taskObj >=  atwork_commander_msgs::Object::ADVANCED_START ) continue;
             mAvailableObjectsPerTable[i].insert(&obj);
           }catch(...){
             ROS_ERROR_STREAM("Object lost because of matching error: " << endl << obj);
