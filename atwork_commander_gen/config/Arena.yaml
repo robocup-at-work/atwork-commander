@@ -27,11 +27,15 @@ arena:
     M30           : 10
     M20_100       : 10
     R20           : 10
-    AXIS          : 10
-    BEARING       : 10
-    BEARING_BOX   : 10
-    DISTANCE_TUBE : 10
-    MOTOR         : 10
+    Axis2         : 10
+    Bearing2      : 10
+    Housing       : 10
+    Motor2        : 10
+    Spacer        : 10
+    Screwdriver   : 10
+    Wrench        : 10
+    Drill         : 10
+    AllenKey      : 10
     CONTAINER_RED :  2
     CONTAINER_BLUE:  2
   cavities: [ "F20_20_H", "S40_40_H", "M20_H", "M30_H", "M20_100_H", "R20_H", "F20_20_V", "S40_40_V", "M20_V", "M30_V", "R20_V" ]

@@ -23,10 +23,14 @@ arena:
       M30           : 1
       M20_100       : 1
       R20           : 1
-      AXIS          : 1
-      BEARING       : 1
-      BEARING_BOX   : 1
-      DISTANCE_TUBE : 1
-      MOTOR         : 1
+      Axis2         : 1
+      Bearing2      : 1
+      Housing       : 1
+      Motor2        : 1
+      Spacer        : 1
+      Screwdriver   : 1
+      Wrench        : 1
+      Drill         : 1
+      AllenKey      : 1
       CONTAINER_RED : 1
       CONTAINER_BLUE: 1

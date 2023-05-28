@@ -21,10 +21,14 @@ objects:
     M30           : 2
     M20_100       : 2
     R20           : 2
-    AXIS          : 2
-    BEARING       : 2
-    BEARING_BOX   : 2
-    DISTANCE_TUBE : 2
-    MOTOR         : 2
+    Axis2         : 2
+    Bearing2      : 2
+    Housing       : 2
+    Motor2        : 2
+    Spacer        : 2
+    Screwdriver   : 2
+    Wrench        : 2
+    Drill         : 2
+    AllenKey      : 2
     CONTAINER_RED : 3
     CONTAINER_BLUE: 3
