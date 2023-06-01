@@ -9,11 +9,11 @@ arena:
     WS07: "00"
     WS08: "15"
     WS09: "15"
-    SH10: "SH"
+    SH01: "SH"
     WS11: "00"
-    PP12: "PP"
+    PP01: "PP"
     WS13: "05"
-    TT14: "TT"
+    TT01: "TT"
   objects:
     F20_20_G      : 3
     F20_20_B      : 13
@@ -22,15 +22,15 @@ arena:
     M20           : 3
     M30           : 5
     M20_100       : 3
-    Axis2         : 1
-    Bearing2      : 1
-    Housing       : 1
-    Motor2        : 1
-    Spacer        : 1
-    Screwdriver   : 1
-    Wrench        : 1
-    Drill         : 1
-    AllenKey      : 1
+    Axis2         : 0
+    Bearing2      : 0
+    Housing       : 0
+    Motor2        : 0
+    Spacer        : 0
+    Screwdriver   : 0
+    Wrench        : 0
+    Drill         : 0
+    AllenKey      : 0
     CONTAINER_RED :  2
     CONTAINER_BLUE:  2
   cavities: [ "F20_20_H", "S40_40_H", "M20_H", "M30_H", "M20_100_H", "R20_H", "F20_20_V", "S40_40_V", "M20_V", "M30_V", "R20_V" ]

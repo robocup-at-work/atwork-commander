@@ -1,0 +1,7 @@
+BMT:
+  prep_time: 3
+  exec_time: 5
+  objects: 3
+  ref_position: true
+  tables: 2
+  allowed_tables: [ "WS04", "WS05" ]

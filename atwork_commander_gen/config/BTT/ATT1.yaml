@@ -9,4 +9,3 @@ ATT1:
   arbitrary_surfaces: 2
   obstacles: 2
   barrier_tapes: 2
-  normal_table_types: [ "00","05","15" ]

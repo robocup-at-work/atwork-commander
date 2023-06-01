@@ -8,9 +8,8 @@
     <rosparam file="$(find atwork_commander_gen)/config/BMT.yaml"  ns="tasks"/>
     <rosparam file="$(find atwork_commander_gen)/config/BTT1.yaml"  ns="tasks"/>
     <rosparam file="$(find atwork_commander_gen)/config/BTT2.yaml"  ns="tasks"/>
-    <rosparam file="$(find atwork_commander_gen)/config/BTT3.yaml"  ns="tasks"/>
-    <rosparam file="$(find atwork_commander_gen)/config/RTT.yaml"  ns="tasks"/>
-    <rosparam file="$(find atwork_commander_gen)/config/PPT.yaml"  ns="tasks"/>
+    <rosparam file="$(find atwork_commander_gen)/config/ATT1.yaml"  ns="tasks"/>
+    <rosparam file="$(find atwork_commander_gen)/config/ATT2.yaml"  ns="tasks"/>
     <rosparam file="$(find atwork_commander_gen)/config/Final.yaml"  ns="tasks"/>
     <rosparam file="$(find atwork_commander_gen)/config/Arena.yaml"/>
 
