@@ -7,16 +7,16 @@ bool   decoy
 uint16 EMPTY = 0
 
 # atwork
-uint16 ATWORK_START = 1
-uint16 F20_20_B     = 1
-uint16 F20_20_G     = 2
-uint16 S40_40_B     = 3
-uint16 S40_40_G     = 4
-uint16 M20_100      = 5
-uint16 M20          = 6
-uint16 M30          = 7
-uint16 R20          = 8
-uint16 ATWORK_END   = 8
+uint16 ATWORK_START = 11
+uint16 F20_20_B     = 11
+uint16 F20_20_G     = 12
+uint16 S40_40_B     = 13
+uint16 S40_40_G     = 14
+uint16 M20_100      = 15
+uint16 M20          = 16
+uint16 M30          = 17
+uint16 R20          = 18
+uint16 ATWORK_END   = 18
 
 # advanced
 uint16 ADVANCED_START = 20
@@ -33,12 +33,12 @@ uint16 ADVANCED_END   = 28
 
 # rockin
 uint16 ROCKIN_START  = 30
-uint16 BEARING_BOX   = 30
-uint16 BEARING       = 31
-uint16 AXIS          = 32
-uint16 DISTANCE_TUBE = 33
-uint16 MOTOR         = 34
-uint16 ROCKIN_END    = 34
+uint16 BEARING_BOX   = 31
+uint16 BEARING       = 32
+uint16 AXIS          = 33
+uint16 DISTANCE_TUBE = 34
+uint16 MOTOR         = 35
+uint16 ROCKIN_END    = 35
 
 # container
 uint16 CONTAINER_START = 40
