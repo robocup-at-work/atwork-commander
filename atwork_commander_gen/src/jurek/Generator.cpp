@@ -915,7 +915,7 @@ class Generator : public GeneratorPluginInterface {
           );
 
           if(workingTables.empty())
-            throw std::runtime_error("Less tables requested then table types in task");
+            throw std::runtime_error("Not enough tables requested: More table types in task then tables requested!");
 
           shuffle(workingTables.begin(), workingTables.end(), mRand);
           unsigned int d=min((unsigned int)workingTables.size(), sumUp(tables)-maxNTables);
