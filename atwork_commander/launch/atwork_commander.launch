@@ -15,13 +15,11 @@
     <group ns="atwork_commander">
         <!-- load config -->
         <param name="generator" value="$(arg generator)"/>
-        <rosparam file="$(arg config)/BNT.yaml"    ns="tasks"/>
         <rosparam file="$(arg config)/BMT.yaml"    ns="tasks"/>
         <rosparam file="$(arg config)/BTT1.yaml"   ns="tasks"/>
         <rosparam file="$(arg config)/BTT2.yaml"   ns="tasks"/>
-        <rosparam file="$(arg config)/BTT3.yaml"   ns="tasks"/>
-        <rosparam file="$(arg config)/RTT.yaml"    ns="tasks"/>
-        <rosparam file="$(arg config)/PPT.yaml"    ns="tasks"/>
+        <rosparam file="$(arg config)/ATT1.yaml"   ns="tasks"/>
+        <rosparam file="$(arg config)/ATT2.yaml"    ns="tasks"/>
         <rosparam file="$(arg config)/FINAL.yaml"  ns="tasks"/>
         <rosparam file="$(arg config)/Arena.yaml"/>
 

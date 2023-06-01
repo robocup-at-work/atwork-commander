@@ -1,9 +1,0 @@
-RTT:
-  prep_time: 3
-  exec_time: 5
-  objects: 3
-  decoys: 3
-  tables: 2
-  tt_grasping: 3
-  deliver_to_robot: true
-  normal_table_types: [ "10" ]

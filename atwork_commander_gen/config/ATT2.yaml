@@ -1,0 +1,15 @@
+BTT3:
+  prep_time: 3
+  exec_time: 10
+  objects: 6
+  decoys: 3
+  tables: 5
+  shelfes_grasping: 2
+  shelfes_placing: 1
+  arbitrary_surfaces: 2
+  obstacles: 2
+  barrier_tapes: 1
+  container_placing_r: 2
+  container_placing_b: 2
+  paired_containers: 1
+  normal_table_types: [ "10" ]

@@ -1,9 +1,0 @@
-PPT:
-  prep_time: 5
-  exec_time: 5
-  objects: 3
-  tables: 2
-  pp_placing: 3
-  ref_cavity_position: true
-  ref_cavity_rotation: true
-  allowed_tables: ["WS14", "WS05"]

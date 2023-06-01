@@ -1,41 +1,36 @@
 arena:
   workstations:
-    SH01: "SH"
+    WS01: "10"
     WS02: "10"
     WS03: "10"
-    WS04: "00"
-    PP01: "PP"
-    TT01: "TT"
-    WS07: "05"
-    WS08: "05"
+    WS04: "10"
+    WS05: "10"
+    WS06: "05"
+    WS07: "00"
+    WS08: "15"
     WS09: "15"
-    WS10: "05"
-    WS11: "05"
-    WS12: "00"
-    WS13: "00"
-    WS14: "10"
-    WS15: "10"
-    SH01: "SH"
-    WS17: "15"
-    WS18: "15"
+    WS10: "SH"
+    WS11: "00"
+    WS12: "PP"
+    WS13: "05"
+    WS14: "TT"
   objects:
-    F20_20_G      : 10
-    F20_20_B      : 10
-    S40_40_B      : 10
-    S40_40_G      : 10
-    M20           : 2
-    M30           : 10
-    M20_100       : 10
-    R20           : 10
-    Axis2         : 10
-    Bearing2      : 10
-    Housing       : 10
-    Motor2        : 10
-    Spacer        : 10
-    Screwdriver   : 10
-    Wrench        : 10
-    Drill         : 10
-    AllenKey      : 10
+    F20_20_G      : 3
+    F20_20_B      : 13
+    S40_40_B      : 6
+    S40_40_G      : 6
+    M20           : 3
+    M30           : 5
+    M20_100       : 3
+    Axis2         : 1
+    Bearing2      : 1
+    Housing       : 1
+    Motor2        : 1
+    Spacer        : 1
+    Screwdriver   : 1
+    Wrench        : 1
+    Drill         : 0
+    AllenKey      : 1
     CONTAINER_RED :  2
     CONTAINER_BLUE:  2
   cavities: [ "F20_20_H", "S40_40_H", "M20_H", "M30_H", "M20_100_H", "R20_H", "F20_20_V", "S40_40_V", "M20_V", "M30_V", "R20_V" ]

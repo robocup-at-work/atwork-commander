@@ -1,0 +1,9 @@
+BTT2:
+  prep_time: 3
+  exec_time: 10
+  objects: 6
+  decoys: 3
+  tables: 5
+  arbitrary_surfaces: 2
+  obstacles: 2
+  tt_placing: 1

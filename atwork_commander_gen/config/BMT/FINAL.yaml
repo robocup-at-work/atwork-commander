@@ -1,0 +1,24 @@
+FINAL:
+  prep_time: 5
+  exec_time: 13
+  objects: 10
+  decoys: 5
+  tables: 8
+  obstacles: 2
+  barrier_tapes: 2
+  arbitrary_surfaces: 3
+  pp_placing: 1
+  container_placing_r: 2
+  container_placing_b: 2
+  paired_containers: true
+  tt_grasping: 1
+  tt_placing: 0
+  ref_tt_direction: true
+  shelfes_grasping: 2
+  shelfes_placing:  1
+  ref_position: true
+  ref_rotation: true
+  ref_orientation: true
+  ref_cavity_position: true
+  ref_cavity_rotation: true
+  ref_cavity_orientation: true

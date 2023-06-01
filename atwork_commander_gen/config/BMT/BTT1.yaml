@@ -1,0 +1,11 @@
+BTT1:
+  prep_time: 5
+  exec_time: 6
+  objects: 5
+  decoys: 3
+  tables: 3
+  ref_position: true
+  ref_rotation: true
+  arbitrary_surfaces: 1
+  barrier_tapes: 2
+  normal_table_types: [ "10" ]
