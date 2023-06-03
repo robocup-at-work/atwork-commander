@@ -53,7 +53,7 @@ class Generator : public GeneratorPluginInterface {
   auto extractObjectTypes(const string& task) {
     vector<ObjectType> availableObjects;
     for ( const auto& item: mTasks[task].objects )
-      if ( item.second && regex_match( item.first, regex("[A-Z0-9_]+") ) )
+      if ( item.second && regex_match( item.first, regex("[A-Za-z0-9_]+") ) )
         availableObjects.emplace_back(item.first, item.second);
     return availableObjects;
   }
@@ -61,7 +61,7 @@ class Generator : public GeneratorPluginInterface {
   auto extractObjectTypes(const ArenaDescription& arena) {
     vector<ObjectType> availableObjects;
     for ( const auto& item: arena.objects )
-      if ( item.second && regex_match( item.first, regex("[A-Z0-9_]+") ) )
+      if ( item.second && regex_match( item.first, regex("[A-Za-z0-9_]+") ) )
         availableObjects.emplace_back(item.first, item.second);
     return availableObjects;
   }
