@@ -9,11 +9,11 @@ arena:
     WS07: "00"
     WS08: "15"
     WS09: "15"
-    SH10: "SH"
+    SH01: "SH"
     WS11: "00"
-    PP12: "PP"
+    PP01: "PP"
     WS13: "05"
-    TT14: "TT"
+    TT01: "TT"
   objects:
     F20_20_G      : 3
     F20_20_B      : 13
