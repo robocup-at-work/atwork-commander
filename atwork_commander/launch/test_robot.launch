@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<launch>
+  <arg name="output" value="log"/>
+  <arg name="task" default="FINAL"/>
+  <arg name="verbose" default="false"/>
+  <arg name="refbox_name" default="/atwork_commander"/>
+  <arg name="multimaster" default="true"/>
+  <arg name="publish_frequency" default="1.0"/>
+  <arg name="generator" default="JurekGen"/>
+  <arg name="coms" default="[ 'atwork_commander::com_plugin::ros::TaskArenaCentric',
+                               'atwork_commander::com_plugin::ros::TaskObjectCentric' ]" />
+  <arg name="config" default="$(find atwork_commander_gen)/config"/>
+
+  <include file="$(find atwork_commander)/launch/atwork_commander.launch">
+    <arg name="output" value="$(arg output)"/>
+    <arg name="gui" value="false"/>
+    <arg name="verbose" value="$(arg verbose)"/>
+    <arg name="multimaster" value="$(arg multimaster)"/>
+    <arg name="config" value="$(arg config)"/>
+  </include>
+
+  <node name="test_robot_cmd" pkg="atwork_commander_core" type="control" args="-v $(arg verbose) test $(arg task)" output="$(arg output)">
+    <param name="refbox" value="$(arg refbox_name)"/>
+  </node>
+
+</launch>
