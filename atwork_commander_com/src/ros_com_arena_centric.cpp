@@ -6,6 +6,13 @@ namespace atwork_commander {
 namespace com_plugin {
 namespace ros {
 
+static void cleanDecoys(std::vector<::atwork_commander_msgs::Workstation>& state) {
+  for(atwork_commander_msgs::Workstation& ws: state){
+    auto newEnd = remove_if(ws.objects.begin(), ws.objects.end(), [](const atwork_commander_msgs::Object& obj){return obj.decoy;});
+    ws.objects.erase(newEnd, ws.objects.end());
+  }
+}
+
 class TaskArenaCentric : public Base {
 
     ::ros::NodeHandle rh;
@@ -18,6 +25,8 @@ public:
     virtual ~TaskArenaCentric() {}
 
     virtual void sendTask( atwork_commander_msgs::Task task ) {
+        cleanDecoys(task.arena_start_state);
+        cleanDecoys(task.arena_target_state);
         this->send_task_pub.publish( task );
     }
 
