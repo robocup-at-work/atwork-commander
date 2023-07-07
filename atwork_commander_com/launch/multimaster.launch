@@ -4,10 +4,10 @@
   <arg name="output"/>
   <arg name="refbox"/>
 
-  <node name="multimaster_discovery" pkg="master_discovery_fkie" type="master_discovery" output="$(arg output)"/>
+  <node name="multimaster_discovery" pkg="fkie_master_discovery" type="master_discovery" output="$(arg output)"/>
 
-  <node name="multimaster_sync" pkg="master_sync_fkie" type="master_sync" output="$(arg output)">
-      <rosparam param="ignore_services">[/*]</rosparam>
-      <rosparam param="sync_topics" subst_value="true">[/$(arg refbox)/task, /$(arg refbox)/robot_state]</rosparam>
+  <node name="multimaster_sync" pkg="fkie_master_sync" type="master_sync" output="$(arg output)">
+    <rosparam param="ignore_services">[/*]</rosparam>
+    <rosparam param="sync_topics" subst_value="true">[/$(arg refbox)/task, /$(arg refbox)/object_task, /$(arg refbox)/robot_state]</rosparam>
   </node>
 </launch>
