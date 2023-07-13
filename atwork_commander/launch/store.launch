@@ -5,7 +5,7 @@
   <arg name="verbose" default="false"/>
 
   <arg name="file"/>
-    <node name="store_helper" pkg="atwork_commander" type="control" args="-v $(arg verbose) store $(arg file)" output="screen">
+    <node name="store_helper" pkg="atwork_commander_core" type="control" args="-v $(arg verbose) store $(arg file)" output="screen">
       <param name="refbox" value="$(arg refbox)"/>
     </node>
 </launch>
