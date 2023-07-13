@@ -1,14 +1,15 @@
 ATT2:
   prep_time: 3
   exec_time: 10
-  objects: 67
+  objects: 7
   decoys: 5
   tables: 6
-  shelfes_grasping: 2
-  shelfes_placing: 1
+  shelfes_grasping: 1
+  shelfes_placing: 0
+  tt_grasping: 1
   arbitrary_surfaces: 2
   obstacles: 2
   barrier_tapes: 1
-  container_placing_r: 2
-  container_placing_b: 2
+  container_placing_r: 1
+  container_placing_b: 1
   paired_containers: 1
