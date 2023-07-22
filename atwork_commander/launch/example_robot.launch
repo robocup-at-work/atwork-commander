@@ -14,12 +14,16 @@
       <param name="refboxName" value="$(arg refbox)"/>
       <param name="teamName" value="$(arg team)"/>
       <param name="robotName" value="$(arg robot)"/>
+      <param name="reportFreq" value="2.0"/>
+      <param name="updateFreq" value="0.1"/>
     </node>
 
     <node pkg="atwork_commander_com" type="robot_example_object_centric" name="$(arg robot)" output="$(arg output)" if="$(arg object_centric)">
       <param name="refboxName" value="$(arg refbox)"/>
       <param name="teamName" value="$(arg team)"/>
       <param name="robotName" value="$(arg robot)"/>
+      <param name="reportFreq" value="2.0"/>
+      <param name="updateFreq" value="0.1"/>
     </node>
 
   <include file="$(find atwork_commander_com)launch/multimaster.launch" if="$(arg multimaster)">
