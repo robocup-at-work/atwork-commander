@@ -44,7 +44,7 @@ void TaskVirtualization::analyzeTask(const atwork_commander_msgs::Task::ConstPtr
 {
   for (auto& workstation : msg->arena_start_state)
   {
-    ROS_INFO_STREAM(workstation.workstation_name);
+    ROS_INFO_STREAM(workstation.name);
   }
   
 }

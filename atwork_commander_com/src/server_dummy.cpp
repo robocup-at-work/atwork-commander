@@ -25,22 +25,22 @@ atwork_commander_msgs::Task createDummyTask() {
     s40b.object = atwork_commander_msgs::Object::S40_40_B;
 
     atwork_commander_msgs::Workstation w_s_1;
-    w_s_1.workstation_name = "WS01";
+    w_s_1.name = "WS01";
     w_s_1.objects.push_back(m20);
     w_s_1.objects.push_back(f20g);
     w_s_1.objects.push_back(bearing);
     w_s_1.objects.push_back(motor);
     atwork_commander_msgs::Workstation w_s_2;
-    w_s_2.workstation_name = "WS02";
+    w_s_2.name = "WS02";
     w_s_2.objects.push_back(m20);
     w_s_2.objects.push_back(s40b);
     atwork_commander_msgs::Workstation w_t_2;
-    w_t_2.workstation_name = "WS02";
+    w_t_2.name = "WS02";
     w_t_2.objects.push_back(bearing);
     w_t_2.objects.push_back(f20g);
     w_t_2.objects.push_back(motor);
     atwork_commander_msgs::Workstation w_t_3;
-    w_t_3.workstation_name = "WS03";
+    w_t_3.name = "WS03";
     w_t_3.objects.push_back(m20);
     w_t_3.objects.push_back(m20);
     w_t_3.objects.push_back(s40b);
