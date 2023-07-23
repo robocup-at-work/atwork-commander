@@ -23,7 +23,7 @@ class ExampleReportGenerator {
     }
 
     void update() {
-      //Check for new arrival of new task
+      //Check for arrival of new task
       if (mTask.id != mTaskID) {
         mTaskID = mTask.id;
         mState.current_arena_state = mTask.arena_start_state;
