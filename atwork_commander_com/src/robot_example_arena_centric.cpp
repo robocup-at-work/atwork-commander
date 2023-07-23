@@ -24,7 +24,7 @@ void update(const ros::TimerEvent& e) {
 }
 
 void report(const ros::TimerEvent& e) {
-  gRobot_state.sender.header.stamp = ros::Time::now();
+  gRobot_state.header.stamp = ros::Time::now();
   gRobot_state_pub.publish( gRobot_state );
 }
 

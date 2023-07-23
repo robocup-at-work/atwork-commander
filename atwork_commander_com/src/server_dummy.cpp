@@ -68,9 +68,6 @@ int main(int argc, char** argv)
 
     while ( ros::ok() )
     {
-        for( auto& r : task.execute_on ) {
-            r.header.stamp = ros::Time::now();
-        }
         send_task_pub.publish( task );
         ros::spinOnce();
         d.sleep();
