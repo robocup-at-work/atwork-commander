@@ -10,17 +10,13 @@ using namespace atwork_commander;
 int main(int argc, char** argv) {
   ros::init(argc, argv, "test_setup");
 
-  string refbox, taskName;
-  if( !ros::param::get("~refbox", refbox) ) {
-      refbox = "atwork_commander";
-      ROS_WARN_STREAM("[TEST-SETUP] No Refbox name specified! Using \"" << refbox << "\"!");
-  }
+  string taskName;
   if( !ros::param::get("~task", taskName) ) {
       ROS_ERROR_STREAM("[TEST-SETUP] No task name specified! Exiting");
       return -1;
   }
 
-  Control control(refbox);
+  Control control;
 
 
   try{

@@ -80,28 +80,13 @@ class Control {
     using StateUpdateCallback = std::function<void(const RefboxState&)>; ///< Callback definition of state callback
     using Task = atwork_commander_msgs::Task;                            ///< Task type definition
 
-    /** Constructor connecting to RefBox.
-     *
-     * \param refboxName the namespace of the RefBox to connect to
-     **/
-    Control( std::string refboxName = "atwork_commander" );
+    /** Constructor connecting to RefBox. **/
+    Control();
 
     /** Destructur severing the connection to the RefBox. **/
     ~Control() noexcept;
     
     ///@{
-
-    /** Setter of output / logging verbosity. All debug information is published on the DEBUG log level of ROS
-     *
-     * \param value If "true" enables additional output within commands to ease debugging
-     **/
-    void verbose( bool value );
-
-    /** Getter of verbosity
-     *
-     * \return current state of verbosity
-     **/
-    bool verbose() const;
 
     /** Setter of RefBox namespace
      *

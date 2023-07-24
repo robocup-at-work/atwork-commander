@@ -243,17 +243,7 @@ int main(int argc, char** argv)
     if( !parseArgs(argc, argv) )
       return -1;
 
-    if( verbose && ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug) ) {
-      ros::console::notifyLoggerLevelsChanged();
-      std::this_thread::sleep_for(std::chrono::seconds(1)); // Necessary to allow rosconsole to react to logger level change
-    }
-
     gControlPtr.reset(new Control());
-
-    if( ros::param::get("~refbox", refboxName) )
-      gControlPtr->refbox(refboxName);
-    else
-      ROS_WARN_STREAM_NAMED("control", "[REFBOX-CONTROL] No Refbox name specified using \"" << gControlPtr->refbox() << "\"!");
 
     ROS_DEBUG_STREAM_NAMED("control", "[REFBOX-CONTROL] Command parsed successfull: Executing " << command << " with arguments " << arguments);
     
