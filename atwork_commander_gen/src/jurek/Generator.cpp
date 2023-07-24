@@ -209,7 +209,9 @@ class Generator : public GeneratorPluginInterface {
     task.arena_target_state.resize(mTablesInverse.size()-1);
     for( unsigned int i=1; i < mTablesInverse.size(); i++ ) {
       task.arena_start_state[i-1].name = mTablesInverse[i];
+      task.arena_start_state[i-1].type = mConfig.arena().workstations.at(mTablesInverse[i]);
       task.arena_target_state[i-1].name = mTablesInverse[i];
+      task.arena_target_state[i-1].type = mConfig.arena().workstations.at(mTablesInverse[i]);
     }
     for( const array<size_t, 3>& cont : container_ids) {
       atwork_commander_msgs::Object o;

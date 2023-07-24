@@ -466,7 +466,9 @@ class Generator: public GeneratorPluginInterface {
     for ( const auto& table : mTables ) {
       index.emplace(&table.second, i);
       task.arena_start_state[i].name = table.second.name;
+      task.arena_start_state[i].name = table.second.type;
       task.arena_target_state[i].name = table.second.name;
+      task.arena_target_state[i].name = table.second.type;
       i++;
     }
 
