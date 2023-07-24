@@ -220,3 +220,7 @@ target_link_libraries(robot_example_object_centric ${catkin_LIBRARIES})
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+if(CATKIN_ENABLE_TESTING)
+  find_package(catkin REQUIRED COMPONENTS atwork_commander_core rostest)
+  add_rostest(test/launch/example_robot.test)
+endif()
