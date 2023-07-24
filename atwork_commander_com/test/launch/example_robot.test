@@ -2,14 +2,14 @@
 
 <launch>
 
-  <test test-name="robot_example_arena_hz_test" pkg="rostest" type="hztest">
+  <test test-name="example_robot_arena_hz_test" pkg="rostest" type="hztest">
     <param name="topic" value="object_refbox/robot_state"/>
     <param name="hz" value="2"/>
     <param name="hzerror" value="0.1"/>
     <param name="test_duration" value="10"/>
   </test>
   
-  <test test-name="robot_example_object_hz_test" pkg="rostest" type="hztest">
+  <test test-name="example_robot_object_hz_test" pkg="rostest" type="hztest">
     <param name="topic" value="arena_refbox/robot_state"/>
     <param name="hz" value="2"/>
     <param name="hzerror" value="0.1"/>
