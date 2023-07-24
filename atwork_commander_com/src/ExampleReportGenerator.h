@@ -19,10 +19,20 @@ class ExampleReportGenerator {
   public:
     ExampleReportGenerator(RobotState& state, const Task& task)
       : mState(state), mTask(task) {
-
+      mState.sender.transforms.emplace_back();
+      auto& t = mState.sender.transforms.back();
+      t.header.frame_id = "world";
+      t.child_frame_id = "map";
+      t.transform.rotation.w = 1.0;
     }
 
     void update() {
+      //Update timestamps
+      auto now = ros::Time::now();
+      mState.sender.header.stamp = now;
+      for(auto& t: mState.sender.transforms)
+        t.header.stamp = now;
+
       //Check for arrival of new task
       if (mTask.id != mTaskID) {
         mTaskID = mTask.id;
@@ -52,6 +62,10 @@ class ExampleReportGenerator {
               }
               ROS_DEBUG_STREAM_NAMED("example", "[REFBOX_EXAMPLE] Putting object " << obj << " on workstation " << *it);
               it->objects.push_back(obj);
+
+              it->objects.back().pose.header.stamp = ros::Time::now();
+              it->objects.back().pose.header.frame_id = "map";
+              it->objects.back().pose.pose.orientation.w = 1.0;
               mState.objects_on_robot[0]=Object();
             }
         return;
@@ -68,7 +82,11 @@ class ExampleReportGenerator {
               if(count(it->objects.begin(), it->objects.end(), obj))
                 continue;
             ROS_DEBUG_STREAM_NAMED("example", "[REFBOX_EXAMPLE] next object on " << ws.name << ":" << std::endl << ws.objects.back());
-            mState.objects_on_robot[0] = ws.objects.back();
+            Object& invObj = mState.objects_on_robot[0];
+            invObj = ws.objects.back();
+            invObj.pose.header.stamp = ros::Time::now();
+            invObj.pose.header.frame_id = "map";
+            invObj.pose.pose.orientation.w=1.0;
             ws.objects.pop_back();
             return;
         }

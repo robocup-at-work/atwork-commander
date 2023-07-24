@@ -34,8 +34,8 @@ int main(int argc, char** argv) {
     std::string refboxName = "atwork_commander";
     std::string teamName   = "exampleTeam";
     std::string robotName  = "exampleRobot";
-    float reportFreq = 2.0;
-    float updateFreq = 0.1;
+    float       reportFreq = 2.0;
+    float       updateFreq = 0.1;
 
     if( !nh.getParam("refboxName", refboxName) )
       ROS_WARN_STREAM_NAMED("example", "[REFBOX-EXAMPLE] No refbox name configured using default: \"atwork_commander\"!");
