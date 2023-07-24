@@ -38,7 +38,7 @@ int main(int argc, char** argv)
 
     while ( ros::ok() )
     {
-        robot_state.sender.header.stamp = ros::Time::now();
+        robot_state.header.stamp = ros::Time::now();
         //TODO change Task periodically
 
         robot_state_pub.publish( robot_state );

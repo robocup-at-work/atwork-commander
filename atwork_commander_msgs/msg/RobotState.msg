@@ -1,9 +1,9 @@
 # RobotState.msg
-
+Header header
 RobotHeader sender
 
 geometry_msgs/Pose2D pose
-nav_msgs/Path path
+geometry_msgs/PoseStamped[] path
 
 Object[3] objects_on_robot
 Workstation[] current_arena_state

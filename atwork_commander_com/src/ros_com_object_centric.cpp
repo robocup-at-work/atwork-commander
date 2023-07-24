@@ -59,9 +59,9 @@ class TaskObjectCentric : public Base {
     static WorkstationObjs toMap(const Workstations& wsList) {
       WorkstationObjs objs(wsList.size());
       for( const Workstation& ws: wsList) {
-        auto result = objs.emplace(ws.workstation_name, ws.objects);
+        auto result = objs.emplace(ws.name, ws.objects);
         if( !result.second ) {
-          ROS_ERROR_STREAM_THROTTLE_NAMED(60, "object", "[REFBOX-COM] Error in task! Workstation name exists multiple times: " << ws.workstation_name);
+          ROS_ERROR_STREAM_THROTTLE_NAMED(60, "object", "[REFBOX-COM] Error in task! Workstation name exists multiple times: " << ws.name);
           continue;
         }
         sort(result.first->second.begin(), result.first->second.end(), compObjects);

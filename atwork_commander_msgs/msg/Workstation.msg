@@ -4,4 +4,5 @@
 
 # either a workstation name or 'robot'
 # (for end of RTT or start of PPT)
-string workstation_name
+string name
+geometry_msgs/Pose pose

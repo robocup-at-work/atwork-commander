@@ -433,10 +433,10 @@ public Q_SLOTS:
         for (auto& ws : ws_list) {
             for (auto& o : ws.objects) {
                 if (is_object(o.object)) {
-                    target_map[ws.workstation_name][o.target].push_back(o.object);
+                    target_map[ws.name][o.target].push_back(o.object);
                 }
                 if (is_container(o.object) && print_empty_container) {
-                    target_map[ws.workstation_name][o.target].push_back(o.object);
+                    target_map[ws.name][o.target].push_back(o.object);
                 }
             }
         }
@@ -495,7 +495,7 @@ public Q_SLOTS:
         QString ppt_indent("  ");
         for (auto& w : task.arena_start_state) {
             //TODO PP-Table-Prefix as parameter
-            if (w.workstation_name == "PP01" && w.objects.size() > 0) {
+            if (w.name == "PP01" && w.objects.size() > 0) {
                 for (auto& o : w.objects) {
                     if (o.object < Object::CAVITY_START || o.object >= Object::CAVITY_END) {
                         continue;

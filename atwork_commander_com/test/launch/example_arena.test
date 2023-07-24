@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <test test-name="robot_example_arena_hz_test" pkg="rostest" type="hztest">
+    <param name="topic" value="object_refbox/robot_state"/>
+    <param name="hz" value="2"/>
+    <param name="hzerror" value="0.1"/>
+    <param name="test_duration" value="10"/>
+  </test>
+  
+  <test test-name="robot_example_object_hz_test" pkg="rostest" type="hztest">
+    <param name="topic" value="arena_refbox/robot_state"/>
+    <param name="hz" value="2"/>
+    <param name="hzerror" value="0.1"/>
+    <param name="test_duration" value="10"/>
+  </test>
+
+  <node name="example_robot_arena" pkg="atwork_commander_com" type="robot_example_arena_centric">
+    <param name="refboxName" value="arena_refbox"/>
+    <param name="teamName" value="test"/>
+    <param name="robotName" value="arena"/>
+    <param name="reportFreq" value="2.0"/>
+    <param name="updateFreq" value="0.1"/>
+  </node>
+  
+  <node name="example_robot_object" pkg="atwork_commander_com" type="robot_example_object_centric">
+    <param name="refboxName" value="object_refbox"/>
+    <param name="teamName" value="test"/>
+    <param name="robotName" value="object"/>
+    <param name="reportFreq" value="2.0"/>
+    <param name="updateFreq" value="0.1"/>
+  </node>
+
+  <node name="task_bag" pkg="rosbag" type="play" args="-l $(find atwork_commander_com)/test/common/test_bmt.bag">
+    <remap from="/atwork_commander/task" to="/arena_refbox/task"/>
+    <remap from="/atwork_commander/object_task" to="/object_refbox/object_task"/>
+  </node>
+
+</launch>

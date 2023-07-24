@@ -208,8 +208,8 @@ class Generator : public GeneratorPluginInterface {
     task.arena_start_state.resize(mTablesInverse.size()-1);
     task.arena_target_state.resize(mTablesInverse.size()-1);
     for( unsigned int i=1; i < mTablesInverse.size(); i++ ) {
-      task.arena_start_state[i-1].workstation_name = mTablesInverse[i];
-      task.arena_target_state[i-1].workstation_name = mTablesInverse[i];
+      task.arena_start_state[i-1].name = mTablesInverse[i];
+      task.arena_target_state[i-1].name = mTablesInverse[i];
     }
     for( const array<size_t, 3>& cont : container_ids) {
       atwork_commander_msgs::Object o;
@@ -669,7 +669,7 @@ class Generator : public GeneratorPluginInterface {
       throw runtime_error("Object ("+to_string(o.object)+") with invalid PPT-Cavity ("+to_string(o.target)+") to be placed on PPT");
     };
     auto checkPPT = [this](const atwork_commander_msgs::Workstation& ws){
-      auto compFunc = [&ws](const pair<string, Table>& t){ return t.second.name == ws.workstation_name;};
+      auto compFunc = [&ws](const pair<string, Table>& t){ return t.second.name == ws.name;};
       return any_of(mTables.equal_range("PP").first, mTables.equal_range("PP").second, compFunc);
     };
 
@@ -680,14 +680,14 @@ class Generator : public GeneratorPluginInterface {
 
         if( checkPPT(ws) && any_of(ws.objects.begin(), ws.objects.end(), checkCavity)) {
             ostringstream os;
-            os << "Non-Cavity objects on PPT table ( " << ws.workstation_name << "):\n\t";
+            os << "Non-Cavity objects on PPT table ( " << ws.name << "):\n\t";
             for(const atwork_commander_msgs::Object& obj: ws.objects)
               if(checkCavity(obj))
                 os << obj.object << " ";
             throw runtime_error(os.str());
           }
       } catch(const runtime_error& e) {
-        throw runtime_error("Workstation "+ws.workstation_name+": "+e.what());
+        throw runtime_error("Workstation "+ws.name+": "+e.what());
       }
     }
 
@@ -705,7 +705,7 @@ class Generator : public GeneratorPluginInterface {
         if( checkPPT(ws) )
           all_of(ws.objects.begin(), ws.objects.end(), checkCavityTarget);
       } catch(const runtime_error& e) {
-        throw runtime_error("Workstation "+ws.workstation_name+": "+e.what());
+        throw runtime_error("Workstation "+ws.name+": "+e.what());
       }
     }
   }
@@ -1170,7 +1170,7 @@ class Generator : public GeneratorPluginInterface {
       auto cavitiesEnd = remainingCavities.end();
       for(atwork_commander_msgs::Workstation& ws: task.arena_target_state) {
         auto checkPPT = [this](const atwork_commander_msgs::Workstation& ws){
-          auto compFunc = [&ws](const pair<string, Table>& t){ return t.second.name == ws.workstation_name;};
+          auto compFunc = [&ws](const pair<string, Table>& t){ return t.second.name == ws.name;};
           return any_of(mTables.equal_range("PP").first, mTables.equal_range("PP").second, compFunc);
         };
         if(checkPPT(ws)) {
@@ -1199,8 +1199,8 @@ class Generator : public GeneratorPluginInterface {
           }
           shuffle(cavities.begin(), cavities.end(), mt19937(random_device()()));
           copy(cavities.begin(), cavities.end(), back_inserter(ws.objects));
-          auto it = find_if(task.arena_start_state.begin(), task.arena_start_state.end(), [&ws](const atwork_commander_msgs::Workstation& startWS){return startWS.workstation_name == ws.workstation_name;});
-          if(it == task.arena_start_state.end()) throw runtime_error("PPT does not exist in start state: "+ws.workstation_name);
+          auto it = find_if(task.arena_start_state.begin(), task.arena_start_state.end(), [&ws](const atwork_commander_msgs::Workstation& startWS){return startWS.name == ws.name;});
+          if(it == task.arena_start_state.end()) throw runtime_error("PPT does not exist in start state: "+ws.name);
           copy(cavities.begin(), cavities.end(), back_inserter(it->objects));
         }
       }
