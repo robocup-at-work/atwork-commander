@@ -3,7 +3,7 @@
 uint16 object
 uint16 target
 bool   decoy
-geometry_msgs/Pose pose
+geometry_msgs/PoseStamped pose
 
 uint16 EMPTY = 0
 

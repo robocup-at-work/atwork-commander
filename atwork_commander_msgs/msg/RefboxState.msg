@@ -1,4 +1,5 @@
 uint8         state
+time          start
 time          end
 Task          task
 RobotState[]  robots

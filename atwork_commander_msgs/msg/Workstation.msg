@@ -1,6 +1,6 @@
 # workstation.msg
 
- Object[] objects
+Object[] objects
 
 # either a workstation name or 'robot'
 # (for end of RTT or start of PPT)

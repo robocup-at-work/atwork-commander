@@ -1,5 +1,4 @@
 # RobotState.msg
-Header header
 RobotHeader sender
 
 geometry_msgs/Pose2D pose
