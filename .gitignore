@@ -6,3 +6,4 @@ docu/doxygen.log
 docu/.nojekyll
 *.kdev*
 .vscode
+docu/html
