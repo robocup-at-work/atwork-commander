@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="refbox" default="atwork_commander"/>
+  <arg name="task" default="FINAL"/>
+  <arg name="file" default="$(find atwork_commander)/common/bags/test_FINAL.bag"/>
+  <node name="record_bag" pkg="rosbag" type="record" args="-O $(arg file) /$(arg refbox)/task /$(arg refbox)/object_task"/> 
+</launch>
