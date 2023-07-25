@@ -1,0 +1,13 @@
+stages:
+  - build
+  - test
+
+build-atwork_commander:
+  stage: build
+  script:
+    - catkin build
+
+test-atwork_commander:
+  stage: test
+  script:
+    - catkin test atwork_commander

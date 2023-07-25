@@ -1,6 +1,7 @@
   # atwork-commander
 
-  [![Build Status](https://travis-ci.org/steup/atwork-commander.svg?branch=noetic)](https://travis-ci.org/steup/atwork-commander)
+  [![Build Status](https://gitlab.robotto.cs.ovgu.de/robotto/remote/atwork_commander/badges/master/pipeline.svg)](http://gitlab.robotto.cs.ovgu.de/robotto/remote/atwork_commander)
+  [![Build Status](https://gitlab.robotto.cs.ovgu.de/robotto/remote/atwork_commander/badges/testing/pipeline.svg)](http://gitlab.robotto.cs.ovgu.de/robotto/remote/atwork_commander)
 
   Complete reimplementation of the [old](https://github.com/robocup-at-work/at_work_central_factory_hub)
   Referee Box (Refbox) for the @Work-League of RoboCup.
