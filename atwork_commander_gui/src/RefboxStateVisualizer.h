@@ -23,29 +23,30 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "task_viz.h"
-namespace atwork_commander
-{
+#pragma once
 
-TaskVirtualization::TaskVirtualization()
-{
-  ros::NodeHandle nh;
-  
-  mTaskSub = nh.subscribe("task",1, &TaskVirtualization::analyzeTask, this);
-  
-}
+#include <atwork_commander_msgs/RefboxState.h>
 
-TaskVirtualization::~TaskVirtualization()
-{
+#include <ros/ros.h>
+#include <tf2_ros/transform_broadcaster.h>
 
-}
-//Funktion, die auf neue Nachrichten von der Refbox reagiert
-void TaskVirtualization::analyzeTask(const atwork_commander_msgs::Task::ConstPtr& msg)
-{
-  for (auto& workstation : msg->arena_start_state)
-  {
-    ROS_INFO_STREAM(workstation.name);
-  }
-  
-}
+/**
+ * @todo write docs
+ */
+namespace atwork_commander {
+class RefboxStateVisualizer {
+  protected:
+    //members
+    ros::Subscriber mStateSub;                    //<<< Refbox State Subscriber
+    ros::Publisher mRobotPosePub;                 //<<< Publisher for all Robot's Poses
+    tf2_ros::TransformBroadcaster mTFBroadcaster; //<< TF2 publisher
+    /** Refbox State callback
+     **/
+    void handleState(const atwork_commander_msgs::RefboxState::ConstPtr& msg);
+  public:
+  /**
+   * Default constructor
+   */
+  RefboxStateVisualizer();
+};
 }
