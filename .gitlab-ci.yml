@@ -1,13 +1,19 @@
 stages:
+  - setup
   - build
   - test
+
+setup_apptainer:
+  stage: setup
+  script:
+    - git clone --depth 1 git@gitlab.robotto.cs.ovgu.de:robotto/robotto_setup.git
 
 build-atwork_commander:
   stage: build
   script:
-    - catkin build
+    - apptainer exec robotto_setup/ros-noetic-robotto.sif catkin build
 
 test-atwork_commander:
   stage: test
   script:
-    - catkin test atwork_commander
+    - apptainer exec robotto_setup/ros-noetic-robotto.sif catkin test atwork_commander
