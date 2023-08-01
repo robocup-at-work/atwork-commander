@@ -3,17 +3,52 @@ stages:
   - build
   - test
 
-setup_apptainer:
+setup-apptainer:
   stage: setup
   script:
     - git clone --depth 1 git@gitlab.robotto.cs.ovgu.de:robotto/robotto_setup.git
+    - echo "#!/bin/bash" > run
+    - echo "source /opt/ros/noetic/setup.bash" >> run
+    - echo "source devel/setup.bash" >> run
+    - echo "catkin \$@" >> run
+    - chmod 0755 run
+  cache:
+    key: apptainer
+    paths:
+      - robotto_setup/ros-noetic-robotto.sif
+      - run
+    policy: push
 
 build-atwork_commander:
   stage: build
+  cache:
+    key: apptainer
+    paths:
+      - robotto_setup/ros-noetic-robotto.sif
+      - run
+    policy: pull
+
   script:
-    - apptainer exec robotto_setup/ros-noetic-robotto.sif catkin build
+    - mkdir src
+    - cd src
+    - ln -s ../atwork_* .
+    - cd ..
+    - apptainer exec robotto_setup/ros-noetic-robotto.sif ./run build
+  artifacts:
+    paths:
+      - logs
+      - build
+      - devel
+      - src
 
 test-atwork_commander:
   stage: test
+  cache:
+    key: apptainer
+    paths:
+      - robotto_setup/ros-noetic-robotto.sif
+      - run
+    policy: pull
+
   script:
-    - apptainer exec robotto_setup/ros-noetic-robotto.sif catkin test atwork_commander
+    - apptainer exec robotto_setup/ros-noetic-robotto.sif ./run test atwork_commander
