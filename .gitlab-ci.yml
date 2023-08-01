@@ -1,11 +1,14 @@
 .default: &default_config
   rules:
-    - if: $CI_PIPELINE_STAGE == "web"
-    - if: $CI_PIPELINE_STAGE != "branch"
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: on_success 
+    - if: $CI_PIPELINE_SOURCE != "push"
       when: never
     - if: $CI_COMMIT_BRANCH == "testing"
       allow_failure: true
+      when: on_success
     - if: $CI_COMMIT_BRANCH == "master"
+      when: on_success
     
 
   cache:
