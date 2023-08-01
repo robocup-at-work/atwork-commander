@@ -3,7 +3,7 @@
 <launch>
   <arg name="frequency" default="1"/>
   <arg name="output" default="log"/>
-  <arg name="task" default="FINAL"/>
+  <arg name="task" default="ATT1"/>
 
   <include file="$(find atwork_commander)/launch/example_robot.launch">
     <arg name="multimaster" value="false"/>
