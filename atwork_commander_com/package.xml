@@ -56,7 +56,7 @@
   <depend>atwork_commander_msgs</depend>
   <exec_depend>fkie_master_discovery</exec_depend>
   <exec_depend>fkie_master_sync</exec_depend>
-
+  <test_depend>atwork_commander_core</test_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
