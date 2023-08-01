@@ -1,54 +1,85 @@
+.default: &default_config
+  rules:
+    - if: $CI_PIPELINE_STAGE == "web"
+    - if: $CI_PIPELINE_STAGE != "branch"
+      when: never
+    - if: $CI_COMMIT_BRANCH == "testing"
+      allow_failure: true
+    - if: $CI_COMMIT_BRANCH == "master"
+    
+
+  cache:
+    key: apptainer
+    paths:
+      - robotto_setup/ros-noetic-robotto.sif
+    policy: pull
+
 stages:
+  - apptainer
   - setup
   - build
   - test
 
-setup-apptainer:
+get-apptainer:
   stage: setup
+
+  <<: *default_config
+
+  cache:
+    policy: push
+
   script:
     - git clone --depth 1 git@gitlab.robotto.cs.ovgu.de:robotto/robotto_setup.git
+
+setup-workspace:
+  stage: setup
+
+  <<: *default_config
+
+  script:
+    - mkdir -p workspace/src
+    - cd workspace/src
+    - ln -s ../../atwork_* .
+    - cd ..
     - echo "#!/bin/bash" > run
+    - echo "cd workspace" >> run
     - echo "source /opt/ros/noetic/setup.bash" >> run
     - echo "source devel/setup.bash" >> run
     - echo "catkin \$@" >> run
     - chmod 0755 run
-  cache:
-    key: apptainer
+
+  artifacts:
     paths:
-      - robotto_setup/ros-noetic-robotto.sif
-      - run
-    policy: push
+      - workspace
 
 build-atwork_commander:
   stage: build
-  cache:
-    key: apptainer
-    paths:
-      - robotto_setup/ros-noetic-robotto.sif
-      - run
-    policy: pull
+
+  <<: *default_config
 
   script:
-    - mkdir src
-    - cd src
-    - ln -s ../atwork_* .
-    - cd ..
-    - apptainer exec robotto_setup/ros-noetic-robotto.sif ./run build
+    - apptainer exec robotto_setup/ros-noetic-robotto.sif ./workspace/run build
+
   artifacts:
     paths:
-      - logs
-      - build
-      - devel
-      - src
+      - workspace
+
+  dependencies:
+    - setup-workspace
+    - get-apptainer
 
 test-atwork_commander:
   stage: test
-  cache:
-    key: apptainer
-    paths:
-      - robotto_setup/ros-noetic-robotto.sif
-      - run
-    policy: pull
+
+  <<: *default_config
 
   script:
-    - apptainer exec robotto_setup/ros-noetic-robotto.sif ./run test atwork_commander
+    - apptainer exec robotto_setup/ros-noetic-robotto.sif ./workspace/run test
+
+  artifacts:
+    paths:
+      - workspace/logs
+  
+  dependencies:
+    - build-atwork_commander
+    - get-apptainer
