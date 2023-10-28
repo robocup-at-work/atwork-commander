@@ -21,13 +21,10 @@ int main(int argc, char** argv) {
   ros::init(argc, argv, "example_task_generator");
   ::testing::InitGoogleTest(&argc, argv);
 
-  bool debug =false;
-  ros::param::get("~debug", debug);
-  if(debug) activateDebug();
+  activateDebug();
   thread run([](){
     ROS_DEBUG_STREAM("ROS spin thread initalized!");
-    while(ros::ok())
-      ros::spin();
+    ros::spin();
   });
 
 
