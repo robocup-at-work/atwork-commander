@@ -1,6 +1,6 @@
 arena:
   workstations:
-    WS01: "10"
+    WS07: "10"
     WS02: "10"
   objects:
     F20_20_G      : 1
