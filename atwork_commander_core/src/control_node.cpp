@@ -6,16 +6,11 @@
 
 #include <string>
 #include <vector>
-#include <regex>
-#include <fstream>
-#include <chrono>
-#include <thread>
-#include <memory>
 
 using namespace std;
 
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 using atwork_commander::Control;
 using atwork_commander::ControlError;
 

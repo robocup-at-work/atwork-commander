@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(atwork_commander)
 
-add_compile_options(-g -Wall -std=c++11)
+add_compile_options(-g -Wall -std=c++17)
 
 find_package(catkin REQUIRED)
 catkin_package()

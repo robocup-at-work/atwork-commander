@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(atwork_commander_core)
 
-add_compile_options(-g -Wall -std=c++11)
+add_compile_options(-g -Wall -std=c++17)
 
 find_package(catkin REQUIRED COMPONENTS
   atwork_commander_msgs

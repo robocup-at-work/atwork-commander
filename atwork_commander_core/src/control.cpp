@@ -9,15 +9,12 @@
 
 #include <ros/ros.h>
 
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-
 #include <iostream>
 #include <sstream>
 #include <regex>
 
 using namespace std;
-namespace fs = boost::filesystem;
+namespace fs = std::filesystem;
 
 using atwork_commander_msgs::RefboxState;
 using atwork_commander_msgs::StateUpdate;
@@ -44,7 +41,7 @@ static ostream& operator<<(ostream& os, const vector<string>& v) {
 
 namespace atwork_commander {
 
-using Callback = Control::StateUpdateCallback;
+using Callback = Control::StateCallback;
 
 static std::string prefix = "[ATC-CTRL] ";
 
@@ -186,7 +183,7 @@ public:
     vector<uint8_t> buffer(size);
     ros::serialization::OStream stream(buffer.data(), size);
     ros::serialization::serialize(stream, state.task);
-    fs::ofstream file(fileName);
+    ofstream file(fileName);
     file.write(reinterpret_cast<const char*>(buffer.data()), buffer.size());
     file.close();
     ROS_DEBUG_STREAM_NAMED("store", prefix << "current refbox task saved to " << fileName << " size: " << buffer.size());
@@ -198,7 +195,7 @@ public:
       throw ControlError("load", ControlError::Reasons::PATH_INVALID, fileName.native());
 
     ROS_DEBUG_STREAM_NAMED("control", prefix << "starting loading of task from " << fileName << " to refbox");
-    fs::ifstream file(fileName);
+    ifstream file(fileName);
     vector<uint8_t> buffer;
     while( !file.eof()) {
       buffer.resize(buffer.size()+1024);
@@ -221,16 +218,15 @@ Control::Control()
 Control::~Control() noexcept { delete mImpl; }
 
 // Functions
-Task Control::generate(const string& task)              { return mImpl->generate(task);  }
-void Control::start( Robots robots )                    { mImpl->start(robots);   }
-void Control::forward()                                 { mImpl->forward();       }
-void Control::stop()                                    { mImpl->stop();          }
-void Control::store( boost::filesystem::path fileName ) { mImpl->store(fileName); }
-void Control::load( boost::filesystem::path fileName )  { mImpl->load(fileName);  }
+Task Control::generate(const string& task) { return mImpl->generate(task);  }
+void Control::start( Robots robots )       { mImpl->start(robots);   }
+void Control::forward()                    { mImpl->forward();       }
+void Control::stop()                       { mImpl->stop();          }
+void Control::store( fs::path fileName )   { mImpl->store(fileName); }
+void Control::load( fs::path fileName )    { mImpl->load(fileName);  }
 
 //Getter
 const Control::RefboxState& Control::state() const               { return mImpl->state;    }
-const Callback&             Control::stateUpdateCallback() const { return mImpl->callback; }
 const std::string&          Control::refbox() const              { return mImpl->refbox;   }
 
 //Setter

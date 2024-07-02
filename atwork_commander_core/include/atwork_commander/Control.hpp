@@ -3,7 +3,7 @@
 #include <atwork_commander_msgs/RefboxState.h>
 #include <atwork_commander_msgs/Task.h>
 
-#include <boost/filesystem/path.hpp>
+#include <filesystem>
 
 #include <string>
 #include <vector>
@@ -75,10 +75,10 @@ class ControlError : public std::runtime_error {
 class Control {
     ControlImpl* mImpl; ///< pImpl, Pointer to implementation to decouple interface and implementation
   public:
-    using Robots = std::vector< std::string >;                           ///< Start argument type declaration
-    using RefboxState = atwork_commander_msgs::RefboxState;              ///< State type of the RefBox
-    using StateUpdateCallback = std::function<void(const RefboxState&)>; ///< Callback definition of state callback
-    using Task = atwork_commander_msgs::Task;                            ///< Task type definition
+    using Robots        = std::vector< std::string >;              ///< Start argument type declaration
+    using RefboxState   = atwork_commander_msgs::RefboxState;      ///< State type of the RefBox
+    using StateCallback = std::function<void(const RefboxState&)>; ///< Callback definition of state callback
+    using Task          = atwork_commander_msgs::Task;             ///< Task type definition
 
     /** Constructor connecting to RefBox. **/
     Control();
@@ -108,20 +108,15 @@ class Control {
      
      * \return constant reference to RefBox state
      **/
-     const RefboxState& state() const; void
+     const RefboxState& state() const;
 
      /** Setter of state update callback. State update callback can be a static function or lambda function or member
       * function. In case of member function std::bind is necessary to enable binding, e.g:
       * std::bind(&<MyClass>::<MyFunction>, this, std::placeholders::_1).
       *
       * \param callback to execute on update of RefboxState
-      **/ stateUpdateCallback(StateUpdateCallback callback);
-
-      /** Getter of state update callback
-       *
-       * \return currently set stateUpdateCallback
-       **/
-      const StateUpdateCallback& stateUpdateCallback() const;
+      **/ 
+      void stateUpdateCallback(StateCallback callback);
       ///@}
       ///@{
       /** Command to generate a new Task on the RefBox
@@ -215,7 +210,7 @@ class Control {
        * \throw ControlError
        * \param fileName filesystem path to store task to
        **/
-       void store( boost::filesystem::path fileName );
+       void store( std::filesystem::path fileName );
 
        /** Command to load a locally stored task in the RefBox. The locally stored file will be parsed and submitted to
         * the RefBox, if no task is currently executed. If  the file does not exist or does not contain a valid task, a
@@ -226,7 +221,7 @@ class Control {
         * \throw ControlError
         * \param fileName filesystem path to load task from
         **/
-        void load( boost::filesystem::path fileName );
+        void load( std::filesystem::path fileName );
         ///@}
     };
 }
