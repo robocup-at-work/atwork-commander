@@ -60,7 +60,7 @@
 ### Easy to use script
 
 You can use the script "default_bringup" which automates the refbox startup.
-Its purpose is mainly for new teams so that they can create bagfiles for tasks more easily.
+Its purpose is mainly for new teams so that they can create bagfiles for tasks more easilys
 You can also use it for normal refbox startup, however you will need to kill the nodes afterwards manually..
 The cleanup is done automatically if you set the  **_immediate** param to **True**
 
@@ -73,6 +73,22 @@ NOTE: This requires rosbash to be installed:
 
 You can also modify the script to use other launchfiles than the default ones provided within this package.
 This is especially useful for your own arena configurations and robot descriptions.
+
+### Easy rosbag generation
+
+There is a special launch file to generate rosbags for testing robots:
+```
+roslaunch atwork_commander generate_rosbag.launch task:=<BMT|BTT1|BTT2|ATT1|ATT2|FINAL>
+```
+Additional parameters to configure bag generation are:
+
+* `id`: custom name to identify generated bag
+* `verbose`: more debug output
+* `output`: log to `screen`(console) or `log`(rosout)
+* `output_dir`: where to put the resulting bag file
+
+The generated files are typically named `<id>_<task>.bag`.
+The default path for the bags is `atwork_commander/common/bags/test_<task>.bag`.
 
 ## Documentation
 
