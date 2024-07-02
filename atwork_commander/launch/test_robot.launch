@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <launch>
-  <arg name="output" value="log"/>
+  <arg name="output" default="log"/>
   <arg name="task" default="FINAL"/>
   <arg name="verbose" default="false"/>
   <arg name="refbox_name" default="/atwork_commander"/>
@@ -11,6 +11,7 @@
   <arg name="coms" default="[ 'atwork_commander::com_plugin::ros::TaskArenaCentric',
                                'atwork_commander::com_plugin::ros::TaskObjectCentric' ]" />
   <arg name="config" default="$(find atwork_commander_gen)/config"/>
+  <arg name="waiting_time" default="0"/>
 
   <include file="$(find atwork_commander)/launch/atwork_commander.launch">
     <arg name="output" value="$(arg output)"/>
@@ -20,7 +21,7 @@
     <arg name="config" value="$(arg config)"/>
   </include>
 
-  <node name="test_robot_cmd" pkg="atwork_commander_core" type="control" args="-v $(arg verbose) test $(arg task)" output="$(arg output)">
+  <node name="test_robot_cmd" pkg="atwork_commander_core" type="control" args="-v $(arg verbose) -t $(arg waiting_time) test $(arg task)" output="$(arg output)" required="true">
     <param name="refbox" value="$(arg refbox_name)"/>
   </node>
 

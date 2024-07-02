@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+
+<launch>
+  <arg name="task"/> <!--one of BMT BTT1 BTT2 ATT1 ATT2 FINAL-->
+  <arg name="id" default="test"/> <!--A custom name to identify the bag-->
+  <arg name="verbose" default="false"/> <!--More debug output (much more!)-->
+  <arg name="output" default="screen"/> <!--Output log to screen or log-->
+  <arg name="output_dir" default="$(find atwork_commander)/common/bags"/> <!--Dir to store bag to-->
+
+  <!--Start a fake robot-->
+  <include file="$(find atwork_commander)/launch/example_robot.launch">
+    <arg name="multimaster" value="false"/>
+  </include>
+
+  <!--Start rosbag recorder-->
+  <include file="$(find atwork_commander)/launch/record_bag.launch">
+    <arg name="task" value="$(arg task)"/>
+    <arg name="id" value="$(arg id)"/>
+    <arg name="output_dir" value="$(arg output_dir)"/>
+  </include>
+
+  <!--Start the refbox and the control program-->
+  <include file="$(find atwork_commander)/launch/test_robot.launch">
+    <arg name="multimaster" value="false"/>
+    <arg name="waiting_time" value="10"/>
+    <arg name="verbose" value="$(arg verbose)"/>
+    <arg name="output" value="$(arg output)"/>
+  </include>
+</launch>

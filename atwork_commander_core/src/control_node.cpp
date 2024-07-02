@@ -28,7 +28,8 @@ enum class Command {
   STATE,
   STORE,
   LOAD,
-  TEST
+  TEST,
+  WAIT
 } command;
 
 enum class Result {
@@ -44,6 +45,7 @@ string refboxName = "atwork_commander";
 vector<string> arguments;
 bool verbose = false;
 bool continous = false;
+float waiting_time = 0.0f;
 unsigned int commandState = 0;
 
 static ostream& operator<<(ostream& os, const vector<string>& v) {
@@ -64,6 +66,7 @@ static ostream& operator<<(ostream& os, Command cmd) {
     case( Command::STORE   ): return os << "\"store current task\"";
     case( Command::LOAD    ): return os << "\"load current task\"";
     case( Command::TEST    ): return os << "\"send task to robot for testing\"";
+    case( Command::WAIT    ): return os << "\"wait for " << waiting_time  << " seconds before terminating\"";
     default                 : return os << "UNKNOWN";
   };
 }
@@ -81,6 +84,7 @@ static Result forward() {
 
 static Result generate() {
   if( arguments.size() != 1 ) {
+
     ROS_ERROR_STREAM_NAMED("generate", "[REFBOX-CONTROL] Invalid amount of task types supplied: Expected 1: Got " << arguments.size());
     return Result::INVALID_ARGUMENT;
   }
@@ -145,6 +149,14 @@ static Result load() {
   }
 }
 
+static Result wait() {
+  if (waiting_time) {
+    ros::Duration(waiting_time).sleep();
+    ROS_DEBUG_STREAM("[REFBOX-CONTROL] done waiting. Terminating!");
+  }
+  return  Result::OK;
+}
+
 static Result test(unsigned int& commandState) {
   Result temp;
   switch(commandState) {
@@ -169,7 +181,19 @@ static Result test(unsigned int& commandState) {
       return temp;
     case(2):
       ROS_DEBUG_STREAM("[REFBOX-CONTROL] start execution of task for robot test.");
-      return forward();
+      temp = forward();
+      if (temp == Result::OK) {
+        ROS_DEBUG_STREAM("[REFBOX-CONTROL] start execution successfull.");
+        commandState = 3;
+        return Result::CONTINUE;
+      }
+      return temp;
+    case(3):
+      ROS_DEBUG_STREAM("[REFBOX-CONTROL] waiting " << waiting_time << "until termination.");
+      temp = wait();
+      ROS_INFO_STREAM("[REFBOX-CONTROL] generate and send test task to robots " << 
+                      (temp == Result::OK ? "successfull" : "failed") << ".");
+      return temp;
     }
     return Result::ERROR;
 }
@@ -207,6 +231,7 @@ static bool parseArgs(int argc, char** argv) {
     ("args", po::value<vector<string>>(&arguments), "command arguments")
     ("verbose,v", po::value<bool>(&verbose), "set verbosity")
     ("continous,c", po::value<bool>(&continous), "try again after failure")
+    ("waiting_time,t", po::value<float>(&waiting_time), "wait for amount of seconds before stopping after success.")
     ("help", "produce help message")
   ;
   po::positional_options_description p;
