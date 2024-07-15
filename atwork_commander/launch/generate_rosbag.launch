@@ -21,6 +21,7 @@
 
   <!--Start the refbox and the control program-->
   <include file="$(find atwork_commander)/launch/test_robot.launch">
+    <arg name="task" value="$(arg task)"/>
     <arg name="multimaster" value="false"/>
     <arg name="waiting_time" value="10"/>
     <arg name="verbose" value="$(arg verbose)"/>
