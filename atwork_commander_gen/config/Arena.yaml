@@ -1,35 +1,40 @@
-arena:
-  workstations:
-    PP01: "PP"
-    WS02: "10"
-    SH01: "SH"
-    WS04: "00"
-    RT01: "TT"
-    WS06: "05"
-    WS07: "10"
-    WS08: "00"
-    WS09: "15"
-    WS10: "10"
-    WS11: "15"
-    WS12: "05"
-    SH02: "SH"
-  objects:
-    F20_20_G      : 1
-    F20_20_B      : 1
-    S40_40_B      : 1
-    S40_40_G      : 1
-    M20           : 2
-    M30           : 2
-    M20_100       : 2
-    Axis2         : 1
-    Bearing2      : 1
-    Housing       : 1
-    Motor2        : 1
-    Spacer        : 1
-    Screwdriver   : 1
-    Wrench        : 1
-    Drill         : 1
-    AllenKey      : 1
-    CONTAINER_RED :  1
-    CONTAINER_BLUE:  1
-  cavities: [ "F20_20_H", "S40_40_H", "M20_H", "M30_H", "M20_100_H", "R20_H", "F20_20_V", "S40_40_V", "M20_V", "M30_V", "R20_V" ]
+ arena:
+   workstations:
+     WS01: "10"
+     WS02: "10"
+     WS03: "15"
+     WS04: "00"
+     WS05: "00"
+     WS06: "05"
+     WS07: "05"
+     WS08: "10"
+     WS09: "10"
+     WS10: "15"
+     WS11: "15"
+     WS12: "00"
+     WS13: "00"
+     WS14: "05"
+     SH01: "SH"
+     SH02: "SH"
+     PP01: "PP"
+     RT01: "TT"
+   objects:
+     F20_20_G      : 2
+     F20_20_B      : 2
+     S40_40_B      : 2
+     S40_40_G      : 2
+     M20           : 2
+     M30           : 2
+     M20_100       : 2
+     Axis2         : 2
+     Bearing2      : 2
+     Housing       : 2
+     Motor2        : 2
+     Spacer        : 2
+     Screwdriver   : 2
+     Wrench        : 2
+     Drill         : 2
+     AllenKey      : 2
+     CONTAINER_RED : 2
+     CONTAINER_BLUE: 2
+   cavities: [ "F20_20_H", "S40_40_H", "M20_H", "M30_H", "M20_100_H", "R20_H", "F20_20_V", "S40_40_V", "M20_V", "M30_V", "R20_V" ]
