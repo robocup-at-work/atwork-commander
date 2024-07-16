@@ -7,6 +7,6 @@ ATT1:
   shelfes_placing: 1
   pp_placing: 1
   arbitrary_surfaces: 2
-  obstacles: 2
+  obstacles: 0
   barrier_tapes: 2
-  normal_table_types: [ "00","05","15" ]
+  normal_table_types: [ "00","05","10","15" ]
